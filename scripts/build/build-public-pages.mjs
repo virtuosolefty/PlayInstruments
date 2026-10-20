@@ -1,11 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { publicLibrary } from '../songs/public-library.mjs';
+import { pagesBase } from './pagesBase.mjs';
 
 // Static, readable entry pages also work without JavaScript. Set PUBLIC_SITE_URL
 // at release time to add the real canonical origin and a sitemap.
 const appShell=fs.readFileSync('dist/index.html','utf8');
-const basePath=process.env.GITHUB_PAGES==='true'?'/PlayInsturments/':'/';
+const basePath=pagesBase();
 const origin=process.env.PUBLIC_SITE_URL ? new URL(process.env.PUBLIC_SITE_URL).origin : null;
 const href=route=>`${basePath}${route}`;
 const escape=text=>String(text).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');

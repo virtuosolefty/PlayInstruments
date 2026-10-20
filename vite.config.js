@@ -1,9 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { pagesBase } from './scripts/build/pagesBase.mjs';
 
-// GitHub Pages serves this project from /PlayInsturments/, while local Vite
+// GitHub Pages serves this project from /PlayInstruments/ (the repository's name), while local Vite
 // previews are served from /. Keeping the base here makes both links work.
-const base = process.env.GITHUB_PAGES === 'true' ? '/PlayInsturments/' : '/';
+const base = pagesBase();
 
 export default defineConfig({
   base,

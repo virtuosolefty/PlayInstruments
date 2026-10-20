@@ -1,6 +1,8 @@
 import { watchSound } from '../helpers/sound.js';
 import { test, expect } from '@playwright/test';
-import { seedSettings } from '../helpers/studio.js';
+import { seedSettings, STAGE_TIMEOUT } from '../helpers/studio.js';
+import { openView, setRenderer } from '../helpers/workspace.js';
+import { choose } from '../helpers/listbox.js';
 
 test.beforeEach(async ({ page }) => {
   await seedSettings(page, { renderer: 'canvas' }, { everyLoad: true });
@@ -14,14 +16,15 @@ const piano = page => page.getByRole('group', { name: 'Practice instrument' }).g
 test('guitar input is audible and a correct open string is scored by the shared engine', async ({ page }) => {
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   await guitar(page).click();
-  await expect(page.getByRole('combobox', { name: 'Guitar exercise' })).toHaveValue('guitar-open-strings');
+  await expect(page.getByRole('combobox', { name: 'Guitar exercise' })).toHaveAttribute('data-value', 'guitar-open-strings');
   await page.locator('.zone-mode button').filter({ hasText: 'Wait for me' }).click();
   await page.locator('.pad-play').click();
   await expect(page.locator('.wait-hint')).toContainText('E2');
   await watchSound(page);
   await page.getByRole('button', { name: 'String 6, open, E2', exact: true }).click();
   await expect.poll(() => page.evaluate(() => window.__studioHeardSound)).toBe(true);
-  await expect(page.locator('.io-strip')).toContainText('Guitar · synthesized');
+  // The strip says "Sound ready"; which instrument and source is its title.
+  await expect(page.locator('.io-strip .audio-slot')).toHaveAttribute('title', /Guitar · synthesized/);
   await expect(page.locator('.guitar-next')).toContainText('A2');
   await page.getByRole('button', { name: 'Stop', exact: true }).click();
   await expect(page.locator('.report:not(.first-run)')).toBeVisible();
@@ -37,12 +40,13 @@ test('piano settings survive a guitar visit; guitar studies and chords are inter
   await page.getByRole('button', { name: 'Right hand', exact: true }).click();
   await page.keyboard.press('Escape');
   await guitar(page).click();
-  await page.getByRole('combobox', { name: 'Guitar exercise' }).selectOption('guitar-c-major');
+  await choose(page.getByRole('combobox', { name: 'Guitar exercise' }), 'guitar-c-major');
   await expect(page.locator('.guitar-next')).toContainText('C3 · string 5 · fret 3');
   await page.getByRole('group', { name: 'Workspace', exact: true }).getByRole('button', { name: 'Free play', exact: true }).click();
   await page.getByRole('button', { name: 'Am', exact: true }).click();
   await watchSound(page);
   await page.getByRole('button', { name: '↓ Strum Am', exact: true }).click();
+  await openView(page);
   await page.getByRole('checkbox', { name: 'Left-handed' }).check();
   await expect(page.locator('.guitar-fretboard')).toHaveClass(/left-handed/);
   await page.getByRole('group', { name: 'Workspace', exact: true }).getByRole('button', { name: 'Learn', exact: true }).click();
@@ -52,25 +56,26 @@ test('piano settings survive a guitar visit; guitar studies and chords are inter
   await page.keyboard.press('Escape');
   await expect(page.locator('.piece-title')).toContainText('C Major');
   await guitar(page).click();
-  await expect(page.getByRole('combobox', { name: 'Guitar exercise' })).toHaveValue('guitar-c-major');
+  await expect(page.getByRole('combobox', { name: 'Guitar exercise' })).toHaveAttribute('data-value', 'guitar-c-major');
   const restored = await page.context().newPage();
   await restored.goto('/');
-  await expect(restored.getByRole('combobox', { name: 'Guitar exercise' })).toHaveValue('guitar-c-major');
+  await expect(restored.getByRole('combobox', { name: 'Guitar exercise' })).toHaveAttribute('data-value', 'guitar-c-major');
   await restored.close();
 });
 
 test('Three.js renders both instruments and recovers from context loss', async ({ page }) => {
+  test.slow(); // 3D in software rendering: see STAGE_TIMEOUT
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   await setRenderer(page, '3D Stage');
-  await expect(page.locator('.roll-gl canvas')).toHaveCount(2);
+  await expect(page.locator('.roll-gl canvas')).toHaveCount(2, { timeout: STAGE_TIMEOUT });
   for (let i = 0; i < 3; i++) {
     await guitar(page).click();
-    await expect(page.locator('.guitar-stage canvas')).toBeVisible();
+    await expect(page.locator('.guitar-stage canvas')).toBeVisible({ timeout: STAGE_TIMEOUT });
     await piano(page).click();
-    await expect(page.locator('.roll-gl canvas')).toHaveCount(2);
+    await expect(page.locator('.roll-gl canvas')).toHaveCount(2, { timeout: STAGE_TIMEOUT });
   }
   await guitar(page).click();
-  await expect(page.locator('.guitar-stage canvas')).toBeVisible();
+  await expect(page.locator('.guitar-stage canvas')).toBeVisible({ timeout: STAGE_TIMEOUT });
   await page.locator('.guitar-stage canvas').evaluate(canvas => canvas.getContext('webgl2').getExtension('WEBGL_lose_context').loseContext());
   await page.getByRole('button',{name:'Instrument settings',exact:true}).click();
   await expect(page.getByRole('button', { name: '2D Trainer', exact: true })).toHaveAttribute('aria-pressed', 'true');
@@ -88,8 +93,3 @@ test('library search finds a piano piece', async ({ page }) => {
 
 });
 
-async function setRenderer(page, name) {
- await page.getByRole('button',{name:'Instrument settings',exact:true}).click();
- await page.getByRole('button',{name,exact:true}).click();
- await page.keyboard.press('Escape');
-}

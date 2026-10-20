@@ -9,6 +9,15 @@ const part = (name, material, [x, y, z] = [0, 0, 0]) => {
   return made;
 };
 
+it('makes only named drums pickable and identifies their playable piece', () => {
+  const { scene, snare, crashA, stand } = kit();
+  const rig = buildDrumModelRig(scene);
+  expect(rig.targets).toContain(snare);
+  expect(rig.targets).toContain(crashA);
+  expect(rig.targets).not.toContain(stand);
+  expect(snare.userData.drum).toBe('snare');
+});
+
 /** A kit: a snare, two crash cymbals, and a stand that is nobody's, all sharing one material as a downloaded kit does. */
 function kit() {
   const shared = new MeshStandardMaterial({ color: '#888888' });
@@ -100,5 +109,29 @@ describe('a drum kit that is hit', () => {
     rig.hit('snare', '#ffffff', 1, 0);
     rig.update(10);
     expect(5 - snare.position.y).toBeGreaterThan(soft);
+  });
+  it('gives the cymbals a finish when asked, leaving the drums and the stands as they were', () => {
+    const { scene, snare, crashA, stand, shared } = kit();
+    buildDrumModelRig(scene, { cymbalColor: '#b1823a' });
+    expect(`#${crashA.material.color.getHexString()}`).toBe('#b1823a');
+    expect(crashA.material.metalness).toBe(1);
+    expect(snare.material.color.getHexString()).toBe('888888');
+    expect(stand.material).toBe(shared);
+  });
+
+  it('keeps the drums to hit next softly lit until they are hit, then lights them as hit', () => {
+    const { scene, snare, crashA } = kit();
+    const rig = buildDrumModelRig(scene);
+    expect(rig.mark(new Set(['snare']), '#5ab8ff')).toBe(true);
+    expect(snare.material.emissive.getHex()).not.toBe(0);
+    expect(crashA.material.emissive.getHex()).toBe(0);
+    expect(rig.mark(new Set(['snare']), '#5ab8ff')).toBe(false);
+    rig.hit('snare', '#00ff00', 1, 0);
+    rig.update(10);
+    expect(snare.material.emissive.g).toBeGreaterThan(snare.material.emissive.b);
+    rig.update(10_000);
+    expect(snare.material.emissive.b).toBeGreaterThan(0);
+    rig.mark(new Set(), '#5ab8ff');
+    expect(snare.material.emissive.getHex()).toBe(0);
   });
 });

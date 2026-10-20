@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { stringKit } from '../lib/instruments.js';
-import { STAGE_COLORS } from '../lib/stageColors.js';
+import { STAGE_COLORS } from '../lib/stage/stageColors.js';
+import { beatPulse, paintBeatPulse, reducedMotion } from '../lib/practice/beatPulse.js';
 
 /**
  * Scrolling string lanes, highest string at the top.
@@ -11,10 +12,10 @@ import { STAGE_COLORS } from '../lib/stageColors.js';
  *
  * The tab is part of the stage, which is dark in both interface themes.
  */
-export default function StringTab({ instrument = 'guitar', score, engine, pps }) {
+export default function StringTab({ instrument = 'guitar', score, engine, pps, metronome = false }) {
   const ref = useRef(null);
-  const live = useRef({ score, engine, pps });
-  live.current = { score, engine, pps };
+  const live = useRef({ score, engine, pps, metronome });
+  live.current = { score, engine, pps, metronome };
   const kit = stringKit(instrument) ?? stringKit('guitar');
   useEffect(() => {
     const canvas = ref.current;
@@ -59,6 +60,7 @@ export default function StringTab({ instrument = 'guitar', score, engine, pps })
       });
       ctx.fillStyle = STAGE_COLORS.hitLine; ctx.fillRect(hit - 1, 24, 2, h - 32);
       ctx.font = '10px sans-serif'; ctx.fillText('PLAY', hit - 13, 16);
+      paintBeatPulse(ctx, { pulse: beatPulse(now, piece, { countIn: !!e.countIn, metronome: live.current.metronome, playing: !!e.playing, calm: reducedMotion() }), from: { x: hit, y: 24 }, to: { x: hit, y: h - 8 }, colour: STAGE_COLORS.hitLine });
       const targets = e.sessionRef.current?.targets ?? piece.notes;
       targets.forEach(n => {
         if (n.string === undefined) return;

@@ -7,9 +7,9 @@ import {
   dailySet,
   pathState,
   troubleDecay,
-} from '../lib/path.js';
-import { dayKey, streakFrom } from '../lib/streaks.js';
-import { getAllSongEntries } from '../lib/storage.js';
+} from '../lib/learning/path.js';
+import { dayKey, streakFrom } from '../lib/learning/streaks.js';
+import { getAllSongEntries } from '../lib/app/storage.js';
 import { instrumentKit } from '../lib/instruments.js';
 
 /**

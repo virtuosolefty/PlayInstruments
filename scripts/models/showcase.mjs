@@ -107,3 +107,47 @@ export function drumZonePart(zones, { centre, size }) {
   }
   return null;
 }
+
+/** An 88-key keyboard's white and black keys, by count. */
+const WHITE_KEYS = 52, BLACK_KEYS = 36;
+/** Two pieces are the same shape when every side is within this share of the other's. */
+const SAME_SHAPE = 0.08;
+const sameShape = (a, b) => [0, 1, 2].every(k => Math.abs(a[k] - b[k]) <= SAME_SHAPE * Math.max(a[k], b[k], 1e-9));
+const isBlackKey = midi => [1, 3, 6, 8, 10].includes(midi % 12);
+
+/**
+ * The keys of a modelled piano, each a part of its own (`key-<midi>`) so the stage can press and light it as its note
+ * plays. A grand's keys are separate pieces of its mesh: fifty-two of one shape and thirty-six of another. The white
+ * keys reach further toward the player than the black, which says which way the keyboard faces, and the keys are
+ * numbered from the player's left, A0 to C8.
+ *
+ * @param {{ centre: number[], size: number[] }[]} pieces every piece of the model, in stage units, y up
+ * @returns {(string | null)[]} for each piece, its key's part name, or null; all null when there is no full keyboard
+ */
+export function keyParts(pieces) {
+  const groups = [];
+  pieces.forEach((piece, index) => {
+    const group = groups.find(g => sameShape(pieces[g[0]].size, piece.size));
+    if (group) group.push(index); else groups.push([index]);
+  });
+  const whites = groups.find(g => g.length === WHITE_KEYS), blacks = groups.find(g => g.length === BLACK_KEYS);
+  const names = pieces.map(() => null);
+  if (!whites || !blacks) return names;
+  const mean = (group, k) => group.reduce((sum, i) => sum + pieces[i].centre[k], 0) / group.length;
+  const white = pieces[whites[0]].size;
+  const along = white[0] > white[2] ? 0 : 2;
+  const front = Math.sign(mean(whites, along) - mean(blacks, along)) || 1;
+  // The player faces the keyboard from its front; their right hand is facing × up.
+  const facing = [0, 0, 0];
+  facing[along] = -front;
+  const right = [-facing[2], 0, facing[0]];
+  const leftToRight = group => [...group].sort((a, b) => {
+    const at = i => pieces[i].centre[0] * right[0] + pieces[i].centre[2] * right[2];
+    return at(a) - at(b);
+  });
+  const notes = Array.from({ length: 88 }, (_, i) => 21 + i);
+  const name = (group, midis) => leftToRight(group).forEach((index, n) => { names[index] = `key-${midis[n]}`; });
+  name(whites, notes.filter(midi => !isBlackKey(midi)));
+  name(blacks, notes.filter(isBlackKey));
+  return names;
+}

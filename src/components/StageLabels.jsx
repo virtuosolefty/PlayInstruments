@@ -1,4 +1,4 @@
-import { STRING_FONT_MAX } from '../lib/guitarStageView.js';
+import { STRING_FONT_MAX } from '../lib/strings/guitarStageView.js';
 
 /**
  * The text a 3D string stage writes over the instrument (guitarStageView.js

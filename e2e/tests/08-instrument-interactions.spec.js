@@ -1,13 +1,15 @@
 import { test, expect } from '@playwright/test';
 import { watchSound } from '../helpers/sound.js';
+import { openView, setRenderer } from '../helpers/workspace.js';
+import { STAGE_TIMEOUT } from '../helpers/studio.js';
 const workspace=(p,name)=>p.getByRole('group',{name:'Workspace',exact:true}).getByRole('button',{name,exact:true});
 const guitar=p=>p.getByRole('group',{name:'Practice instrument'}).getByRole('button',{name:'Guitar',exact:true}).click();
 const events=p=>p.evaluate(()=>window.__notes);
 const onCount=p=>expect.poll(async()=>(await events(p)).filter(m=>m.type==='noteon').length);
 test.beforeEach(async({page})=>{
-  await page.addInitScript(()=>localStorage.setItem('piano-practice-coach:v1',JSON.stringify({version:1,songs:{},settings:{onboarded:true,countInBars:0,settingsVersion:5,renderer:'canvas'}})));
+  await page.addInitScript(()=>localStorage.setItem('piano-practice-coach:v1',JSON.stringify({version:1,songs:{},settings:{onboarded:true,studioTourDone:true,countInBars:0,settingsVersion:5,renderer:'canvas'}})));
   await page.goto('/');await expect(page.locator('.piece-title')).toContainText('C Major');
-  await page.evaluate(async()=>{window.__notes=[];(await import('/src/lib/midiInput.js')).midiInput.onMessage(m=>window.__notes.push(m));});
+  await page.evaluate(async()=>{window.__notes=[];(await import('/src/lib/input/midiInput.js')).midiInput.onMessage(m=>window.__notes.push(m));});
 });
 test('the first quick piano tap both unlocks audio and makes sound',async({page})=>{
   await workspace(page,'Free play').click();
@@ -19,6 +21,7 @@ test('the first quick piano tap both unlocks audio and makes sound',async({page}
   await expect(page.locator('.audio-slot')).toHaveAttribute('title',/Web Audio synth|Grand Piano|sample/i);
 });
 test('pointer notes last until release, glide, and cancel in 2D and 3D',async({page})=>{
+  test.slow(); // 3D in software rendering: see STAGE_TIMEOUT
   await workspace(page,'Free play').click();
   for(const renderer of ['2D Trainer','3D Stage']){
     await setRenderer(page, renderer);
@@ -61,14 +64,14 @@ test('guitar picks identify one position, MIDI shows alternatives, and fret navi
   await expect(page.getByRole('button',{name:'String 3, fret 5, C4',exact:true})).toBeFocused();
   await expect(page.locator('.guitar-fretboard button[tabindex="0"]')).toHaveCount(1);
   await page.waitForTimeout(1100);
-  await page.evaluate(async()=>{(await import('/src/lib/midiInput.js')).emitSyntheticMidi({type:'noteon',midi:59,velocity:.7});});
+  await page.evaluate(async()=>{(await import('/src/lib/input/midiInput.js')).emitSyntheticMidi({type:'noteon',midi:59,velocity:.7});});
   await expect(page.locator('.guitar-string .held')).toHaveCount(0);
   await expect.poll(()=>page.locator('.guitar-string .possible').count()).toBeGreaterThan(1);
 });
 test('3D picking uses the visible string and fret, including the left-handed view',async({page})=>{
   await guitar(page);await workspace(page,'Free play').click();await setRenderer(page, '3D Stage');
   for(const left of [false,true]){
-    await page.getByRole('checkbox',{name:'Left-handed'}).setChecked(left);await page.waitForTimeout(500);
+    await openView(page);await page.getByRole('checkbox',{name:'Left-handed'}).setChecked(left);await page.keyboard.press('Escape');await page.waitForTimeout(500);
     const f=await page.locator('.guitar-position-label.fret').getByText('4',{exact:true}).boundingBox();
     const s=await page.locator('.guitar-position-label.string').getByText('G3',{exact:true}).boundingBox();
     await page.evaluate(()=>window.__notes=[]);await page.mouse.click(f.x+f.width/2,s.y+s.height/2);
@@ -97,13 +100,8 @@ test('instruments fit desktop heights and resizing preserves the playing area',a
       await page.getByRole('button',{name:'Instrument settings',exact:true}).click();
       const size=page.getByRole('slider',{name:'Keyboard height'});await size.focus();await page.keyboard.press('ArrowUp');await expect(size).toHaveValue('105'); await page.keyboard.press('Escape');
     }
-    await guitar(page);await expect(page.locator('.guitar-stage canvas')).toBeVisible();
+    await guitar(page);await expect(page.locator('.guitar-stage canvas')).toBeVisible({ timeout: STAGE_TIMEOUT });
     const neck=await page.locator('.guitar-stage').boundingBox();expect(neck.height).toBeGreaterThanOrEqual(175);expect(neck.y+neck.height).toBeLessThan(viewport.height-28);
   }
 });
 
-async function setRenderer(page, name) {
- await page.getByRole('button',{name:'Instrument settings',exact:true}).click();
- await page.getByRole('button',{name,exact:true}).click();
- await page.keyboard.press('Escape');
-}

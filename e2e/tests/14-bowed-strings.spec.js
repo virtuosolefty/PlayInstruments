@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { seedSettings } from '../helpers/studio.js';
+import { choose } from '../helpers/listbox.js';
 
 const pick = (p, name) => p.getByRole('group', { name: 'Practice instrument' }).getByRole('button', { name, exact: true }).click();
 const workspace = (p, name) => p.getByRole('group', { name: 'Workspace', exact: true }).getByRole('button', { name, exact: true });
@@ -10,7 +11,7 @@ test.beforeEach(async ({ page }) => {
   await seedSettings(page, { renderer: 'canvas' }, { everyLoad: true });
   await page.goto('/');
   await expect(page.locator('.piece-title')).toContainText('C Major', { timeout: 30000 });
-  await page.evaluate(async () => { window.__notes = []; (await import('/src/lib/midiInput.js')).midiInput.onMessage(m => window.__notes.push(m)); });
+  await page.evaluate(async () => { window.__notes = []; (await import('/src/lib/input/midiInput.js')).midiInput.onMessage(m => window.__notes.push(m)); });
 });
 
 test('violin and cello join the instrument picker with their own studios', async ({ page }) => {
@@ -78,7 +79,7 @@ test('the scale explorer plays a first-position scale and shows it on the finger
 test('a violin lesson scores the open G with the shared practice engine', async ({ page }) => {
   await pick(page, 'Violin');
   const study = page.getByLabel('Violin exercise');
-  await study.selectOption('violin-open-strings');
+  await choose(study, 'violin-open-strings');
   await expect(page.locator('.bowed-stage')).toHaveAttribute('data-target-positions', '1');
   const open = page.getByRole('button', { name: 'G string · open string · G3', exact: true });
   await open.focus();

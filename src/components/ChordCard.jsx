@@ -1,6 +1,6 @@
-import { noteName } from '../lib/theory.js';
+import { noteName } from '../lib/music/theory.js';
 import StringPicks from './StringPicks.jsx';
-import { chordFullName, chordPositionLabel, chordTone } from '../lib/guitarPresentation.js';
+import { chordFullName, chordPositionLabel, chordTone } from '../lib/strings/guitarPresentation.js';
 
 /** Where the chord diagram's outer strings are drawn, whatever the number of strings between them. */
 const DIAGRAM = Object.freeze({ left: 42, right: 202 });

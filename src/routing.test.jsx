@@ -36,6 +36,7 @@ vi.mock('tone', () => {
     now: () => 0,
     loaded: vi.fn().mockResolvedValue(undefined),
     getContext: () => ({ lookAhead: 0 }),
+    getDestination: () => ({}),
     dbToGain: (db) => 10 ** (db / 20),
     Frequency: () => ({ toNote: () => 'C4' }),
     Gain: class extends Node {
@@ -45,6 +46,8 @@ vi.mock('tone', () => {
       }
     },
     Reverb: Node,
+    Limiter: Node,
+    WaveShaper: Node,
     Meter: class extends Node {
       getValue() {
         return -60;
@@ -133,9 +136,9 @@ async function playOneNote(instrumentSource, { ports = 'present' } = {}) {
     }),
   );
 
-  const { midiOutput } = await import('./lib/midiOutput.js');
-  const { audio } = await import('./lib/audio.js');
-  const { emitSyntheticMidi } = await import('./lib/midiInput.js');
+  const { midiOutput } = await import('./lib/input/midiOutput.js');
+  const { audio } = await import('./lib/audio/audio.js');
+  const { emitSyntheticMidi } = await import('./lib/input/midiInput.js');
 
   const port = fakePort();
   midiOutput.outputs = [port];
@@ -176,8 +179,8 @@ async function playTheScore(instrumentSource, mode) {
     }),
   );
 
-  const { midiOutput } = await import('./lib/midiOutput.js');
-  const { audio } = await import('./lib/audio.js');
+  const { midiOutput } = await import('./lib/input/midiOutput.js');
+  const { audio } = await import('./lib/audio/audio.js');
 
   const port = fakePort();
   midiOutput.outputs = [port];

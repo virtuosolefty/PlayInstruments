@@ -14,37 +14,46 @@
 /* The wood, frets, nut and inlays sit behind transparent buttons. */
 .fretboard-surface {
   --rosewood:
-    repeating-linear-gradient(180deg,#ffffff06 0 2px,transparent 2px 5px,#0000000f 5px 6px,transparent 6px 11px),
-    linear-gradient(180deg,#472b1d 0%,#331f16 22%,#2a1911 55%,#37231a 100%);
-  --pearl:#fbf9ff 0,#e6eef2 3.5px,#c9dcd8 5.5px,#0006 6.5px,transparent 7.5px;
+    repeating-linear-gradient(180deg,var(--wood-grain-light) 0 2px,transparent 2px 5px,var(--wood-grain-dark) 5px 6px,transparent 6px 11px),
+    linear-gradient(180deg,var(--rosewood-1) 0%,var(--rosewood-2) 22%,var(--rosewood-3) 55%,var(--rosewood-4) 100%);
+  --pearl:var(--pearl-1) 0,var(--pearl-2) 3.5px,var(--pearl-3) 5.5px,var(--pearl-edge) 6.5px,transparent 7.5px;
   position:absolute; z-index:0; inset:34px 18px 14px; display:grid; pointer-events:none;
 }
 .fretboard-surface > span { position:relative; }
-.fretboard-surface > span:nth-child(2) { border-inline-end:7px solid #efe5cf; box-shadow:inset -1px 0 0 #b9a887; background:linear-gradient(90deg,transparent,#1f1510 85%); border-start-start-radius:6px; border-end-start-radius:6px; }
+.fretboard-surface > span:nth-child(2) { border-inline-end:7px solid var(--bone); box-shadow:inset -1px 0 0 var(--bone-shade); background:linear-gradient(90deg,transparent,var(--rosewood-shade) 85%); border-start-start-radius:var(--radius-sm); border-end-start-radius:var(--radius-sm); }
 .left-handed .fretboard-surface { direction:rtl; }
-.fretboard-surface > span:nth-child(n+3) { background:var(--rosewood); border-block:3px solid #e9dcc0; }
+.fretboard-surface > span:nth-child(n+3) { background:var(--rosewood); border-block:3px solid var(--binding); }
 .fretboard-surface > span.single { background:radial-gradient(circle 8px at 50% 50%,var(--pearl)),var(--rosewood); }
 .fretboard-surface > span.double { background:radial-gradient(circle 8px at 50% 33.3%,var(--pearl)),radial-gradient(circle 8px at 50% 66.7%,var(--pearl)),var(--rosewood); }
-.fretboard-surface > span:last-child { border-start-end-radius:8px; border-end-end-radius:8px; border-inline-end:3px solid #e9dcc0; }
+.fretboard-surface > span:last-child { border-start-end-radius:8px; border-end-end-radius:8px; border-inline-end:3px solid var(--binding); }
+/* The veena's board is its own: brass frets on dark wax, no inlay dots (a veena has none). */
+.veena-workspace .fretboard-surface {
+  --rosewood: linear-gradient(180deg, var(--wax-1), var(--wax-2));
+  --pearl: transparent 0, transparent 1px;
+  --fret-1: var(--brass-1); --fret-2: var(--brass-2); --fret-3: var(--brass-3);
+}
+.veena-workspace .guitar-fretboard .fret-numbers span.inlay-fret { color: inherit; font-weight: inherit; }
+/* The swaras of the piece's raga or scale, on the sarani, show at rest (GuitarWorkspace.jsx). */
+.guitar-fretboard .guitar-string button.idle.swara span { width: auto; min-width: 26px; padding: 0 var(--sp-1-5); border-radius: var(--radius-sm); background: var(--swara-bg); border: 1px solid var(--swara-edge); color: var(--swara-text); font: var(--fw-bold) var(--fs-2xs) var(--sans); }
 /* Nickel-silver fret wire at the end of each fret space. */
 .fretboard-surface > span:nth-child(n+3):not(:last-child)::before {
   content:''; position:absolute; inset-block:-1px; inset-inline-end:-2px; width:4px; z-index:1;
-  background:linear-gradient(90deg,#8e9196,#f4f6f8 45%,#a7aaaf); border-radius: var(--radius-xs); box-shadow:1px 0 2px #0007;
+  background:linear-gradient(90deg,var(--fret-1),var(--fret-2) 45%,var(--fret-3)); border-radius: var(--radius-xs); box-shadow:1px 0 2px var(--fret-shadow);
 }
 .guitar-fretboard .guitar-string { position:relative; z-index:1; }
 .guitar-fretboard .guitar-string button,
 .studio-app .guitar-fretboard .guitar-string button,
 .guitar-fretboard .guitar-string button:first-of-type { background:transparent; border:0; height:32px; min-height:32px; }
 /* Strings: metallic, with the low three wound in bronze. */
-.guitar-fretboard .guitar-string button::before { height:var(--gauge,1px); transform:translateY(-50%); opacity:1; background:linear-gradient(180deg,#ffffff,#b9bcc0 55%,#7c8085); box-shadow:0 2px 2px #0008; }
-.guitar-fretboard .guitar-string.wound button::before { background:repeating-linear-gradient(90deg,#8d6a3f 0 1px,#e2c48f 1px 2.5px),#c9a36a; }
+.guitar-fretboard .guitar-string button::before { height:var(--gauge,1px); transform:translateY(-50%); opacity:1; background:linear-gradient(180deg,var(--string-plain-1),var(--string-plain-2) 55%,var(--string-plain-3)); box-shadow:0 2px 2px var(--string-shadow); }
+.guitar-fretboard .guitar-string.wound button::before { background:repeating-linear-gradient(90deg,var(--string-wound-dark) 0 1px,var(--string-wound-light) 1px 2.5px),var(--string-wound); }
 .guitar-fretboard .guitar-string .string-name { font-weight: var(--fw-bold); }
 .guitar-fretboard .guitar-string button.idle span { background:transparent; border-color:transparent; color:transparent; }
 .guitar-fretboard .guitar-string button:hover span,
-.guitar-fretboard .guitar-string button:focus-visible span { background:#fff9eee6; color:#2c2119; box-shadow:0 0 0 3px #ffffff30,0 2px 6px #0008; }
+.guitar-fretboard .guitar-string button:focus-visible span { background:var(--fret-label-bg); color:var(--fret-label-text); box-shadow:0 0 0 3px var(--fret-label-ring),0 2px 6px var(--string-shadow); }
 .guitar-fretboard .guitar-string .chord-position span,
 .guitar-fretboard .guitar-string .target span,
-.guitar-fretboard .guitar-string .held span { box-shadow:0 2px 6px #0009; }
+.guitar-fretboard .guitar-string .held span { box-shadow:0 2px 6px var(--fret-label-shadow); }
 
 /* ------------------------------------------------------- 3D stage labels */
 /* The string names sit over the headstock; a halo in the page colour keeps them readable on the dark wood in either theme. */
@@ -85,7 +94,7 @@
 /* On a phone the legend, the view switch and Reset view share one line: the switch says "Whole", Reset view is its
    icon, and the hint gives way. The narrowest phones give the bar a second line rather than cut a button off. */
 @media (max-width:600px) {
-  .guitar-stage-bottom { inset:auto 12px 10px; gap:var(--sp-2); flex-wrap:wrap; }
+  .guitar-stage-bottom { inset:auto var(--sp-3) 10px; gap:var(--sp-2); flex-wrap:wrap; }
   .guitar-stage-end { margin-inline-start:auto; }
   .guitar-reset-view, .stage-view-toggle button { padding:var(--sp-1) var(--sp-2); }
   .stage-view-toggle .stage-view-more, .stage-view-toggle .stage-view-long, .guitar-reset-view .reset-text { display:none; }
@@ -96,7 +105,7 @@
 /* What the stage is waiting for, or could not do, in the middle of the stage, readable over the instrument. */
 .stage-status {
   position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:2; max-width:calc(100% - 32px);
-  padding:6px var(--sp-3); border-radius: var(--radius-pill); background:color-mix(in srgb,var(--bg-1) 90%,transparent);
+  padding:var(--sp-1-5) var(--sp-3); border-radius: var(--radius-pill); background:color-mix(in srgb,var(--bg-1) 90%,transparent);
   color:var(--text); font-size: var(--fs-xs); line-height:1.4; text-align:center; pointer-events:none;
 }
 .stage-status:empty { display:none; }
@@ -109,70 +118,70 @@
 .guitar-stage.bowed-stage-3d[data-view] canvas { touch-action:none; user-select:none; -webkit-user-select:none; }
 
 /* What the chosen 3D detail shows, under its buttons in Instrument settings. */
-.instrument-settings-panel .stage-detail-note { margin:6px 0 0; font-size: var(--fs-xs); line-height:1.45; }
+.instrument-settings-panel .stage-detail-note { margin:var(--sp-1-5) 0 0; font-size: var(--fs-xs); line-height:1.45; }
 
 /* ------------------------------------------------- 3D violin and cello stage */
 /* Tape numbers sit beyond the highest string, as the guitar's fret numbers do. */
 .guitar-position-label.tape { color:var(--text-dim); font-family:var(--mono); font-weight: var(--fw-bold); }
 /* Outlined markers leave the dark fingerboard showing through, so their numbers are light. */
-.guitar-position-label.finger.inverse { color:#f4efff; text-shadow:0 1px 2px #000a; }
+.guitar-position-label.finger.inverse { color:var(--finger-inverse); text-shadow:0 1px 2px var(--finger-inverse-shadow); }
 .bowed-stage-preparing { position:absolute; inset:0; display:grid; place-items:center; color:var(--text-dim); font-size: var(--fs-xs); pointer-events:none; }
 .bowed-finger-controls .bowed-stage { min-height:220px; }
 
 /* ------------------------------------------------------- violin and cello */
 .bowed-stage {
   position:relative; flex:1 1 auto; min-height:170px; display:flex; flex-direction:column; justify-content:center;
-  padding:8px 0 38px; overflow:hidden; border-block:1px solid var(--line-soft);
-  background:radial-gradient(ellipse at 42% 50%,#34313a 0%,#24232c 65%,#202029);
+  padding:var(--sp-2) 0 38px; overflow:hidden; border-block:1px solid var(--line-soft);
+  background:radial-gradient(ellipse at 42% 50%,var(--viewer-centre) 0%,var(--model-picture-bg) 65%,var(--viewer-rim));
 }
 .studio-app.free-play .bowed-stage { min-height:300px; }
 .bowed-svg { display:block; width:100%; height:100%; max-height:430px; overflow:visible; touch-action:none; user-select:none; -webkit-user-select:none; }
 .bowed-art, .bowed-tape, .bowed-marker, .bowed-string, .bowed-string-wind, .bowed-string-glint, .bowed-string-silk, .bowed-string-name, .bowed-zone-caption, .bowed-bow { pointer-events:none; }
 .bowed-zone { fill:transparent; cursor:pointer; outline:none; }
-.bowed-zone:hover { fill:#ffffff12; }
-.bowed-zone.bow:hover { fill:#ffffff24; }
-.bowed-zone:focus-visible { fill:#a594ff30; stroke:var(--accent); stroke-width:2; }
-.bowed-tape rect { fill:#f4ebd6; opacity:.92; }
+.bowed-zone:hover { fill:var(--bowed-zone-hover); }
+.bowed-zone.bow:hover { fill:var(--bowed-zone-bow-hover); }
+.bowed-zone:focus-visible { fill:var(--bowed-zone-focus); stroke:var(--accent); stroke-width:2; }
+.bowed-tape rect { fill:var(--bowed-tape); opacity:.92; }
 .bowed-tape text { fill:var(--text-dim); font: var(--fw-bold) var(--fs-sm) var(--mono); text-anchor:middle; }
 .bowed-string { stroke-linecap:round; }
-.bowed-string-shadow { stroke:#000; opacity:.32; pointer-events:none; }
+.bowed-string-shadow { stroke:var(--bowed-shadow); opacity:.32; pointer-events:none; }
 /* Winding, a specular glint along the top of each string, and the coloured silk by the tailpiece. */
-.bowed-string-wind { stroke:#14110f; stroke-opacity:.42; stroke-dasharray:1 1.8; stroke-linecap:butt; }
-.bowed-string-glint { stroke:#fff; stroke-opacity:.55; stroke-linecap:round; }
+.bowed-string-wind { stroke:var(--bowed-wind); stroke-opacity:.42; stroke-dasharray:1 1.8; stroke-linecap:butt; }
+.bowed-string-glint { stroke:var(--bowed-glint); stroke-opacity:.55; stroke-linecap:round; }
 .bowed-string-silk { stroke-linecap:butt; stroke-opacity:.92; }
 /* The whole string hums together: wire, shadow, winding and glint. */
-.bowed-string.sounding { stroke:#86e8ca; }
+.bowed-string.sounding { stroke:var(--bowed-sounding); }
 .bowed-string-set.sounding { animation:bowed-hum 70ms linear infinite alternate; }
 @keyframes bowed-hum { to { transform:translateY(.9px); } }
-.bowed-string-name { fill:#f3e9d6; font: var(--fw-bold) var(--fs-md) var(--mono); opacity:.9; }
-.bowed-zone-caption { fill:#fff3dc; opacity:.8; font: var(--fw-bold) var(--fs-2xs) var(--sans); letter-spacing: var(--tracking-caps); text-anchor:middle; }
-.bowed-marker circle { fill:#fffaf0; stroke:#d7c8b2; stroke-width:1.5; }
-.bowed-stage .bowed-marker circle.marker-shadow { fill:#000; stroke:none; opacity:.35; }
-.bowed-marker text { font:700 var(--bowed-label-size,14px) var(--sans); fill:#302821; text-anchor:middle; dominant-baseline:central; }
-.bowed-marker.target circle { fill:#30253e; stroke:#c4b0ff; stroke-width:3; }
-.bowed-marker.target text { fill:#efe8ff; }
-.bowed-marker.held circle { fill:#8bdfb9; stroke:#e9fff5; stroke-width:3; }
-.bowed-marker.held text { fill:#173c2c; }
-.bowed-marker.hover circle { fill:#fffaf0e6; stroke:var(--accent); stroke-width:2.5; }
-.bowed-marker.possible circle { fill:transparent; stroke:#e6d3a6; stroke-dasharray:4 3; }
-.bowed-marker.chord circle { fill:#efe4d2; stroke:#c9a877; stroke-width:2; }
+.bowed-string-name { fill:var(--bowed-name); font: var(--fw-bold) var(--fs-md) var(--mono); opacity:.9; }
+.bowed-zone-caption { fill:var(--bowed-caption); opacity:.8; font: var(--fw-bold) var(--fs-2xs) var(--sans); letter-spacing: var(--tracking-caps); text-anchor:middle; }
+.bowed-marker circle { fill:var(--marker-fill); stroke:var(--marker-edge); stroke-width:1.5; }
+.bowed-stage .bowed-marker circle.marker-shadow { fill:var(--bowed-shadow); stroke:none; opacity:.35; }
+.bowed-marker text { font:700 var(--bowed-label-size,14px) var(--sans); fill:var(--marker-text); text-anchor:middle; dominant-baseline:central; }
+.bowed-marker.target circle { fill:var(--marker-target); stroke:var(--marker-target-edge); stroke-width:3; }
+.bowed-marker.target text { fill:var(--marker-target-text); }
+.bowed-marker.held circle { fill:var(--marker-held); stroke:var(--marker-held-edge); stroke-width:3; }
+.bowed-marker.held text { fill:var(--marker-held-text); }
+.bowed-marker.hover circle { fill:var(--marker-fill-hover); stroke:var(--accent); stroke-width:2.5; }
+.bowed-marker.possible circle { fill:transparent; stroke:var(--marker-possible); stroke-dasharray:4 3; }
+.bowed-marker.chord circle { fill:var(--marker-chord); stroke:var(--marker-chord-edge); stroke-width:2; }
 .bowed-bow { animation:bowed-stroke 1.5s ease-in-out infinite alternate; }
-.bowed-bow .bow-hair { fill:#fbf7ec; stroke:#b9ab8f; stroke-width:1; }
-.bowed-bow .bow-stick { fill:#5a2a10; stroke:#2e1406; stroke-width:1; }
-.bowed-bow .bow-frog { fill:#15100e; stroke:#3a2d27; }
+.bowed-bow .bow-hair { fill:var(--bow-hair); stroke:var(--bow-hair-edge); stroke-width:1; }
+.bowed-bow .bow-stick { fill:var(--bow-stick); stroke:var(--bow-stick-edge); stroke-width:1; }
+.bowed-bow .bow-frog { fill:var(--bow-frog); stroke:var(--bow-frog-edge); }
 @keyframes bowed-stroke { from { transform:translateY(-28px); } to { transform:translateY(28px); } }
 @media (prefers-reduced-motion:reduce) { .bowed-bow, .bowed-string-set.sounding { animation:none; } }
-.bowed-stage-bottom { position:absolute; inset:auto 18px 8px; display:flex; align-items:center; justify-content:space-between; gap:12px; pointer-events:none; }
+.bowed-stage-bottom { position:absolute; inset:auto 18px var(--sp-2); display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); pointer-events:none; }
 .bowed-stage-bottom .guitar-stage-hint { position:static; font-size: var(--fs-2xs); color:var(--text-dim); }
 
 .bow-card .bow-notes { display:flex; flex-direction:column; gap:var(--sp-2); }
 .bow-note-list { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:var(--sp-1); }
 .bow-note-list button, .bow-open-strings button { width:100%; touch-action:none; user-select:none; -webkit-user-select:none; }
-.bow-note-list button { display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 0; min-height:44px; border:1px solid var(--line-strong); border-radius: var(--radius-sm); background:var(--bg-1); }
+.bow-note-list button { display:flex; flex-direction:column; align-items:center; gap:var(--sp-hair); padding:var(--sp-1-5) 0; min-height:44px; border:1px solid var(--line-strong); border-radius: var(--radius-sm); background:var(--bg-1); }
 .bow-note-list b { font-size: var(--fs-md); font-weight: var(--fw-bold); }
 .bow-note-list small { font: var(--fs-2xs) var(--mono); color:var(--text-faint); }
-.bow-note-list button.sounding, .bow-open-strings button.sounding { background:#167b63; color:#fff; border-color:#167b63; }
-.bow-note-list button.sounding small, .bow-open-strings button.sounding small { color:#ddfff4; }
+.bow-note-list button.sounding, .bow-open-strings button.sounding { background:var(--guitar-played); color:var(--on-played); border-color:var(--guitar-played); }
+.bow-note-list button.sounding small, .bow-open-strings button.sounding small { color:var(--on-played-soft); }
 .bow-card .bow-actions { margin:var(--sp-3) 0 0; }
 .bow-card .bow-actions button { flex:1; }
 
@@ -212,6 +221,8 @@
 .view-tool:hover { color:var(--accent); border-color:var(--accent); }
 .view-tool:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 .guitar-view-controls .view-tool { margin-inline-start:auto; }
+/* A switch among the tools (the drone): pressed, it wears the accent. */
+.view-tool[aria-pressed="true"] { border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
 .guitar-view-controls .view-tool + .guitar-left-toggle { margin-inline-start:var(--sp-3); }
 /* The row now holds a type switch and a tuner beside the selects: where it cannot fit on one line it takes two, rather than cut a select down to a letter. */
 @media (min-width:901px) and (max-width:1250px) {

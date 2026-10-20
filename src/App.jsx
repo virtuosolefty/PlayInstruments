@@ -1,6 +1,12 @@
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import TopBar from './components/TopBar.jsx';
 import Icon from './components/Icon.jsx';
+import ShortcutLegend from './components/ShortcutLegend.jsx';
+import BarInspector from './components/BarInspector.jsx';
+import UndoToast from './components/UndoToast.jsx';
+import { barAt } from './lib/music/passages.js';
+import { barCount } from './lib/practice/barInspect.js';
+import StageViews, { StageAppearance } from './components/StageViews.jsx';
 import LiveHud from './components/LiveHud.jsx';
 import FreePlayBar from './components/FreePlayBar.jsx';
 import SetupDialog from './components/SetupDialog.jsx';
@@ -10,12 +16,13 @@ import StudioHeader, { InstrumentSettings, stageCaption } from './components/Stu
 import GuitarWorkspace from './components/GuitarWorkspace.jsx';
 import BowedWorkspace from './components/BowedWorkspace.jsx';
 import DrumWorkspace from './components/DrumWorkspace.jsx';
-import { chooseVariant, familyOf, instrumentForStudy, instrumentInfo, instrumentKit, normalizeInstrument, studyIdFor, usesKit } from './lib/instruments.js';
+import { chooseVariant, familyOf, INSTRUMENTS, instrumentForStudy, instrumentInfo, instrumentKit, normalizeInstrument, studyIdFor, usesKit } from './lib/instruments.js';
 import Controls from './components/Controls.jsx';
 import PianoRoll from './components/PianoRoll.jsx';
 import Minimap from './components/Minimap.jsx';
 const StaffView = lazy(() => import('./components/StaffView.jsx'));
 const RollGL = lazy(() => import('./components/RollGL.jsx'));
+const PianoWholeView = lazy(() => import('./components/PianoWholeView.jsx'));
 import FeedbackPanel from './components/FeedbackPanel.jsx';
 import PiecePanel from './components/PiecePanel.jsx';
 import HistoryPanel from './components/HistoryPanel.jsx';
@@ -24,7 +31,7 @@ import PathTab from './components/PathTab.jsx';
 import ProgressTab from './components/ProgressTab.jsx';
 import KeyboardPanel from './components/KeyboardPanel.jsx';
 import { MODES, usePracticeEngine } from './hooks/usePracticeEngine.js';
-import { loadScoreFromFile, loadScoreFromUrl } from './lib/score.js';
+import { loadScoreFromFile, loadScoreFromUrl } from './lib/music/score.js';
 import PracticeReport from './components/PracticeReport.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import Drawer from './components/Drawer.jsx';
@@ -37,27 +44,45 @@ import { useKeyboardSetup } from './hooks/useKeyboardSetup.js';
 import { usePathData } from './hooks/usePathData.js';
 import { useAppData } from './hooks/useAppData.js';
 import { useMicNotes, useMicStatus } from './hooks/useMicInput.js';
-import { MIC_STATUS } from './lib/micInput.js';
-import { NARROW_QUERY, useMediaQuery } from './hooks/useMediaQuery.js';
-import { INSTRUMENT_MODES, midiOutput } from './lib/midiOutput.js';
-import { arrangeScore, assessFit, FIT_MODES, FULL_VARIANT, HAND_FILTERS } from './lib/arrange.js';
-import { AUTO_PROFILE } from './lib/devices.js';
-import { emitSyntheticMidi, midiInput, MIDI_STATUS } from './lib/midiInput.js';
-import { DRILL_RATE, nextStep, suggestNext } from './lib/coaching.js';
-import { drillFrom } from './lib/drills.js';
-import { webglAvailable } from './lib/webgl.js';
-import { pageTitle } from './lib/pageTitle.js';
-import { audio } from './lib/audio.js';
-import { playInput } from './lib/playInput.js';
-import { pianoViewRange } from './lib/instrumentView.js';
+import { MIC_STATUS } from './lib/input/micInput.js';
+import { NARROW_QUERY, PHONE_QUERY, SHORT_LANDSCAPE_QUERY, useMediaQuery } from './hooks/useMediaQuery.js';
+import { useRoute } from './hooks/useRoute.js';
+import { INSTRUMENT_MODES, midiOutput } from './lib/input/midiOutput.js';
+import { arrangeScore, assessFit, FIT_MODES, FULL_VARIANT, HAND_FILTERS } from './lib/music/arrange.js';
+import { AUTO_PROFILE } from './lib/input/devices.js';
+import { emitSyntheticMidi, midiInput, MIDI_STATUS } from './lib/input/midiInput.js';
+import { DRILL_RATE, nextStep, suggestNext } from './lib/practice/coaching.js';
+import { drillFrom } from './lib/practice/drills.js';
+import { webglAvailable } from './lib/stage/webgl.js';
+import { pageTitle } from './lib/app/pageTitle.js';
+import { audio } from './lib/audio/audio.js';
+import { playInput } from './lib/input/playInput.js';
+import { pianoViewRange, visibleFrets } from './lib/strings/instrumentView.js';
+import { displayRangeFor } from './lib/piano/keyboard.js';
 import InstrumentControls from './components/InstrumentControls.jsx';
 import LearningHome, { LearningSummary } from './components/LearningHome.jsx';
-import LessonGuide, { LessonBar } from './components/LessonGuide.jsx';
+import LessonGuide, { LessonBar, LessonDock, LessonStepCard } from './components/LessonGuide.jsx';
 import { useLearningFlow } from './hooks/useLearningFlow.js';
 import { useScorePreview } from './hooks/useScorePreview.js';
-import { FIRST_LESSON } from './lib/discovery.js';
-import { loadSettings } from './lib/storage.js';
-import { DEFAULT_SETTINGS, migrateSettings } from './lib/settings.js';
+import { FIRST_LESSON } from './lib/learning/discovery.js';
+import { loadSettings } from './lib/app/storage.js';
+import { DEFAULT_SETTINGS, migrateSettings } from './lib/app/settings.js';
+import { appearanceFor, applyAppearance } from './lib/app/appearance.js';
+import { useCommandPalette } from './hooks/useCommandPalette.js';
+import { useAwake } from './hooks/useAwake.js';
+import { useScreenTransition } from './hooks/useScreenTransition.js';
+import { withNote, withoutNote } from './lib/practice/pieceNotes.js';
+import { soundFor, techniqueFor } from './lib/audio/technique.js';
+import { useShownModel } from './lib/stage/shownModel.js';
+import { droneFor, droneLevel } from './lib/audio/drone.js';
+import { struckSetFor } from './lib/struck/struckSets.js';
+import CommandPalette from './components/CommandPalette.jsx';
+import CoachTour from './components/CoachTour.jsx';
+
+/** How long a cleared history can be brought back before it is deleted. */
+const UNDO_SECONDS = 10;
+/** The piano keys' height on a short landscape screen. */
+const SHORT_KEYBOARD_HEIGHT = 72;
 
 /**
  * The count-in as beat lamps.
@@ -82,7 +107,9 @@ function BeatPads({ countIn }) {
 export default function App({ startupSettings = {} }) {
   // Centralized app state (replaces 7 scattered useState calls)
   const appData = useAppData(startupSettings);
-  const { settings, setSettings, days, refreshVersion, storageFailure } = appData;
+  const { settings, setSettings: storeSettings, days, refreshVersion, storageFailure } = appData;
+  // A change of screen cross-fades (View Transitions); every other update goes straight through.
+  const setSettings = useScreenTransition(storeSettings, settings);
   const instrument = normalizeInstrument(settings.practiceInstrument);
   // Every instrument but the piano brings a kit: its own studies, path and workspace.
   const kitted = usesKit(instrument);
@@ -90,15 +117,14 @@ export default function App({ startupSettings = {} }) {
   const guitar = instrument === 'guitar';
   // Guitar and bass share one studio; violin and cello another.
   const fretted = !!kit?.fretted;
-  const drums = instrument === 'drums';
+  // A struck instrument (struck.js): the drums, the tabla, the handpan, all played in DrumWorkspace.
+  const struck = struckSetFor(instrument);
+  const drums = !!struck;
   const studyId = studyIdFor(settings, instrument);
-  const theme = settings.theme === 'dark' ? 'dark' : 'light';
-  useLayoutEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    document.documentElement.style.colorScheme = theme;
-    // Browser chrome (mobile address bar, installed-app title bar) follows the theme.
-    document.querySelectorAll('meta[name="theme-color"]').forEach((m) => { m.setAttribute('content', theme === 'dark' ? '#0b0b10' : '#f2f0eb'); m.removeAttribute('media'); });
-  }, [theme]);
+  const look = appearanceFor(settings);
+  const theme = look.theme;
+  // Theme, dark accent, true black and text size are attributes on <html> that tokens.css keys on.
+  useLayoutEffect(() => { applyAppearance(document.documentElement, look); }, [look.theme, look.accent, look.black, look.text]);
   const [freePlay, setFreePlay] = useState(!!settings.entryFreePlay);
   useEffect(()=>{if(settings.entryFreePlay)setSettings(s=>({...s,entryFreePlay:false}));},[]);
   const [focus, setFocus] = useState(false);
@@ -108,7 +134,7 @@ export default function App({ startupSettings = {} }) {
   const [setupOpen, setSetupOpen] = useState(false);
   const [tunerOpen, setTunerOpen] = useState(false);
   // A real instrument, heard through the microphone, plays as a controller would. A drum kit has no one pitch to hear.
-  const micChosen = settings.inputMethod === 'mic' && !drums;
+  const micChosen = settings.inputMethod === 'mic' && !(struck && !struck.pitched);
   // Chosen on an earlier visit, the microphone still waits for a click or a key press on this one:
   // a page does not start listening because it was opened.
   const [gestured, setGestured] = useState(false);
@@ -125,7 +151,16 @@ export default function App({ startupSettings = {} }) {
   const micListening = mic.status === MIC_STATUS.ON;
   const [requestedTab, setRequestedTab] = useState(null);
   const [libraryInstrument, setLibraryInstrument] = useState(settings.practiceInstrument ?? 'piano');
-  useEffect(() => { audio.setInstrumentType(instrument); }, [instrument]);
+  // A bowed instrument plucked with the fingers is its own voice (technique.js).
+  const technique = techniqueFor(settings, instrument);
+  // What is heard is what is seen: a model the whole-instrument view shows in the instrument's place has its own voice.
+  const shownModel = useShownModel();
+  useEffect(() => { const { voice, transpose } = soundFor(instrument, technique, shownModel); audio.setInstrumentType(voice, { transpose }); }, [instrument, technique, shownModel]);
+  // The drone sounds while you practise an instrument that has one (drone.js), and stops on the learning home.
+  const practising = settings.learningView !== 'home';
+  const drone = settings.drone && practising ? droneFor(instrument) : null;
+  const droneDb = droneLevel(settings);
+  useEffect(() => { audio.setDrone(drone, droneDb); }, [drone, droneDb]);
 
   // UI state (not data-related, stays local)
   const [library, setLibrary] = useState([]);
@@ -340,13 +375,19 @@ export default function App({ startupSettings = {} }) {
   const path = usePathData(library, days, refreshVersion, instrument);
 
   const narrow = useMediaQuery(NARROW_QUERY);
+  const phone = useMediaQuery(PHONE_QUERY);
+  // Sideways, the keys give up some height so the notes above them have room to fall.
+  const shortLandscape = useMediaQuery(SHORT_LANDSCAPE_QUERY);
+  const keyboardHeight = shortLandscape ? Math.min(SHORT_KEYBOARD_HEIGHT, settings.pianoHeight ?? 104) : (settings.pianoHeight ?? 104);
+  // Eighty-eight keys on a phone are 7px each. Until the player picks a range themselves, a phone fits the piece.
+  const phoneFit = phone && (settings.pianoRange ?? 'full') === 'full' && !settings.pianoRangeChosen;
 
   const rollRange = useMemo(() => {
     if (settings.fit === FIT_MODES.OFF) return null;
     if (!deviceName && settings.keyboardId === AUTO_PROFILE) return null;
     return keyWindow;
   }, [settings.fit, settings.keyboardId, deviceName, keyWindow]);
-  const visiblePianoRange = useMemo(() => pianoViewRange(score, settings.pianoRange, settings.typingOctave, rollRange), [score, settings.pianoRange, settings.typingOctave, rollRange]);
+  const visiblePianoRange = useMemo(() => (settings.learningView === 'lesson' && settings.pianoRange === 'fit') || phoneFit ? displayRangeFor(score, narrow ? 9 : 25) : pianoViewRange(score, settings.pianoRange, settings.typingOctave, rollRange), [score, settings.pianoRange, settings.typingOctave, settings.learningView, narrow, phoneFit, rollRange]);
 
   const bestCombo = useMemo(
     () => (score ? appData.getBestCombo(score.id, variant) : 0),
@@ -443,7 +484,7 @@ export default function App({ startupSettings = {} }) {
   },[settings.startIntent,library.length,learning.entries]);
   const toggleFavorite=id=>setSettings(s=>({...s,favoritePieces:(s.favoritePieces??[]).includes(id)?s.favoritePieces.filter(f=>f!==id):[...(s.favoritePieces??[]),id]}));
   const openProgress=()=>{learning.leave();setLibraryOpen(true);setRequestedTab({id:'progress',at:Date.now()});};
-  useEffect(() => { if (learning.active && narrow) setFeedbackOpen(true); }, [learning.active, narrow, learning.record.step]);
+  useEffect(() => { if (learning.active && narrow) setFeedbackOpen(false); }, [learning.active, narrow, learning.record.step]);
   useEffect(() => { if (learning.active && narrow && engine.playing) setFeedbackOpen(false); }, [learning.active, narrow, engine.playing]);
 
   // Everything to do with picking a stretch of music and hearing, looping or
@@ -520,7 +561,7 @@ export default function App({ startupSettings = {} }) {
   const buildDrill = useCallback(() => {
     const drill = drillFrom(rawScore, troubleSpots);
     if (!drill) {
-      setError('Nothing to drill yet — play a run or two first and the trouble spots will build up.');
+      setError('Nothing to drill yet: play a run or two first and the trouble spots will build up.');
       return;
     }
     setSettings((s) => ({ ...s, loop: null, rate: DRILL_RATE }));
@@ -555,10 +596,39 @@ export default function App({ startupSettings = {} }) {
     }
   }, [rawScore, library, localScores, pickSong]);
 
+  // Clearing a piece's history waits UNDO_SECONDS with an Undo before anything is deleted. A second Clear in that
+  // time deletes the first at once; leaving the page in that time deletes nothing.
+  const [pendingClear, setPendingClear] = useState(null);
+  const clearTimer = useRef(null);
+  // A piece's note for next time goes with its history.
+  const forgetHistory = useCallback(songId => { appData.clearSongHistory(songId); setSettings(s => ({ ...s, pieceNotes: withoutNote(s.pieceNotes, songId) })); }, [appData, setSettings]);
   const clearHistory = useCallback(() => {
     if (!score) return;
-    appData.clearSongHistory(score.id);
-  }, [score, appData]);
+    if (pendingClear) { clearTimeout(clearTimer.current); forgetHistory(pendingClear.songId); }
+    const item = { songId: score.id, title: score.title };
+    setPendingClear(item);
+    clearTimer.current = setTimeout(() => { forgetHistory(item.songId); setPendingClear(null); }, UNDO_SECONDS * 1000);
+  }, [score, forgetHistory, pendingClear]);
+  const undoClear = useCallback(() => { clearTimeout(clearTimer.current); setPendingClear(null); }, []);
+  useEffect(() => () => clearTimeout(clearTimer.current), []);
+  // Playing the piece again ends the undo there: the old history goes now, so the new run is not swept away with it.
+  useEffect(() => {
+    if (!engine.playing || !pendingClear || pendingClear.songId !== score?.id) return;
+    clearTimeout(clearTimer.current);
+    forgetHistory(pendingClear.songId);
+    setPendingClear(null);
+  }, [engine.playing, pendingClear, score?.id, forgetHistory]);
+  // Your own line for next time (pieceNotes.js): written in the report, shown in the guide before the next run.
+  const pieceNote = score && pendingClear?.songId !== score.id ? settings.pieceNotes?.[score.id] ?? null : null;
+  const setNoteFor = (id, text) => setSettings(s => ({ ...s, pieceNotes: withNote(s.pieceNotes, id, text) }));
+  const applyNoteAction = a => setSettings(s => ({ ...s, loop: a.loop, ...(a.rate ? { rate: a.rate } : {}) }));
+  const closeError = useCallback(() => setError(null), []);
+  // Every piece and study, for the teacher's progress page (it covers every instrument, not the one on stage).
+  const allPieces = useMemo(() => [...library, ...INSTRUMENTS.filter(id => id !== 'piano').flatMap(id => instrumentKit(id)?.studies ?? [])], [library]);
+  // While a cleared history waits for its undo, its stars and best streak are hidden with it.
+  const shownStars = useMemo(() => (pendingClear ? { ...starsBySong, [pendingClear.songId]: undefined } : starsBySong), [starsBySong, pendingClear]);
+  const shownRates = useMemo(() => (pendingClear ? { ...starRates, [pendingClear.songId]: undefined } : starRates), [starRates, pendingClear]);
+  const shownCombo = pendingClear && pendingClear.songId === score?.id ? 0 : bestCombo;
 
   const startAudio = useCallback(async () => {
     try { await engine.actions.ensureAudio(); } catch (err) { setError(`Could not enable sound: ${err.message}. Open Input & sound to try again.`); }
@@ -605,15 +675,109 @@ export default function App({ startupSettings = {} }) {
   // already starts the audio engine, so showing both is two buttons asking for
   // the same click.
   const showStartBanner = !engine.audioReady && !engine.playing && !beforeFirstNote;
-  const stageNote = stageCaption(instrument, freePlay);
+  const stageNote = stageCaption(instrument, freePlay, technique);
+  // An address for every screen, so Back goes back and a screen can be bookmarked (useRoute.js, route.js).
+  const route = useMemo(() => {
+    const view = learning.homeOpen ? 'home' : learning.active ? 'lesson' : libraryOpen ? 'library' : 'studio';
+    return {
+      view, instrument,
+      id: view === 'lesson' ? (learning.lesson?.id ?? null) : view === 'studio' && !freePlay ? (score?.id ?? null) : null,
+      free: view === 'studio' && freePlay,
+    };
+  }, [learning.homeOpen, learning.active, learning.lesson?.id, libraryOpen, instrument, freePlay, score?.id]);
+  // One step toward an address from the bar: an instrument first, then the screen, then the piece. False when the
+  // address names something the app does not have (a lesson or study of another instrument, a removed piece).
+  const applyRoute = target => {
+    if (target.id && usesKit(target.instrument) && target.view !== 'lesson' && instrumentForStudy(target.id) !== target.instrument) return false;
+    if (target.view === 'home' || target.view === 'lesson') {
+      if (target.instrument !== instrument) { changeInstrument(target.instrument); return true; }
+      if (target.view === 'home') { if (!learning.homeOpen) learning.openHome(); return true; }
+      if (!learning.entries.some(entry => entry.id === target.id)) return false;
+      learning.startLesson(target.id);
+      return true;
+    }
+    setLibraryOpen(target.view === 'library');
+    if (learning.homeOpen || learning.active) learning.leave();
+    if (target.view === 'library' || target.free) {
+      if (freePlay !== target.free) setFreePlay(target.free);
+      if (target.instrument !== instrument) changeInstrument(target.instrument);
+      return true;
+    }
+    if (freePlay) setFreePlay(false);
+    if (target.id && target.id !== score?.id) {
+      if (usesKit(target.instrument)) { selectStudy(target.id); return true; }
+      const entry = library.find(e => e.id === target.id);
+      // A piece that is not there: still go to its instrument, then let the address go.
+      if (!entry) { if (target.instrument !== instrument) changeInstrument(target.instrument); return false; }
+      selectPianoSong(entry);
+      return true;
+    }
+    if (target.instrument !== instrument) changeInstrument(target.instrument);
+    return true;
+  };
+  useRoute(route, applyRoute, library.length > 0);
+  // Arriving in the studio from another screen puts the focus on its title, as the home and a lesson do with theirs
+  // (ui-ux-pro-max focus-on-route-change). Closing the library is left to the drawer, which returns the focus itself.
+  const lastView = useRef(route.view);
+  useEffect(() => {
+    const from = lastView.current;
+    lastView.current = route.view;
+    if (from === route.view || route.view !== 'studio' || from === 'library') return undefined;
+    const frame = requestAnimationFrame(() => document.querySelector('.studio-heading h1')?.focus({ preventScroll: true }));
+    return () => cancelAnimationFrame(frame);
+  }, [route.view]);
+
+  // The inspector's bar: chosen by clicking the timeline or the roll (never by a keyboard seek or "Restart
+  // passage"), never while a run plays, and let go of on a new piece or when a run starts.
+  const [inspectedBar, setInspectedBar] = useState(null);
+  // The note clicked on the roll (its time and pitch), when the click was on one; the bar alone otherwise.
+  const [inspectedNote, setInspectedNote] = useState(null);
+  const engineNow = useRef(engine);
+  engineNow.current = engine;
+  useEffect(() => { setInspectedBar(null); }, [score?.id, learning.active, freePlay]);
+  useEffect(() => { if (engine.playing) setInspectedBar(null); }, [engine.playing]);
+  const chooseBarAt = useCallback(time => {
+    if (!score || learning.active || freePlay || engineNow.current.playing) return;
+    setInspectedBar(Math.min(barCount(score), barAt(time, score)));
+  }, [score, learning.active, freePlay]);
+  const seekAndChoose = useCallback((time, lane = null) => {
+    engineNow.current.actions.seek(time);
+    chooseBarAt(time);
+    setInspectedNote(lane == null ? null : { time, midi: lane });
+  }, [chooseBarAt]);
+  const chooseBarOnly = useCallback(time => { setInspectedNote(null); chooseBarAt(time); }, [chooseBarAt]);
+  const openLibrary = () => { learning.leave(); setLibraryInstrument(instrument); setLibraryOpen(true); setRequestedTab({ id: 'songs', at: Date.now() }); };
+  // Ctrl+K: the palette runs the same functions as the controls it names.
+  const palette = useCommandPalette({ settings, setSettings, instrument, library, learning, engine, score, freePlay, focus, theme,
+    selectPianoSong, selectStudy, changeInstrument, changeWorkspace, openLibrary, openProgress, openSetup, openTuner, toggleLoop, hearOrTry,
+    toggleFocus: () => setFocus(v => !v), startAudio });
+  // The studio's first-visit tour, or again from Help. Never over a lesson, free play, a report or a run.
+  const [tourAgain, setTourAgain] = useState(false);
+  const showTour = (tourAgain || !settings.studioTourDone) && settings.onboarded && !learning.homeOpen && !learning.active && !freePlay
+    && !!score && !engine.playing && !engine.lastResult && !setupOpen && !tunerOpen && !palette.open;
+  const endTour = useCallback(() => { setTourAgain(false); setSettings(s => ({ ...s, studioTourDone: true })); }, [setSettings]);
+  // While a run plays, the chrome around the stage fades back; moving the pointer brings it back for a moment.
+  const awake = useAwake(engine.playing);
+  // The transport: on a phone above the stage, where its one-row deck and More sheet live; on a wide screen in one
+  // bar under the keys, beside the hands, with Practice settings moved up beside Focus.
+  const deck = !freePlay && <Controls
+    settings={settings}
+    setSettings={setSettings}
+    engine={engine}
+    score={score}
+    onShowFeedback={narrow ? () => setFeedbackOpen(true) : null}
+    onHearOrTry={hearOrTry}
+    onToggleLoop={toggleLoop}
+    headerSlot={!narrow}
+  />;
   useEffect(() => { document.title = pageTitle({ piece: score?.title, instrument: instrumentInfo(instrument).label, freePlay, home: learning.homeOpen }); }, [score?.title, instrument, freePlay, learning.homeOpen]);
 
   // Setup chrome recedes while you play. Opacity only — collapsing any of it
   // would reflow the toolbar at the exact moment you are trying to hit a note.
   return (
-    <div className={`app studio-app ${kitted ? 'guitar-mode' : 'piano-mode'} ${instrument}-mode ${learning.active ? 'guided-lesson' : ''} ${engine.playing ? 'focused' : ''} ${focus ? 'focus-view' : ''} ${freePlay ? 'free-play' : ''}`}>
+    <div className={`app studio-app ${kitted ? 'guitar-mode' : 'piano-mode'} ${instrument}-mode ${learning.active ? 'guided-lesson' : ''} ${engine.playing ? 'focused' : ''} ${engine.playing && !awake ? 'receded' : ''} ${focus ? 'focus-view' : ''} ${freePlay ? 'free-play' : ''}`}>
       <a className="skip-link" href="#practice-stage">Skip to practice</a>
-      <TopBar onLearn={learning.openHome} learningHome={learning.homeOpen} theme={theme} onToggleTheme={() => setSettings(s => ({ ...s, theme: theme === 'light' ? 'dark' : 'light' }))} onSetup={openSetup} onTuner={openTuner} onProgress={openProgress}
+      <TopBar settings={settings} setSettings={setSettings} onSearch={() => palette.setOpen(true)} onTour={() => { learning.leave(); setFreePlay(false); setTourAgain(true); }} onLearn={learning.openHome} learningHome={learning.homeOpen} theme={theme} onToggleTheme={() => setSettings(s => ({ ...s, theme: theme === 'light' ? 'dark' : 'light' }))} onSetup={openSetup} onTuner={openTuner} onProgress={openProgress}
         midiState={midiState} micListening={micListening} micChosen={micChosen} midiChosen={settings.inputMethod === 'midi'} deviceName={deviceName}
         onSelectDevice={(id) => midiInput.select(id)}
         storageProblem={storageProblem}
@@ -648,7 +812,7 @@ export default function App({ startupSettings = {} }) {
         </div>
       )}
 
-      {learning.homeOpen ? <LearningHome learning={learning} path={path} storageProblem={storageProblem} instrument={instrument} days={days} settings={settings} setSettings={setSettings} preview={preview} onPick={kitted?entry=>selectStudy(entry.id):selectPianoSong} onFavorite={toggleFavorite} onBackup={openProgress} onInstrument={changeInstrument} onExplore={() => changeWorkspace(true)} onLibrary={() => { learning.leave(); setLibraryInstrument(instrument); setLibraryOpen(true); setRequestedTab({ id: 'songs', at: Date.now() }); }} /> : <div
+      {learning.homeOpen ? <LearningHome learning={learning} path={path} storageProblem={storageProblem} instrument={instrument} days={days} settings={settings} setSettings={setSettings} preview={preview} onPick={kitted?entry=>selectStudy(entry.id):selectPianoSong} onFavorite={toggleFavorite} onBackup={openProgress} onInstrument={changeInstrument} onExplore={() => changeWorkspace(true)} onLibrary={openLibrary} /> : <div
         className={`app-body ${libraryOpen ? 'library-open' : ''} ${
           feedbackOpen ? 'feedback-open' : ''
         }`}
@@ -673,8 +837,8 @@ export default function App({ startupSettings = {} }) {
                 onPick={selectPianoSong}
                 onLoadFile={handleLoadFile}
                 window={keyWindow}
-                starsBySong={starsBySong}
-                starRates={starRates}
+                starsBySong={shownStars}
+                starRates={shownRates}
                 suggestedId={suggested?.id}
                 onListen={listenTo}
               />
@@ -702,9 +866,10 @@ export default function App({ startupSettings = {} }) {
                 goalMinutes={settings.dailyGoalMinutes}
                 onGoalChange={(dailyGoalMinutes) => setSettings((s) => ({ ...s, dailyGoalMinutes }))}
                 library={kitted ? kit.studies : library}
-                starsBySong={starsBySong}
+                starsBySong={shownStars}
                 onPick={kitted ? entry => selectStudy(entry.id) : selectPianoSong}
                 onRestored={refreshAfterRestore}
+                pieces={allPieces}
               /></>
             }
           />
@@ -715,18 +880,10 @@ export default function App({ startupSettings = {} }) {
         <main className="pane center">
           <StudioHeader score={score} settings={settings} onInstrumentChange={changeInstrument} freePlay={freePlay} onFreePlay={changeWorkspace} focus={focus} onFocus={() => setFocus(v => !v)}
             instrumentSettings={<InstrumentSettings settings={settings} setSettings={setSettings} instrument={instrument}>
-              {!kitted && <InstrumentControls settings={settings} setSettings={setSettings} sustain={sustain} onSustain={value => playInput.sustain(value)} />}
+              {!kitted && <InstrumentControls settings={settings} setSettings={setSettings} shownRange={phoneFit ? 'fit' : undefined} sustain={sustain} onSustain={value => playInput.sustain(value)} />}
             </InstrumentSettings>} />
-          {learning.active ? <LessonBar learning={learning} engine={engine} onShowGuide={narrow ? () => setFeedbackOpen(true) : null}/> : !freePlay && <Controls
-            settings={settings}
-            setSettings={setSettings}
-            engine={engine}
-            score={score}
-            onShowFeedback={narrow ? () => setFeedbackOpen(true) : null}
-            onHearOrTry={hearOrTry}
-            onToggleLoop={toggleLoop}
-          />}
-          {freePlay && !learning.active && <FreePlayBar kit={kit} onTuner={kit?.tuning ? openTuner : null} onSetup={openSetup} />}
+          {learning.active ? <LessonBar learning={learning} engine={engine} onShowGuide={narrow ? () => setFeedbackOpen(true) : null}/> : narrow && deck}
+          {freePlay && !learning.active && <FreePlayBar kit={kit} technique={technique} onTuner={kit?.tuning ? openTuner : null} onSetup={openSetup} drone={droneFor(instrument) ? { on: !!settings.drone, onToggle: () => setSettings(s => ({ ...s, drone: !s.drone })) } : null} />}
 
           {!freePlay && !learning.active && <Minimap theme={theme}
             score={score}
@@ -735,11 +892,15 @@ export default function App({ startupSettings = {} }) {
             onLoopChange={loop => setSettings(s => ({ ...s, loop }))}
             engine={engine}
             onSeek={engine.actions.seek}
+            onChooseBar={chooseBarOnly}
           />}
 
           {/* Everything that floats over the notes lives in here, so it is
               positioned against the roll rather than the whole pane — anchoring
               to the pane puts the wait hint on top of the toolbar. */}
+          {!kitted && <StageViews settings={settings} setSettings={setSettings} freePlay={freePlay} lesson={learning.active} />}
+          {learning.active && !narrow && <LessonStepCard learning={learning} engine={engine} score={score} instrument={instrument} onSetup={openSetup} path={path} />}
+
           {!freePlay && !kitted && settings.view !== 'roll' && (
             /* Engraving is the most intricate thing here and the only part
                using a third-party renderer. Its own boundary, so a piece
@@ -747,7 +908,7 @@ export default function App({ startupSettings = {} }) {
             <ErrorBoundary
               fallback={
                 <div className="staff-view empty-staff">
-                  This piece could not be engraved. The falling notes still work — switch back to Roll.
+                  This piece could not be engraved. The falling notes still work: switch back to Roll.
                 </div>
               }
             >
@@ -768,12 +929,12 @@ export default function App({ startupSettings = {} }) {
               that is currently at full feature parity. */}
           {/* The chord and scale explorers go in the side column; on a narrow screen that column is a slide-over that
               free play has no button to open, so there they stay inline under the stage. */}
-          {fretted ? <GuitarWorkspace key={instrument} instrument={instrument} onInstrument={changeInstrument} onTuner={openTuner} score={stageScore} engine={stageEngine} settings={settings} setSettings={setSettings} freePlay={freePlay} onFreePlay={() => changeWorkspace(true)}
+          {fretted ? <GuitarWorkspace key={instrument} appearance={<StageAppearance settings={settings} setSettings={setSettings} />} instrument={instrument} onInstrument={changeInstrument} onTuner={openTuner} score={stageScore} engine={stageEngine} settings={settings} setSettings={setSettings} freePlay={freePlay} onFreePlay={() => changeWorkspace(true)}
             onStudy={selectStudy}
-            inspector={focus || narrow ? null : chordInspector} onError={setError} onContextLost={why => { setSettings(s => ({ ...s, renderer: 'canvas' })); setError(`Switched to 2D Trainer — ${why}.`); }}
-          /> : drums ? <DrumWorkspace score={stageScore} engine={stageEngine} settings={settings} freePlay={freePlay} onFreePlay={() => changeWorkspace(true)}
-            onStudy={selectStudy} inspector={focus || narrow ? null : chordInspector} listening={settings.mode === MODES.LISTEN} compact={narrow} onError={e => setError(`Could not play this drum: ${e.message}`)}
-          /> : kitted ? <BowedWorkspace key={instrument} instrument={instrument} onInstrument={changeInstrument} onTuner={openTuner} score={stageScore} engine={stageEngine} settings={settings} setSettings={setSettings} freePlay={freePlay} onFreePlay={() => changeWorkspace(true)}
+            inspector={focus || narrow ? null : chordInspector} onError={setError} onContextLost={why => { setSettings(s => ({ ...s, renderer: 'canvas' })); setError(`Switched to 2D Trainer: ${why}.`); }}
+          /> : drums ? <DrumWorkspace key={instrument} instrument={instrument} score={stageScore} appearance={<StageAppearance settings={settings} setSettings={setSettings} />} engine={stageEngine} settings={settings} freePlay={freePlay} onFreePlay={() => changeWorkspace(true)}
+            onStudy={selectStudy} inspector={focus || narrow ? null : chordInspector} listening={settings.mode === MODES.LISTEN} compact={narrow} onError={e => setError(`Could not play the ${instrumentInfo(instrument).label.toLowerCase()}: ${e.message}`)}
+          /> : kitted ? <BowedWorkspace key={instrument} appearance={<StageAppearance settings={settings} setSettings={setSettings} />} instrument={instrument} onInstrument={changeInstrument} onTuner={openTuner} score={stageScore} engine={stageEngine} settings={settings} setSettings={setSettings} freePlay={freePlay} onFreePlay={() => changeWorkspace(true)}
             onStudy={selectStudy} inspector={focus || narrow ? null : chordInspector}
           /> : useGL ? (
             <Suspense fallback={<div className="roll-gl" />}>
@@ -782,17 +943,19 @@ export default function App({ startupSettings = {} }) {
                 engine={stageEngine}
                 pixelsPerSecond={settings.pps}
                 troubleSpots={troubleSpots}
-                range={visiblePianoRange} settings={settings} keyboardHeight={settings.pianoHeight ?? 104}
+                range={visiblePianoRange} settings={settings} keyboardHeight={keyboardHeight} fingers={learning.active}
                 labels={settings.noteLabels}
                 ghost={ghost}
-                bestCombo={bestCombo}
-                onSeek={engine.actions.seek}
+                bestCombo={shownCombo}
+                onSeek={seekAndChoose}
                 onPreviewNote={previewNote}
                 onContextLost={(why) => {
                   setSettings((s) => ({ ...s, renderer: 'canvas' }));
-                  setError(`Switched back to the 2D view — ${why}.`);
+                  setError(`Switched back to the 2D view: ${why}.`);
                 }}
               />
+              {/* Only in free play, so its models and viewer code load when someone can use them. */}
+              {freePlay && <Suspense fallback={null}><PianoWholeView freePlay={freePlay} quality={settings.stageQuality} /></Suspense>}
             </Suspense>
           ) : (
             <PianoRoll
@@ -800,12 +963,12 @@ export default function App({ startupSettings = {} }) {
               engine={stageEngine}
               pixelsPerSecond={settings.pps}
               troubleSpots={troubleSpots}
-              onSeek={engine.actions.seek}
+              onSeek={seekAndChoose}
               onPreviewNote={previewNote}
-              range={visiblePianoRange} settings={settings} keyboardHeight={settings.pianoHeight ?? 104}
+              range={visiblePianoRange} settings={settings} keyboardHeight={keyboardHeight} fingers={learning.active}
               labels={settings.noteLabels}
               ghost={ghost}
-              bestCombo={bestCombo}
+              bestCombo={shownCombo}
             />
           )}
 
@@ -846,6 +1009,9 @@ export default function App({ startupSettings = {} }) {
               scoreNotes={score?.notes ?? []}
               onHearPassage={hearReportPassage}
               next={reportNext}
+              note={pieceNote}
+              notePieceId={score?.id ?? null}
+              onNoteChange={score ? setNoteFor : null}
             />
           )}
 
@@ -875,9 +1041,12 @@ export default function App({ startupSettings = {} }) {
           )}
           </div>
           {/* One status line: what the stage shows on the left, how it is set up on the right. Shortcuts live in Help. */}
+          {learning.active && narrow && <LessonDock learning={learning} engine={engine} score={score} instrument={instrument} onShowGuide={() => setFeedbackOpen(true)} />}
+          {!narrow && !learning.active && deck}
           <footer className="studio-footer">
             <span className="stage-caption"><i />{stageNote.caption}<span className="stage-description">{stageNote.description}</span></span>
-            <span>{fretted ? `${guitar ? '' : `${kit.label} · `}Standard tuning · ${settings.guitarFrets ?? 12} frets · ` : kitted ? `${kit.label} · ${instrumentInfo(instrument).detail} · ` : ''}{freePlay ? 'Explore freely · no score recorded' : <><kbd>Space</kbd> play / pause{learning.active && <span className="footer-detail"> · Your lesson is saved automatically</span>}</>}</span>
+            {kitted && <span className="footer-meta">{fretted ? `${guitar ? '' : `${kit.label} · `}${kit.tuningLabel ?? 'Standard tuning'} · ${visibleFrets(settings.guitarFrets, phone)} frets` : `${kit.label} · ${instrumentInfo(instrument).detail}`}</span>}
+            <span>{freePlay ? 'Explore freely · no score recorded' : learning.active ? <><kbd>Space</kbd> play / pause<span className="footer-detail"> · Your lesson is saved automatically</span></> : <ShortcutLegend />}</span>
           </footer>
         </main>
 
@@ -887,23 +1056,27 @@ export default function App({ startupSettings = {} }) {
 
         <aside className="pane right" aria-label={learning.active ? 'Lesson guide' : 'This run'}>
           {narrow && <button className="close-feedback" onClick={() => setFeedbackOpen(false)} aria-label={learning.active ? 'Close lesson guide' : 'Close this run panel'}><Icon name="close" size={14} /> Close</button>}
-          {learning.active ? <LessonGuide learning={learning} engine={engine} score={score} instrument={instrument} onSetup={openSetup} path={path} typingOctave={settings.typingOctave ?? 0}/> : freePlay && kitted ? <div ref={setChordInspector} className="chord-inspector"/> : freePlay ? <div className="section free-play-coach"><h2>Follow your curiosity.</h2><p>Play a few notes, find a chord you like, and make it your own.</p><div className="free-play-tip">Click the keys, play a MIDI controller, or use your computer keyboard: the row from A to J is the white keys from middle C.</div><p className="hint">Free play is not graded and does not add practice results.</p></div> : beforeFirstNote ? (
+          {learning.active ? <LessonGuide learning={learning} engine={engine} score={score} instrument={instrument} onSetup={openSetup} path={path} typingOctave={settings.typingOctave ?? 0} stageCard={!narrow}/> : freePlay && kitted ? <div ref={setChordInspector} className="chord-inspector"/> : freePlay ? <div className="section free-play-coach"><h2>Follow your curiosity.</h2><p>Play a few notes, find a chord you like, and make it your own.</p><div className="free-play-tip">Click the keys, play a MIDI controller, or use your computer keyboard: the row from A to J is the white keys from middle C.</div><p className="hint">Free play is not graded and does not add practice results.</p></div> : inspectedBar && score && !engine.playing ? (
+            <BarInspector score={score} bar={inspectedBar} note={inspectedNote} troubleSpots={troubleSpots} onSelect={bar => { setInspectedNote(null); setInspectedBar(bar); }}
+              onHear={hearPassage} onLoop={(from, to) => setSettings(s => ({ ...s, loop: [from, to] }))} onClose={() => setInspectedBar(null)} />
+          ) : beforeFirstNote ? (
             <>
               <PiecePanel
                 score={score}
                 history={history}
                 assessment={kitted ? null : assessment}
                 mode={settings.mode} rate={settings.rate} loop={settings.loop} onHear={hearOrTry} onWait={() => setSettings(s => ({ ...s, mode: MODES.WAIT }))}
-                bestStars={score ? (starsBySong[score.id] ?? 0) : 0}
-                bestStarsRate={score ? (starRates[score.id] ?? 1) : 1}
+                bestStars={score ? (shownStars[score.id] ?? 0) : 0}
+                bestStarsRate={score ? (shownRates[score.id] ?? 1) : 1}
                 audioReady={engine.audioReady}
                 onPlay={() => engine.actions.play()}
                 onLeaveDrill={leaveDrill}
                 playing={engine.playing}
+                note={pieceNote} onNoteAction={applyNoteAction} onClearNote={() => setNoteFor(score.id, '')}
               />
               {/* Show if current variant has sessions, OR if there's any history in other variants.
                   This ensures the "Show runs in other arrangements" button is reachable. */}
-              {((history?.sessions?.length ?? 0) > 0 || (appData.getSongHistory(score?.id)?.sessions?.length ?? 0) > 0) && score && (
+              {pendingClear?.songId !== score?.id && ((history?.sessions?.length ?? 0) > 0 || (appData.getSongHistory(score?.id)?.sessions?.length ?? 0) > 0) && score && (
                 <HistoryPanel
                   history={history}
                   songId={score?.id}
@@ -919,7 +1092,7 @@ export default function App({ startupSettings = {} }) {
             <>
               <FeedbackPanel playing={engine.playing} summary={engine.summary} events={engine.events} score={score} listening={settings.mode === MODES.LISTEN} waitingMode={settings.mode === MODES.WAIT} />
               {/* Show if current variant has sessions, OR if there's any history in other variants. */}
-              {((history?.sessions?.length ?? 0) > 0 || (appData.getSongHistory(score?.id)?.sessions?.length ?? 0) > 0) && score && (
+              {pendingClear?.songId !== score?.id && ((history?.sessions?.length ?? 0) > 0 || (appData.getSongHistory(score?.id)?.sessions?.length ?? 0) > 0) && score && (
                 <HistoryPanel
                   history={history}
                   songId={score?.id}
@@ -972,6 +1145,9 @@ export default function App({ startupSettings = {} }) {
           />
       } />}
       {tunerOpen && <TunerDialog instrument={instrument} onClose={() => setTunerOpen(false)} />}
+      {palette.open && <CommandPalette commands={palette.commands} onClose={() => palette.setOpen(false)} />}
+      {showTour && <CoachTour onDone={endTour} />}
+      <UndoToast message={pendingClear ? `History for ${pendingClear.title} cleared` : ''} onUndo={undoClear} />
       <AppModals
         practiceInstrument={settings.practiceInstrument}
         onInstrumentChange={family => changeInstrument(chooseVariant(settings.variants, family))}
@@ -985,7 +1161,7 @@ export default function App({ startupSettings = {} }) {
         onConnectMidi={() => midiInput.connect()}
         isDev={import.meta.env.DEV}
         error={error}
-        onErrorClose={() => setError(null)}
+        onErrorClose={closeError}
       />
 
       <CalibratorDialogs

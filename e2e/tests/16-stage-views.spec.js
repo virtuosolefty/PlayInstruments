@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { seedSettings } from '../helpers/studio.js';
-import { chooseWorkspace as workspace } from '../helpers/workspace.js';
+import { seedSettings, STAGE_TIMEOUT } from '../helpers/studio.js';
+import { chooseWorkspace as workspace, openView } from '../helpers/workspace.js';
+import { choose } from '../helpers/listbox.js';
 
 /**
  * The guitar stage's camera views: lessons look through a fixed long lens
@@ -29,13 +30,14 @@ async function drag(page, from, by) {
 const moved = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
 /** Starts recording every note the instrument sends; read them back with `notesPlayed`. */
-const listenForNotes = page => page.evaluate(async () => { window.__notes = []; (await import('/src/lib/midiInput.js')).midiInput.onMessage(m => window.__notes.push(m)); });
+const listenForNotes = page => page.evaluate(async () => { window.__notes = []; (await import('/src/lib/input/midiInput.js')).midiInput.onMessage(m => window.__notes.push(m)); });
 const notesPlayed = page => page.evaluate(() => window.__notes.filter(m => m.type === 'noteon').map(m => m.midi));
 
 test.beforeEach(async ({ page }) => {
+  test.slow(); // every test starts on the 3D stage: see STAGE_TIMEOUT
   await seedSettings(page, { renderer: 'gl', practiceInstrument: 'guitar' });
   await page.goto('/');
-  await expect(stage(page).locator('canvas')).toBeVisible();
+  await expect(stage(page).locator('canvas')).toBeVisible({ timeout: STAGE_TIMEOUT });
 });
 
 test('free play turns the guitar when the background is dragged, without playing anything', async ({ page }) => {
@@ -80,7 +82,8 @@ test('Reset view keeps keyboard focus until the player moves on', async ({ page 
 
 test('a first-position neck stays between the bars however far it is turned', async ({ page }) => {
   await workspace(page, 'Free play');
-  await page.getByRole('combobox', { name: 'Visible guitar frets' }).selectOption('5');
+  await openView(page);
+  await choose(page.getByRole('combobox', { name: 'Visible guitar frets' }), '5');
   await expect(page.locator('.guitar-position-label.fret')).toHaveCount(5);
   const band = async () => {
     const top = await stage(page).locator('.guitar-stage-top').boundingBox();

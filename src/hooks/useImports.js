@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import { loadScoreFromFile } from '../lib/score.js';
+import { loadScoreFromFile } from '../lib/music/score.js';
 import {
   listScoreFiles,
   packFromFiles,
   putSamplePack,
   putScoreFile,
   supported as vaultSupported,
-} from '../lib/vault.js';
-import { audio } from '../lib/audio.js';
+} from '../lib/app/vault.js';
+import { audio } from '../lib/audio/audio.js';
 
 /** How many imported pieces stay in the drawer. */
 const MAX_LOCAL = 12;
@@ -104,7 +104,7 @@ export function useImports({ onError, onScoreLoaded }) {
         const pack = packFromFiles(files, files[0]?.name ? 'Your piano' : 'Imported pack');
         if (!pack.count) {
           throw new Error(
-            'none of those filenames say which note they record — try names like C4.wav or Ds3.wav',
+            'none of those filenames say which note they record; try names like C4.wav or Ds3.wav',
           );
         }
         await putSamplePack({ name: pack.name, files: pack.files });

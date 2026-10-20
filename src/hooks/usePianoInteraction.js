@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { playInput } from '../lib/playInput.js';
-import { noteName } from '../lib/theory.js';
+import { playInput } from '../lib/input/playInput.js';
+import { noteName } from '../lib/music/theory.js';
 
 export function usePianoInteraction({ pick, range, settings = {}, onSeek }) {
   const prefix = 'pointer-' + useId();
@@ -24,7 +24,7 @@ export function usePianoInteraction({ pick, range, settings = {}, onSeek }) {
     onPointerDown(event) {
       if (event.button !== 0) return;
       const target = identify(event);
-      if (target?.midi == null) { if (target?.time != null) onSeek?.(target.time); return; }
+      if (target?.midi == null) { if (target?.time != null) onSeek?.(target.time, target.lane ?? null); return; }
       event.preventDefault(); event.currentTarget.focus(); event.currentTarget.setPointerCapture?.(event.pointerId);
       setFocused(target.midi); pointers.current.set(event.pointerId, target.midi);
       playInput.press(`${prefix}-${event.pointerId}`, target.midi, velocity(target.depth), {source:'piano-screen'});

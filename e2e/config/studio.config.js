@@ -4,7 +4,7 @@ import base from '../../playwright.config.js';
 
 // Focused suites live here; relative paths in a config resolve from its own
 // folder, so everything below is anchored to the repository root.
-export const root = fileURLToPath(new URL('../../', import.meta.url));
+export const root = fileURLToPath(new URL('../..', import.meta.url));
 
 // Isolated port: never run the review against somebody else's dev server.
 export default defineConfig({

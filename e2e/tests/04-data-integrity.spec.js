@@ -60,7 +60,7 @@ test.describe('Data integrity — settings', () => {
   test('multiple settings changed together all survive a reload', async ({ page, appPage }) => {
     console.log('[integrity] changing fit mode, hand filter and daily goal together');
     await appPage.setFit('As written');
-    await page.getByRole('button', { name: 'R', exact: true }).click(); // hands: right only
+    await appPage.setHands('Right hand');
     await appPage.setDailyGoalMinutes(25);
 
     await expect.poll(async () => {

@@ -1,21 +1,26 @@
-import { describeFit } from '../lib/arrange.js';
-import { atTempo } from '../lib/path.js';
-import { noteName } from '../lib/theory.js';
-import { loopLabel } from '../lib/loopSelection.js';
-import { drumLanes } from '../lib/drums.js';
+import { describeFit } from '../lib/music/arrange.js';
+import { NextTimeNote } from './NextTimeNote.jsx';
+import { atTempo } from '../lib/learning/path.js';
+import { noteName } from '../lib/music/theory.js';
+import { loopLabel } from '../lib/practice/loopSelection.js';
+import { struckSetFor } from '../lib/struck/struckSets.js';
 
 const pct = v => v == null ? '—' : `${Math.round(v * 100)}%`;
 
-export default function PiecePanel({ score, history, assessment, bestStars = 0, bestStarsRate = 1, mode, rate = 1, loop, onHear, onWait }) {
+export default function PiecePanel({ score, history, assessment, bestStars = 0, bestStarsRate = 1, mode, rate = 1, loop, onHear, onWait, note = null, onNoteAction, onClearNote }) {
   if (!score) return <div className="section"><p className="empty">Choose a piece from the library to get started.</p></div>;
   const sessions = history?.sessions ?? [];
   const last = sessions.at(-1);
-  const waiting = mode === 'wait', listening = mode === 'listen', drums = score.instrument === 'drums';
-  const objective = listening ? 'Hear the phrase first.' : waiting ? (drums ? 'Find every drum, at your pace.' : 'Find every note, at your pace.') : loop ? 'Make this passage feel easy.' : drums ? 'A steady beat, one hit at a time.' : 'A steady phrase, one note at a time.';
-  const guidance = listening ? 'Follow the notes and listen to their rhythm. This mode plays the reference without scoring.' : waiting ? (drums ? 'The music waits for the right drum. Focus on where each one is; timing is not graded.' : 'The music waits for the correct notes. Focus on where your fingers go; timing is not graded.') : score.description || 'Aim for accurate notes and an even pulse. Lower the tempo whenever you need more time.';
+  // The drums and the tabla have no pitch to name: they speak of drums and strokes. The handpan's notes are notes.
+  const set = struckSetFor(score.instrument);
+  const drums = !!set && !set.pitched, thing = score.instrument === 'tabla' ? 'stroke' : 'drum';
+  const waiting = mode === 'wait', listening = mode === 'listen';
+  const objective = listening ? 'Hear the phrase first.' : waiting ? (drums ? `Find every ${thing}, at your pace.` : 'Find every note, at your pace.') : loop ? 'Make this passage feel easy.' : drums ? 'A steady beat, one hit at a time.' : 'A steady phrase, one note at a time.';
+  const guidance = listening ? 'Follow the notes and listen to their rhythm. This mode plays the reference without scoring.' : waiting ? (drums ? `The music waits for the right ${thing}. Focus on where each one is; timing is not graded.` : 'The music waits for the correct notes. Focus on where your fingers go; timing is not graded.') : score.description || 'Aim for accurate notes and an even pulse. Lower the tempo whenever you need more time.';
   return <div className="section piece-panel">
     <h2 className="practice-objective">{objective}</h2>
     <p className="objective-copy">{guidance}</p>
+    <NextTimeNote note={note} score={score} onAction={onNoteAction} onClear={onClearNote} />
     <div className="session-goal"><span>{loop ? loopLabel(loop, score) : 'Whole piece'}</span><strong>{Math.round((score.bpm ?? 80) * rate)} bpm</strong></div>
     <p className="hint piece-hint">Press Play or Space when you’re ready.</p>
     <div className="coach-actions"><button onClick={onHear}>{listening ? 'Try it yourself' : loop ? 'Hear this passage' : 'Hear the phrase'}</button>{!waiting && <button onClick={onWait}>Use Wait for me</button>}</div>
@@ -24,7 +29,7 @@ export default function PiecePanel({ score, history, assessment, bestStars = 0, 
     <details className="piece-details"><summary>Piece details</summary><h3 className="piece-title">{score.drillOf ? 'Your trouble spots' : score.title}</h3>{score.composer && <p className="piece-composer">{score.composer}</p>}<dl className="piece-facts">
       {!drums && <div><dt>Key</dt><dd>{score.key?.name}</dd></div>}<div><dt>Written tempo</dt><dd>{Math.round(score.bpm)} bpm · {score.timeSignature?.join('/') ?? '4/4'}</dd></div>
       <div><dt>Length</dt><dd>{Math.floor(score.duration / 60)}:{String(Math.floor(score.duration % 60)).padStart(2, '0')}</dd></div>
-      {drums ? <div><dt>Drums</dt><dd>{drumLanes(score).map(piece => piece.short).join(', ')}</dd></div> : <div><dt>Range</dt><dd>{noteName(score.range[0])}–{noteName(score.range[1])}</dd></div>}
+      {drums ? <div><dt>{thing === 'stroke' ? 'Strokes' : 'Drums'}</dt><dd>{set.lanes(score).map(piece => piece.short).join(', ')}</dd></div> : <div><dt>Range</dt><dd>{noteName(score.range[0])}–{noteName(score.range[1])}</dd></div>}
       {assessment && <div><dt>Your keys</dt><dd>{describeFit(assessment)}</dd></div>}
     </dl></details>
   </div>;

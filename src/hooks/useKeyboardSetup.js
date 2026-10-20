@@ -5,8 +5,8 @@ import {
   profileById,
   profileForDeviceName,
   windowFor,
-} from '../lib/devices.js';
-import { midiInput } from '../lib/midiInput.js';
+} from '../lib/input/devices.js';
+import { midiInput } from '../lib/input/midiInput.js';
 
 /**
  * Which keybed is in front of you, and where its octave currently sits.

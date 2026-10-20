@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { isBlackKey } from '../lib/theory.js';
+import { isBlackKey } from '../lib/music/theory.js';
 
 const LOW = 21; // A0
 const HIGH = 108; // C8
@@ -96,7 +96,7 @@ export default function KeyboardMap({ window: keyWindow, range, onMove }) {
   };
 
   return (
-    <div className="keyboard-map" ref={wrapRef} title="Your controller against a full 88 keys — click to move it">
+    <div className="keyboard-map" ref={wrapRef} title="Your controller against a full 88 keys. Click to move it">
       <canvas ref={canvasRef} style={{ height: HEIGHT }} onPointerDown={moveTo} />
     </div>
   );

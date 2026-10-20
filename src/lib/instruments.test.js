@@ -2,17 +2,17 @@ import { describe, expect, it } from 'vitest';
 import {
   INSTRUMENTS, PICKER, chooseVariant, familyOf, instrumentForStudy, instrumentInfo, instrumentKit, isStringed, normalizeInstrument, stringKit, studyIdFor, usesKit, variantsOf,
 } from './instruments.js';
-import { GUITAR_STUDIES } from './guitar.js';
-import { DRUM_STUDIES } from './drums.js';
+import { GUITAR_STUDIES } from './strings/guitar.js';
+import { DRUM_STUDIES } from './struck/drums.js';
 
 describe('instrument registry', () => {
-  it('lists the six instruments in picker order, families side by side', () => {
-    expect(INSTRUMENTS).toEqual(['piano', 'guitar', 'bass', 'violin', 'cello', 'drums']);
+  it('lists the instruments in picker order, families side by side', () => {
+    expect(INSTRUMENTS).toEqual(['piano', 'guitar', 'bass', 'violin', 'cello', 'veena', 'drums', 'tabla', 'handpan']);
     for (const id of INSTRUMENTS) { expect(instrumentInfo(id).tagline, id).toBeTruthy(); expect(instrumentInfo(id).detail, id).toBeTruthy(); }
     INSTRUMENTS.forEach(id => expect(instrumentInfo(id).label).toMatch(/^[A-Z]/));
   });
-  it('lists five instruments in the pickers, the bass behind the guitar', () => {
-    expect(PICKER).toEqual(['piano', 'guitar', 'violin', 'cello', 'drums']);
+  it('lists one button an instrument in the pickers, the bass behind the guitar', () => {
+    expect(PICKER).toEqual(['piano', 'guitar', 'violin', 'cello', 'veena', 'drums', 'tabla', 'handpan']);
     expect(PICKER.every(id => INSTRUMENTS.includes(id))).toBe(true);
     expect(familyOf('bass')).toBe('guitar');
     expect(PICKER.map(familyOf)).toEqual(PICKER);
@@ -41,16 +41,16 @@ describe('instrument registry', () => {
     expect(normalizeInstrument('cello')).toBe('cello');
   });
   it('treats every string instrument alike, and the piano apart', () => {
-    expect(INSTRUMENTS.filter(isStringed)).toEqual(['guitar', 'bass', 'violin', 'cello']);
+    expect(INSTRUMENTS.filter(isStringed)).toEqual(['guitar', 'bass', 'violin', 'cello', 'veena']);
     expect(stringKit('piano')).toBeNull();
     // Each string kit is one or the other: plucked on frets, or bowed.
-    expect(INSTRUMENTS.filter(id => stringKit(id)?.fretted)).toEqual(['guitar', 'bass']);
+    expect(INSTRUMENTS.filter(id => stringKit(id)?.fretted)).toEqual(['guitar', 'bass', 'veena']);
     expect(INSTRUMENTS.filter(id => stringKit(id)?.bowed)).toEqual(['violin', 'cello']);
   });
   it('gives the drums a kit of studies without calling them a string instrument', () => {
     expect(isStringed('drums')).toBe(false);
     expect(stringKit('drums')).toBeNull();
-    expect(INSTRUMENTS.filter(usesKit)).toEqual(['guitar', 'bass', 'violin', 'cello', 'drums']);
+    expect(INSTRUMENTS.filter(usesKit)).toEqual(['guitar', 'bass', 'violin', 'cello', 'veena', 'drums', 'tabla', 'handpan']);
     const drums = instrumentKit('drums');
     expect(drums.drums).toBe(true);
     expect(drums.lessons).toBe(DRUM_STUDIES);

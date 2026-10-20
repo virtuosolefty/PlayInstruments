@@ -1,11 +1,14 @@
+import Listbox from './Listbox.jsx';
+import Icon from './Icon.jsx';
 import { useEffect, useState } from 'react';
 import { useDialog } from '../hooks/useDialog.js';
-import { MIDI_STATUS, midiInput } from '../lib/midiInput.js';
-import { MIC_STATUS, micInput } from '../lib/micInput.js';
+import { MIDI_STATUS, midiInput } from '../lib/input/midiInput.js';
+import { MIC_STATUS, micInput } from '../lib/input/micInput.js';
 import { useMicStatus } from '../hooks/useMicInput.js';
-import { noteName } from '../lib/theory.js';
+import { noteName } from '../lib/music/theory.js';
 import { InstrumentIcon } from './StudioHeader.jsx';
 import { instrumentInfo, normalizeInstrument, stringKit } from '../lib/instruments.js';
+import { struckSetFor } from '../lib/struck/struckSets.js';
 
 const MIC_TEXT = {
   [MIC_STATUS.OFF]: 'Turning the microphone on…',
@@ -18,7 +21,7 @@ const MIC_TEXT = {
 /** A numbered step of the dialog: its number, its name, and whether it is done. */
 function Step({ number, title, done = false, children }) {
   return <section className={`setup-step ${done ? 'done' : ''}`} aria-label={`Step ${number}: ${title}`}>
-    <h3 className="setup-section-title"><i aria-hidden="true">{done ? '✓' : number}</i>{title}</h3>
+    <h3 className="setup-section-title"><i aria-hidden="true">{done ? <Icon name="check" size={13} /> : number}</i>{title}</h3>
     {children}
   </section>;
 }
@@ -44,8 +47,10 @@ export default function SetupDialog({ settings, setSettings, midiState, audioRea
   const kit = stringKit(instrument);
   const fretted = !!kit?.fretted;
   const midi = settings.inputMethod === 'midi';
-  // The microphone hears one pitch at a time, which a drum kit does not have.
-  const drums = instrument === 'drums';
+  // The microphone hears one pitch at a time, which a drum kit and a tabla stroke do not have (the handpan's notes do).
+  const struck = struckSetFor(instrument);
+  const drums = !!struck && !struck.pitched;
+  const thing = instrument === 'tabla' ? 'stroke' : 'drum';
   const mic = settings.inputMethod === 'mic' && !drums;
   const micState = useMicStatus();
   const micOn = micState.status === MIC_STATUS.ON;
@@ -61,7 +66,7 @@ export default function SetupDialog({ settings, setSettings, midiState, audioRea
   const connect = async () => { setBusy(true); setError(''); try { await midiInput.connect(); } finally { setBusy(false); } };
   const test = async () => {
     setBusy(true); setError('');
-    try { setTested(false); await onTest(instrument === 'drums' ? 38 : kit ? kit.tuning[0] : 60); setTested(true); }
+    try { setTested(false); await onTest(struck ? struck.testMidi : kit ? kit.tuning[0] : 60); setTested(true); }
     catch (e) { setError(`Sound could not start. ${e.message} Try again after checking your browser audio settings.`); }
     finally { setBusy(false); }
   };
@@ -82,7 +87,7 @@ export default function SetupDialog({ settings, setSettings, midiState, audioRea
         <div className="setup-inputs" role="group" aria-label="Input preference">
           <button aria-pressed={!midi && !mic} onClick={() => setSettings(s => ({ ...s, inputMethod: 'screen' }))}><strong>On-screen instrument</strong><span>Click to play. No equipment needed.</span></button>
           <button aria-pressed={midi} onClick={() => setSettings(s => ({ ...s, inputMethod: 'midi' }))}><strong>MIDI controller</strong><span>Play your connected instrument.</span></button>
-          <button aria-pressed={mic} disabled={drums} onClick={() => setSettings(s => ({ ...s, inputMethod: 'mic' }))}><strong>Microphone</strong><span>{drums ? 'Not for drums: it cannot tell one drum from another.' : `Play your real ${info.label.toLowerCase()}, one note at a time.`}</span></button>
+          <button aria-pressed={mic} disabled={drums} onClick={() => setSettings(s => ({ ...s, inputMethod: 'mic' }))}><strong>Microphone</strong><span>{drums ? `Not for the ${info.label.toLowerCase()}: it cannot tell one ${thing} from another.` : `Play your real ${info.label.toLowerCase()}, one note at a time.`}</span></button>
         </div>
       </Step>
 
@@ -91,7 +96,7 @@ export default function SetupDialog({ settings, setSettings, midiState, audioRea
           <p role={micFailed ? 'alert' : 'status'}>{micState.status === MIC_STATUS.ERROR ? micState.error : MIC_TEXT[micState.status]}</p>
           {/* Kept in place while it retries, so the keyboard's place in the dialog is not lost. */}
           {!micOn && <button aria-disabled={!micFailed} onClick={() => { if (micFailed) micInput.retry(); }}>Try again</button>}
-          <p className={`setup-detected ${micHeard ? 'verified' : ''}`} role="status">{micHeard ? `✓ Heard ${micHeard} from your ${info.label.toLowerCase()}.` : micOn ? 'Nothing heard yet.' : ''}</p>
+          <p className={`setup-detected ${micHeard ? 'verified' : ''}`} role="status">{micHeard ? <><Icon name="check" size={14} />{`Heard ${micHeard} from your ${info.label.toLowerCase()}.`}</> : micOn ? 'Nothing heard yet.' : ''}</p>
           <ul className="setup-mic-limits">
             <li>It hears single notes: a chord or a strum is not recognised.</li>
             <li>Wear headphones whenever the app itself is sounding, so the microphone hears only you. The app makes no sound for your own notes.</li>
@@ -99,11 +104,11 @@ export default function SetupDialog({ settings, setSettings, midiState, audioRea
           </ul>
           <button onClick={onTuner}>Open the tuner</button>
         </div> : midi ? <div className="setup-connection"><h4>{connected ? 'Controller connected' : 'Connect your controller'}</h4><p>{guidance}</p>
-          {connected && <label>MIDI input<select value={midiState.selectedId ?? ''} onChange={e => midiInput.select(e.target.value)}>{midiState.inputs.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}</select></label>}
+          {connected && <label>MIDI input<Listbox label="MIDI input" value={midiState.selectedId ?? ''} options={midiState.inputs.map(i => ({ value: i.id, label: i.name }))} onChange={id => midiInput.select(id)} /></label>}
           <button disabled={busy || midiState.status === MIDI_STATUS.UNSUPPORTED} onClick={connect}>{busy ? 'Checking…' : connected ? 'Refresh devices' : 'Look for a device'}</button>
-          <p className={`setup-detected ${heard ? 'verified' : ''}`} role="status">{heard ? `✓ Received ${heard} from your MIDI controller.` : 'Input not verified yet. Play a note on your MIDI controller.'}</p>
-        </div> : <p className="setup-help">{instrument === 'drums' ? 'Tap a drum on the kit or a pad, or press the letter it starts with: K for kick, S for snare, H for hi-hat.' : fretted ? (kit.chords.length ? 'Click any fret to pluck a string. Free play gives you chord shapes and a strum control.' : 'Click any fret to pluck a string. Free play has the whole neck to explore.') : kit?.bowed ? `Press and hold a place on the fingerboard to bow it. Free play has scales and open strings.` : 'Click a piano key, or use A–J on your computer keyboard for the middle-C octave.'}</p>}
-        {drums && <p className="hint">On-screen and MIDI input are supported. The microphone cannot tell one drum from another, so it is not offered for the kit.</p>}
+          <p className={`setup-detected ${heard ? 'verified' : ''}`} role="status">{heard ? <><Icon name="check" size={14} />{`Received ${heard} from your MIDI controller.`}</> : 'Input not verified yet. Play a note on your MIDI controller.'}</p>
+        </div> : <p className="setup-help">{instrument === 'drums' ? 'Tap a drum on the kit or a pad, or press the letter it starts with: K for kick, S for snare, H for hi-hat.' : instrument === 'tabla' ? 'Tap a drum or a pad, or press the letter a bol is spoken with: N for Na, G for Ge, both for Dha.' : instrument === 'handpan' ? 'Tap a note on the handpan or a pad. The middle row of keys plays the top notes, A for the ding; the bottom row the underside.' : fretted ? (kit.chords.length ? 'Click any fret to pluck a string. Free play gives you chord shapes and a strum control.' : 'Click any fret to pluck a string. Free play has the whole neck to explore.') : kit?.bowed ? `Press and hold a place on the fingerboard to bow it. Free play has scales and open strings.` : 'Click a piano key, or use A–J on your computer keyboard for the middle-C octave.'}</p>}
+        {drums && <p className="hint">On-screen and MIDI input are supported. The microphone cannot tell one {thing} from another, so it is not offered for the {instrument === 'drums' ? 'kit' : info.label.toLowerCase()}.</p>}
       </Step>
 
       <Step number={3} title="Check the sound" done={tested}>

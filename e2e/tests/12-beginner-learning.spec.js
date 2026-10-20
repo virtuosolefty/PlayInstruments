@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { watchSound } from '../helpers/sound.js';
+import { STAGE_TIMEOUT } from '../helpers/studio.js';
 
-const base = {settingsVersion:5,onboarded:true,renderer:'canvas',countInBars:0,errorCues:false};
+const base = {settingsVersion:5,onboarded:true,studioTourDone:true,renderer:'canvas',countInBars:0,errorCues:false};
 const record = (lessonId,step='follow') => ({lessonId,step,rate:.65,soundConfirmed:true,firstNoteDone:true,listened:true,followed:false,practised:false,completed:{}});
 async function seed(page, settings={}, songs={}) {
   await page.addInitScript(({settings,songs})=>{
@@ -10,7 +11,7 @@ async function seed(page, settings={}, songs={}) {
 }
 async function autoFollow(page) {
   await page.evaluate(async()=>{
-    const {emitSyntheticMidi}=await import('/src/lib/midiInput.js');
+    const {emitSyntheticMidi}=await import('/src/lib/input/midiInput.js');
     let lastAt=0;
     window.__followTimer=setInterval(()=>{
       if(performance.now()-lastAt<300)return;
@@ -26,7 +27,7 @@ test('a new learner confirms sound, plays the first note, and resumes without au
   await page.getByRole('button',{name:'Guide me from the beginning →'}).click();
   await expect(page.getByRole('heading',{name:'A clear path to your first song.'})).toBeVisible();
   await page.getByRole('button',{name:'Start my first lesson'}).click();
-  await expect(page.locator('.studio-heading h2')).toHaveText('Home Five — Right Hand');
+  await expect(page.locator('.studio-heading h1')).toHaveText('Home Five — Right Hand');
   await watchSound(page);await page.getByRole('button',{name:'Play a test note',exact:true}).click();
   await expect.poll(()=>page.evaluate(()=>window.__studioHeardSound)).toBe(true);
   await expect(page.getByRole('button',{name:'I heard it'})).toBeVisible();
@@ -57,7 +58,7 @@ test('a full guided piano phrase opens the next lesson without passing mastery a
   await expect(page.locator('.lesson-bar [aria-current="step"]')).toContainText('Practice');
   await expect(page.getByRole('button',{name:'Pause lesson'})).toHaveCount(0);
   await page.getByRole('button',{name:'Save & leave'}).click();
-  await expect(page.locator('.learning-roadmap > header')).toContainText('1 / 15 lessons finished · 0 checks passed');
+  await expect(page.locator('.learning-roadmap > header')).toContainText('1 / 17 lessons finished · 0 checks passed');
   // Finishing the lesson, even with the notes waiting, opens the next one; the one after stays shut.
   await expect(page.locator('.learning-stage-lessons button').filter({hasText:'Home Five — Left Hand'})).toBeEnabled();
   await expect(page.locator('.learning-stage-lessons button').filter({hasText:'Mirror Hands'})).toBeDisabled();
@@ -66,7 +67,7 @@ test('a full guided piano phrase opens the next lesson without passing mastery a
 test('guitar first notes and an instrument switch keep separate saved lessons',async({page})=>{
   await seed(page,{learningView:'home',learning:{piano:record('path-01-home-five-right','practice')}});await page.goto('/');
   await page.getByRole('group',{name:'Learning instrument'}).getByRole('button',{name:'Guitar',exact:true}).click();
-  await expect(page.locator('.next-lesson-card h3')).toHaveText('Meet the six strings');
+  await expect(page.locator('.next-lesson-card h2')).toHaveText('Meet the six strings');
   await expect(page.locator('.daily-learning-card')).not.toContainText('Home Five');
   await page.getByRole('button',{name:'Start my first lesson'}).click();
   await page.getByRole('button',{name:'Play a test note',exact:true}).click();await page.getByRole('button',{name:'I heard it'}).click();
@@ -87,8 +88,8 @@ test('a guitar chord mastery check uses the shared scoring and offers the correc
   await page.goto('/');await expect(page.getByRole('button',{name:'Start mastery check',exact:true})).toBeEnabled();
   await page.getByRole('button',{name:'Enable sound',exact:true}).click();
   await page.evaluate(async()=>{
-    const {emitSyntheticMidi}=await import('/src/lib/midiInput.js');
-    const {GUITAR_STUDIES}=await import('/src/lib/guitar.js');const score=GUITAR_STUDIES.find(s=>s.id==='guitar-first-em');
+    const {emitSyntheticMidi}=await import('/src/lib/input/midiInput.js');
+    const {GUITAR_STUDIES}=await import('/src/lib/strings/guitar.js');const score=GUITAR_STUDIES.find(s=>s.id==='guitar-first-em');
     document.querySelector('.lesson-transport .primary').addEventListener('click',()=>{
       score.notes.forEach(note=>{setTimeout(()=>emitSyntheticMidi({type:'noteon',midi:note.midi,velocity:note.velocity}),note.time*1000+50);setTimeout(()=>emitSyntheticMidi({type:'noteoff',midi:note.midi}),note.time*1000+300);});
     },{once:true});
@@ -96,7 +97,7 @@ test('a guitar chord mastery check uses the shared scoring and offers the correc
   await page.getByRole('button',{name:'Start mastery check',exact:true}).click();
   await expect(page.locator('.lesson-result h3')).toHaveText('Lesson mastered',{timeout:25_000});
   await page.getByRole('button',{name:'Continue to the next lesson →'}).click();
-  await expect(page.locator('.studio-heading h2')).toHaveText('Your next chord · Am');
+  await expect(page.locator('.studio-heading h1')).toHaveText('Your next chord · Am');
   await expect(page.getByRole('button',{name:'Listen to the phrase',exact:true})).toBeEnabled();
   await expect(page.getByRole('button',{name:'Pause lesson'})).toHaveCount(0);
 });
@@ -112,7 +113,7 @@ test('failed lesson loading has a retry and cannot start the previous score',asy
   await page.unroute('**/songs/path-01-home-five-right.mid');
   await page.getByRole('button',{name:'Retry lesson'}).click();
   await expect(page.getByRole('button',{name:'Play a test note',exact:true})).toBeEnabled();
-  await expect(page.locator('.studio-heading h2')).toHaveText('Home Five — Right Hand');
+  await expect(page.locator('.studio-heading h1')).toHaveText('Home Five — Right Hand');
 });
 
 test('daily guided completion advances the saved queue and closes with a clear next lesson',async({page})=>{
@@ -124,7 +125,7 @@ test('daily guided completion advances the saved queue and closes with a clear n
   await page.evaluate(()=>clearInterval(window.__followTimer));
   await page.getByRole('button',{name:'Continue today’s practice →'}).click();
   await expect(page.locator('.daily-finished')).toContainText('Today’s practice is complete.');
-  await expect(page.locator('.learning-roadmap > header')).toContainText('1 / 7 lessons finished · 0 checks passed');
+  await expect(page.locator('.learning-roadmap > header')).toContainText('1 / 8 lessons finished · 0 checks passed');
   await page.reload();await expect(page.locator('.daily-finished')).toBeVisible();
 });
 
@@ -144,7 +145,7 @@ test('short desktop layouts, themes and reduced motion preserve usable 3D instru
   await page.screenshot({path:'test-results/screens/learning/piano-3d-dark-720.png'});
   await page.getByRole('group',{name:'Practice instrument'}).getByRole('button',{name:'Guitar',exact:true}).click();
   await page.getByRole('button',{name:'Start my first lesson'}).click();
-  await expect(page.locator('.guitar-stage canvas')).toBeVisible();
+  await expect(page.locator('.guitar-stage canvas')).toBeVisible({ timeout: STAGE_TIMEOUT });
   const guitar=await page.locator('.guitar-stage').boundingBox();expect(guitar.y+guitar.height).toBeLessThanOrEqual(720);
   await page.screenshot({path:'test-results/screens/learning/guitar-3d-dark-720.png'});expect(errors).toEqual([]);
 });
@@ -166,10 +167,12 @@ test('the guide stays reachable in a narrow desktop preview pane',async({page})=
   await page.setViewportSize({width:860,height:900});
   await seed(page,{learningView:'home'});await page.goto('/');
   await page.getByRole('button',{name:'Start my first lesson'}).click();
-  await expect(page.getByRole('button',{name:'Play a test note',exact:true})).toBeVisible();
-  await page.getByRole('button',{name:'Close lesson guide'}).click();
-  await expect(page.getByRole('button',{name:'Play a test note',exact:true})).not.toBeVisible();
+  await expect(page.locator('.lesson-dock').getByRole('button',{name:'Play a test note',exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Open lesson guide'}).click();
-  await expect(page.getByRole('button',{name:'Play a test note',exact:true})).toBeVisible();
+  await expect(page.locator('.lesson-guide').getByRole('button',{name:'Play a test note',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Close lesson guide'}).click();
+  await expect(page.locator('.lesson-guide').getByRole('button',{name:'Play a test note',exact:true})).not.toBeVisible();
+  await page.getByRole('button',{name:'Open lesson guide'}).click();
+  await expect(page.locator('.lesson-guide').getByRole('button',{name:'Play a test note',exact:true})).toBeVisible();
   const box=await page.locator('.pane.center').boundingBox();expect(box.width).toBeGreaterThan(750);
 });

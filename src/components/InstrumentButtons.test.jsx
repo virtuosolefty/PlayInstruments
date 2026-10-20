@@ -19,10 +19,10 @@ beforeEach(() => {
 afterEach(() => { act(() => root.unmount()); container.remove(); });
 
 describe('the instrument buttons', () => {
-  it('list the five instruments in a named group, the one in hand pressed', () => {
+  it('list the instruments in a named group, the one in hand pressed', () => {
     render(<InstrumentButtons label="Practice instrument" current="cello" onPick={() => {}} />);
     expect(container.querySelector('[role="group"]').getAttribute('aria-label')).toBe('Practice instrument');
-    expect(buttons().map(b => b.textContent)).toEqual(['Piano', 'Guitar', 'Violin', 'Cello', 'Drums']);
+    expect(buttons().map(b => b.textContent)).toEqual(['Piano', 'Guitar', 'Violin', 'Cello', 'Veena', 'Drums', 'Tabla', 'Handpan']);
     expect(buttons().filter(b => b.getAttribute('aria-pressed') === 'true').map(b => b.textContent)).toEqual(['Cello']);
   });
 

@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { ReportNote } from './NextTimeNote.jsx';
 import Icon from './Icon.jsx';
-import { compareToBest } from '../lib/grading.js';
-import { cancelSpeech, coachingScript, speak, speechAvailable } from '../lib/speech.js';
-import { clipsDuration, comparisonClips, PerformancePlayback, toClips } from '../lib/playback.js';
-import { audio } from '../lib/audio.js';
+import { compareToBest } from '../lib/practice/grading.js';
+import { cancelSpeech, coachingScript, speak, speechAvailable } from '../lib/audio/speech.js';
+import { clipsDuration, comparisonClips, PerformancePlayback, toClips } from '../lib/audio/playback.js';
+import { audio } from '../lib/audio/audio.js';
+import { reducedMotion } from '../lib/practice/beatPulse.js';
 import { useDialog } from '../hooks/useDialog.js';
 
 /**
@@ -16,7 +18,7 @@ function useCountUp(target, ms = 750) {
   const raf = useRef(0);
 
   useEffect(() => {
-    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const reduced = reducedMotion();
     if (reduced) {
       setValue(target);
       return undefined;
@@ -77,6 +79,9 @@ export default function PracticeReport({
   scoreNotes = [],
   onHearPassage,
   next = null,
+  note = null,
+  notePieceId = null,
+  onNoteChange = null,
 }) {
   const { grade, summary, passages, title } = result;
   const comparison = compareToBest(grade.overall, previousSessions);
@@ -156,72 +161,60 @@ export default function PracticeReport({
   const slower = Math.max(SLOWEST_RATE, Math.round(((result.rate ?? 1) - RATE_STEP) * 100) / 100);
   const offerSlower = slower < (result.rate ?? 1) - 0.001;
 
+  const ringValue = grade.complete ? shownScore : Math.round(grade.coverage * 100);
+  const ringTone = grade.complete ? BAND_TONE(grade.overall) : 'var(--warn)';
+
   return (
     <div className="report-overlay">
       <div
-        className="report"
+        className="report rx"
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label={`Practice report — ${grade.headline}`}
+        aria-label={`Practice report: ${grade.headline}`}
         tabIndex={-1}
       >
-        <header>
+        <header className="rx-head">
           <span className="eyebrow">{title}</span>
-          {canSpeak && (
-            <button
-              className={`speak-toggle ${spokenCoaching ? 'on' : ''}`}
-              onClick={() => onSpokenCoachingChange?.(!spokenCoaching)}
-              aria-pressed={spokenCoaching}
-              title={
-                spokenCoaching
-                  ? 'Stop reading results aloud'
-                  : 'Read this and future results aloud'
-              }
-            >
-              {spokenCoaching ? '🔊' : '🔈'} <span>Coach</span>
-            </button>
-          )}
-          <h2>{grade.headline}</h2>
-          {/* Finishing and rating are two things: the tick opens the next lesson, the stars say how well it went. */}
-          {grade.complete && <span className="report-finished"><i aria-hidden="true">✓</i> Finished</span>}
-          {grade.complete ? (
-            <Stars count={grade.stars} />
-          ) : (
-            <div className="incomplete-mark">
-              {Math.round(grade.coverage * 100)}% played
-            </div>
-          )}
-          <p className="blurb">{grade.blurb}</p>
-          {/* Said here because here is where it is believed. The stars above
-              this line are real, and they are also not worth what they look
-              like: with the clock stopped there is no timing to measure, so
-              timing's weight falls onto the notes and the same playing rates
-              higher than it would in Practice. So the run finishes the lesson,
-              which opens the next one on the Path, and its stars are not the
-              Path's stars; unsaid, that had the app congratulate somebody
-              fourteen times and show them nothing for it. */}
-          {result.mode === 'wait' && grade.complete && (
-            <p className="report-note">
-              <strong>Finished, without Path stars.</strong> Wait for me stops the clock at
-              every chord, so this run was graded on notes and touch alone. It opens the
-              next lesson on the Path; play it in Practice, at full speed, for the stars.
-            </p>
-          )}
+          <div className="rx-tools">
+            {canSpeak && (
+              <button
+                className={`rx-icon ${spokenCoaching ? 'on' : ''}`}
+                onClick={() => onSpokenCoachingChange?.(!spokenCoaching)}
+                aria-pressed={spokenCoaching}
+                aria-label="Coach reads results aloud"
+                title={spokenCoaching ? 'Stop reading results aloud' : 'Read this and future results aloud'}
+              >
+                <Icon name="volume" size={16} />
+              </button>
+            )}
+            <button className="rx-icon" onClick={onClose} aria-label="Close report"><Icon name="close" size={16} /></button>
+          </div>
         </header>
 
-        {grade.complete && (
-          <div className={`report-score ${comparison.isBest && comparison.previousBest !== null ? 'record' : ''}`}>
-            <strong>{shownScore}</strong>
-            <span>/ 100</span>
-            {comparison.previousBest === null ? (
-              <em className="best">first run</em>
-            ) : comparison.isBest ? (
-              <em className="best">new best · +{comparison.delta}</em>
-            ) : (
-              <em>{comparison.delta} vs your best of {comparison.previousBest}</em>
-            )}
+        <div className="rx-hero">
+          <div className="rx-ring" style={{ '--ring': ringValue, '--ring-tone': ringTone }} role="img" aria-label={grade.complete ? `${grade.overall} out of 100` : `${ringValue}% of the piece played`}>
+            <svg viewBox="0 0 120 120" aria-hidden="true"><circle className="track" cx="60" cy="60" r="52" /><circle className="value" cx="60" cy="60" r="52" pathLength="100" /></svg>
+            <strong>{ringValue}{grade.complete ? '' : '%'}</strong>
+            <span>{grade.complete ? 'of 100' : 'played'}</span>
           </div>
+          <div className="rx-hero-copy">
+            {grade.complete && <span className="report-finished"><Icon name="check" size={13} /> Finished</span>}
+            <h2>{grade.headline}</h2>
+            {grade.complete && <Stars count={grade.stars} />}
+            <p className="blurb">{grade.blurb}</p>
+            {grade.complete && (comparison.previousBest === null ? <em className="rx-best">First run: this is your starting point</em>
+              : comparison.isBest ? <em className="rx-best record">New best · +{comparison.delta}</em>
+              : <em className="rx-best">{comparison.delta} vs your best of {comparison.previousBest}</em>)}
+          </div>
+        </div>
+
+        {result.mode === 'wait' && grade.complete && (
+          <p className="report-note">
+            <strong>Finished, without Path stars.</strong> Wait for me stops the clock at
+            every chord, so this run was graded on notes and touch alone. It opens the
+            next lesson on the Path; play it in Practice, at full speed, for the stars.
+          </p>
         )}
 
         {step && (
@@ -236,27 +229,13 @@ export default function PracticeReport({
           </div>
         )}
 
-        <div className="report-bands">
+        <div className="rx-bands">
           {Object.entries(grade.bands).map(([key, value], i) => (
-            <div
-              className={`band ${value === null ? 'unmeasured' : ''}`}
-              key={key}
-              // Filled in sequence rather than all at once, so the eye reads
-              // them in order instead of taking three bars as one shape.
-              style={{ '--band-delay': `${140 + i * 130}ms` }}
-            >
-              <div className="band-head">
-                <span>{BAND_LABELS[key]}</span>
-                <strong style={{ color: value === null ? 'var(--text-faint)' : BAND_TONE(value) }}>
-                  {value === null ? '—' : value}
-                </strong>
-              </div>
-              <div className="meter">
-                <i style={{ width: `${value ?? 0}%`, background: BAND_TONE(value ?? 0) }} />
-              </div>
-              <span className="band-sub">
-                {value === null ? unmeasured(key, result.mode) : bandSub(key, summary)}
-              </span>
+            <div className={`rx-band ${value === null ? 'unmeasured' : ''}`} key={key} style={{ '--band-delay': `${140 + i * 130}ms`, '--tone': value === null ? 'var(--line-strong)' : BAND_TONE(value) }}>
+              <span className="rx-band-label">{BAND_LABELS[key]}</span>
+              <strong>{value === null ? '—' : value}</strong>
+              <div className="meter"><i style={{ width: `${value ?? 0}%` }} /></div>
+              <span className="band-sub">{value === null ? unmeasured(key, result.mode) : bandSub(key, summary)}</span>
             </div>
           ))}
         </div>
@@ -264,27 +243,19 @@ export default function PracticeReport({
         <div className="report-section">
           <h3>What to work on</h3>
           {passages.length === 0 ? (
-            <p className="empty">Nothing recurring — that run was clean.</p>
+            <p className="empty">Nothing recurring. That run was clean.</p>
           ) : (
             <div className="passage-list">
               {passages.map((p) => (
-                /* Hear it before you drill it. These are by definition the bars
-                   that did not go well, which makes them the ones most worth
-                   knowing the sound of before another attempt. */
                 <div className="passage-row" key={`${p.fromBar}-${p.toBar}`}>
                   <button className="passage" onClick={() => onDrill(p, null)} title="Loop this passage">
                     <span className="where">{p.label}</span>
                     <span className="what">{p.detail}</span>
-                    <span className="go">drill →</span>
+                    <span className="go">Drill <Icon name="arrowRight" size={12} /></span>
                   </button>
                   {onHearPassage && (
-                    <button
-                      className="hear-bit"
-                      onClick={() => onHearPassage(p)}
-                      title="Hear this passage played to you"
-                      aria-label={`Hear ${p.label}`}
-                    >
-                      <Icon name="music" size={14} />
+                    <button className="hear-bit" onClick={() => onHearPassage(p)} title="Hear this passage played to you" aria-label={`Hear ${p.label}`}>
+                      <Icon name="headphones" size={14} />
                     </button>
                   )}
                 </div>
@@ -293,45 +264,30 @@ export default function PracticeReport({
           )}
         </div>
 
+        {onNoteChange && <ReportNote pieceId={notePieceId} note={note} onChange={onNoteChange} />}
 
-
-        <p className="report-replay-hint">Listen back to hear where your timing and touch changed.</p>
-        <div className="report-actions">
-          {clips.length > 0 && (
-            <button
-              className={`hear-yourself ${hearing === 'you' ? 'on' : ''}`}
-              onClick={() => hear('you', clips)}
-              title={`Play back the ${clips.length} notes you played, at the volume you played them`}
-            >
-              {hearing === 'you' ? '■ Stop' : '▶ Hear yourself'}
-              <span className="hear-len">{clipsDuration(clips).toFixed(0)}s</span>
-            </button>
+        <footer className="rx-actions">
+          {(clips.length > 0 || together.length > 0) && (
+            <div className="rx-listen" role="group" aria-label="Listen back">
+              <span>Listen back</span>
+              {clips.length > 0 && (
+                <button className={`hear-yourself ${hearing === 'you' ? 'on' : ''}`} onClick={() => hear('you', clips)} title={`Play back the ${clips.length} notes you played, at the volume you played them`}>
+                  <Icon name={hearing === 'you' ? 'stop' : 'play'} size={13} />You <span className="hear-len">{clipsDuration(clips).toFixed(0)}s</span>
+                </button>
+              )}
+              {together.length > 0 && (
+                <button className={`hear-yourself ${hearing === 'together' ? 'on' : ''}`} onClick={() => hear('together', together)} title={clips.length > 0 ? 'Play your run with the score underneath it' : 'Play the piece as written'}>
+                  <Icon name={hearing === 'together' ? 'stop' : 'play'} size={13} />{clips.length > 0 ? 'You + score' : 'The score'} <span className="hear-len">{clipsDuration(together).toFixed(0)}s</span>
+                </button>
+              )}
+            </div>
           )}
-
-          {/* Offered even when you played nothing at all, and especially then:
-              a run with no notes in it is the one where hearing how the piece
-              actually goes is worth most. The label follows suit — with
-              nothing of yours in the mix there is nothing to compare. */}
-          {together.length > 0 && (
-            <button
-              className={`hear-yourself ${hearing === 'together' ? 'on' : ''}`}
-              onClick={() => hear('together', together)}
-              title={
-                clips.length > 0
-                  ? 'Play your run with the score underneath it — missed notes are where only the score sounds, and dragging is you arriving late behind it'
-                  : 'Play the piece as written'
-              }
-            >
-              {hearing === 'together' ? '■ Stop' : clips.length > 0 ? '▶ Against the score' : '▶ Hear the score'}
-              <span className="hear-len">{clipsDuration(together).toFixed(0)}s</span>
-            </button>
-          )}
-          <span className="report-actions-spacer" />
-          <button onClick={onRepeat}>↻ Run again</button>
-          {offerSlower && <button onClick={() => onApplyRate(slower)} title="Play it again, one step slower">Slower · {Math.round(slower * 100)}%</button>}
-          {next && <button onClick={next.go}>{next.label} →</button>}
-          <button onClick={onClose}>Close</button>
-        </div>
+          <div className="rx-go">
+            {offerSlower && <button onClick={() => onApplyRate(slower)} title="Play it again, one step slower">Slower · {Math.round(slower * 100)}%</button>}
+            {next && <button onClick={next.go}>{next.label} <Icon name="arrowRight" size={13} /></button>}
+            <button onClick={onRepeat}><Icon name="restart" size={14} />Run again</button>
+          </div>
+        </footer>
       </div>
     </div>
   );
@@ -345,7 +301,7 @@ export default function PracticeReport({
  * telling the player their playing was the problem when the mode was.
  */
 function unmeasured(key, mode) {
-  if (key === 'timing' && mode === 'wait') return 'Wait for me stops the clock — never measured';
+  if (key === 'timing' && mode === 'wait') return 'Wait for me stops the clock, so it is never measured';
   return 'too few notes played to measure';
 }
 

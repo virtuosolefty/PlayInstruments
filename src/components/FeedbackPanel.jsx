@@ -1,4 +1,5 @@
-import { liveFeedback } from '../lib/liveFeedback.js';
+import Icon from './Icon.jsx';
+import { liveFeedback } from '../lib/practice/liveFeedback.js';
 
 export default function FeedbackPanel({ summary, events = [], listening = false, waitingMode = false, playing = false }) {
   const s = summary ?? {};
@@ -18,7 +19,7 @@ export default function FeedbackPanel({ summary, events = [], listening = false,
     </div>
     <div className="section coaching-cue"><span className="eyebrow">ONE THING TO FOCUS ON</span><p>{live.cue}</p></div>
     <div className="section"><h2 className="section-title">Recent notes</h2><p className="sr-only" role="status">{events[0]?.detail ?? ''}</p>
-      {!events.length ? <p className="hint">Your last few notes will appear here.</p> : <div className="event-list">{events.slice(0, 4).map(e => <div className={'event ' + e.type} key={e.id}><span className="note">{e.name}</span><span className="msg"><strong>{e.type === 'hit' ? '✓ ' : '· '}{e.label}</strong></span></div>)}</div>}
+      {!events.length ? <p className="hint">Your last few notes will appear here.</p> : <div className="event-list">{events.slice(0, 4).map(e => <div className={'event ' + e.type} key={e.id}><span className="note">{e.name}</span><span className="msg"><strong>{e.type === 'hit' ? <Icon name="check" size={12} /> : '· '}{e.label}</strong></span></div>)}</div>}
     </div>
     <details className="section fold"><summary>Performance details</summary><p className="hint">Live accuracy includes judged notes and extra notes. Upcoming notes are not counted. Your final grade also accounts for how much of the piece you completed.</p>
       <div className="kv"><span>On time</span><span>{live.timingMeasured ? pct(s.timingAccuracy) : 'Not measured yet'}</span></div>

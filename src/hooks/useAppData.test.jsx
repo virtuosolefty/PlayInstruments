@@ -11,7 +11,7 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { useAppData } from './useAppData.js';
-import { recordCombo, recordGhost } from '../lib/storage.js';
+import { recordCombo, recordGhost } from '../lib/app/storage.js';
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 

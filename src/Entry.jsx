@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState } from 'react';
 import WelcomePage from './components/WelcomePage.jsx';
-import { loadSettings, saveSettings } from './lib/storage.js';
+import { loadSettings, saveSettings } from './lib/app/storage.js';
 import { INSTRUMENTS, PICKER } from './lib/instruments.js';
 const App=lazy(()=>import('./App.jsx'));
 

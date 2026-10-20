@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import ModelChooser from './ModelChooser.jsx';
 import ModelViewer from './ModelViewer.jsx';
-import { modelCredit } from '../lib/modelCredits.js';
-import { isStaged, modelsFor, playedModel } from '../lib/stageModels.js';
+import { modelCredit } from '../lib/stage/modelCredits.js';
+import { isStaged, modelsFor, playedModel } from '../lib/stage/stageModels.js';
+import { setShownModel } from '../lib/stage/shownModel.js';
 
 /**
  * Which instrument the whole-instrument view shows.
@@ -19,7 +20,7 @@ import { isStaged, modelsFor, playedModel } from '../lib/stageModels.js';
  *   drum as it is hit, told of the hits through `hits`.
  *
  * Whatever is shown in place of the played instrument carries its maker's
- * credit. One that cannot be shown gives the stage back and says so. An
+ * credit, and is heard (shownModel.js): a bass guitar sounds like a bass. One that cannot be shown gives the stage back and says so. An
  * instrument with nothing else to show has no pop-up.
  *
  * A stage renders this inside its own element, before its bottom bar, so the
@@ -35,7 +36,7 @@ import { isStaged, modelsFor, playedModel } from '../lib/stageModels.js';
  * @param {string} [props.stageNotice] what the stage has to say, e.g. that an instrument it was asked for could not be shown
  * @param {(listener: Function) => () => void} [props.hits] where a shown drum kit hears the hits made on the stage
  */
-export default function WholeModels({ instrument, active, quality = 'auto', onShowing, staged, onStage, stageNotice = '', hits }) {
+export default function WholeModels({ instrument, active, quality = 'auto', onShowing, staged, onStage, stageNotice = '', hits, onHit }) {
   const models = modelsFor(instrument);
   const played = playedModel(instrument);
   const [picked, setPicked] = useState(null);
@@ -49,11 +50,14 @@ export default function WholeModels({ instrument, active, quality = 'auto', onSh
   const shown = active ? models.find(model => model.id === picked && !model.played) ?? null : null;
   const showing = !!shown;
   useEffect(() => { onShowing?.(showing); }, [showing, onShowing]);
-
-  if (models.length < 2 || !played) return null;
   const onStageNow = models.find(model => model.id === staged) ?? played;
   // What stands in the played instrument's place: in the viewer, or on the stage's own rig.
-  const other = shown ?? (active && !onStageNow.played ? onStageNow : null);
+  const other = models.length < 2 || !played ? null : shown ?? (active && !onStageNow.played ? onStageNow : null);
+  const otherId = other?.id ?? null;
+  useEffect(() => { setShownModel(otherId); }, [otherId]);
+  useEffect(() => () => setShownModel(null), []);
+
+  if (models.length < 2 || !played) return null;
   const credit = other && modelCredit(other.id);
   const choose = id => {
     const model = models.find(each => each.id === id);
@@ -71,9 +75,9 @@ export default function WholeModels({ instrument, active, quality = 'auto', onSh
   };
 
   return <>
-    {shown && <ModelViewer key={shown.id} model={shown} quality={quality} onFailed={failed} hits={hits} />}
+    {shown && <ModelViewer key={shown.id} model={shown} quality={quality} onFailed={failed} hits={hits} onHit={onHit} />}
     {other && <div className="model-caption"><strong>{other.label}</strong>{credit && <span>
-      <a href={credit.source} target="_blank" rel="noopener noreferrer">“{credit.title}”</a> by <a href={credit.authorUrl} target="_blank" rel="noopener noreferrer">{credit.author}</a> · <a href={credit.licenseUrl} target="_blank" rel="noopener noreferrer">{credit.license}</a>
+      3D model by <a className="model-artist" href={credit.authorUrl} target="_blank" rel="noopener noreferrer">{credit.author}</a><span className="model-source"> · <a href={credit.source} target="_blank" rel="noopener noreferrer">“{credit.title}”</a> · <a href={credit.licenseUrl} target="_blank" rel="noopener noreferrer">{credit.license}</a></span>
     </span>}</div>}
     {active && <button type="button" className="model-change" onClick={() => setOpen(true)}>Choose instrument</button>}
     <div className="model-notice" role="status">{notice || stageNotice}</div>

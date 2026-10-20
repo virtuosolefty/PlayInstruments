@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 import Icon from './Icon.jsx';
-import { getSongHistory } from '../lib/storage.js';
+import { getSongHistory } from '../lib/app/storage.js';
 
 /** An unmeasured ratio is not zero per cent — see timingAccuracy in matcher.js. */
 const pct = (v) => (v == null ? '—' : `${Math.round(v * 100)}%`);
@@ -133,9 +133,7 @@ export default function HistoryPanel({
                       {spot.names?.length ? spot.names.join(', ') : 'timing'}
                     </span>
                     <span className="count">
-                      {spot.missed ? `${spot.missed}✗` : ''}
-                      {spot.wrong ? ` ${spot.wrong}!` : ''}
-                      {spot.late ? ` ${spot.late}~` : ''}
+                      {[spot.missed && `${spot.missed} missed`, spot.wrong && `${spot.wrong} wrong`, spot.late && `${spot.late} late`].filter(Boolean).join(' · ')}
                     </span>
                   </button>
                   {onHearSpot && (
@@ -153,12 +151,12 @@ export default function HistoryPanel({
             </div>
             {onBuildDrill && (
               <button className="primary drill-build" onClick={onBuildDrill}>
-                ✎ Build me an exercise
+                <Icon name="sparkle" size={14} /> Build me an exercise
               </button>
             )}
             <p className="hint" style={{ marginTop: 8 }}>
               Counts accumulate across every run. Click a spot to loop those four bars, or build an exercise
-              from the worst of them — each passage approached from the bar before and played twice.
+              from the worst of them: each passage approached from the bar before and played twice.
             </p>
           </>
         )}

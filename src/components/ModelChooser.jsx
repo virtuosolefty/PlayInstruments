@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useDialog } from '../hooks/useDialog.js';
-import { isStaged, modelImage } from '../lib/stageModels.js';
+import { isStaged, modelImage } from '../lib/stage/stageModels.js';
+import { modelCredit } from '../lib/stage/modelCredits.js';
 
 /**
  * The pop-up that opens when Whole instrument is selected: a picture of each
@@ -29,10 +30,11 @@ export default function ModelChooser({ models, value, onChoose, onClose }) {
         <header className="settings-heading"><h2 id="model-chooser-title">Whole instrument</h2><button type="button" aria-label="Close" onClick={onClose}>×</button></header>
         <p className="model-chooser-lead">Choose one to see it whole. Drag to turn it round.</p>
         <ul className="model-cards">{models.map(model => <li key={model.id}>
-          <button type="button" className={`model-card${missing.has(model.id) ? ' no-picture' : ''}`} aria-pressed={model.id === value} onClick={() => onChoose(model.id)}>
+          <button type="button" data-instrument={model.instrument} className={`model-card${missing.has(model.id) ? ' no-picture' : ''}`} aria-pressed={model.id === value} onClick={() => onChoose(model.id)}>
             <span className="model-picture"><img src={modelImage(model.id)} alt="" width="640" height="400" onError={() => setMissing(old => new Set([...old, model.id]))} /></span>
             <strong>{model.label}</strong>
             <span className="model-about">{model.about}</span>
+            {modelCredit(model.id) && <span className="model-by">3D model by <b className="artist-name">{modelCredit(model.id).author}</b></span>}
             {model.played ? <small>You play this one</small> : !isStaged(model) && !model.struck && <small className="look-only">To look at</small>}
           </button>
         </li>)}</ul>

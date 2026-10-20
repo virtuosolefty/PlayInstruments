@@ -1,5 +1,5 @@
 import { DirectionalLight, HemisphereLight, Mesh, NeutralToneMapping, OrthographicCamera, PCFShadowMap, PerspectiveCamera, PlaneGeometry, Raycaster, Scene, ShadowMaterial, Vector2, Vector3, WebGLRenderer } from 'three';
-import { rendererNameOf } from '../webgl.js';
+import { rendererNameOf } from './webgl.js';
 import { createStudioEnvironment } from './environment.js';
 import { frameBox, frameSpan } from './framing.js';
 import { pickStageTier, STAGE_TIERS } from './quality.js';
@@ -23,7 +23,7 @@ import { STAGE_VIEWS } from './views.js';
  * root markers pale; Neutral keeps wood, pearl and marker colours as authored.
  */
 const LOOKS = {
-  [STAGE_TIERS.FULL]: { pixelRatio: 2, shadowMap: 2048, environment: 1, hemisphere: 1.0, key: 2.4, rim: 0.7 },
+  [STAGE_TIERS.FULL]: { pixelRatio: 2, shadowMap: 2048, environment: 1, hemisphere: 1.35, key: 2.4, rim: 1.4 },
   [STAGE_TIERS.LIGHT]: { pixelRatio: 1.75, shadowMap: 1024, environment: 0, hemisphere: 1.2, key: 2.4, rim: 0.7 },
 };
 const FLOOR_Y = -0.58;

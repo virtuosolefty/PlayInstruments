@@ -18,7 +18,7 @@ test.describe('Smoke — the app boots', () => {
   test('loads the main UI without hitting the top-level error boundary', async ({ page, appPage }) => {
     console.log('[smoke] app loaded, asserting core chrome is present');
     await appPage.assertNoFatalError();
-    await expect(page.getByRole('heading', { name: 'Practice Deck' })).toBeVisible();
+    await expect(page.locator('.topbar .brand-name')).toBeVisible();
     await expect(page.getByRole('button', { name: /Library/i }).first()).toBeVisible();
     await expect(page.locator('.pad-play')).toBeVisible();
 
@@ -29,7 +29,7 @@ test.describe('Smoke — the app boots', () => {
   test('survives a hard reload without regressing to the error boundary', async ({ page, appPage }) => {
     await page.reload();
     await appPage.assertNoFatalError();
-    await expect(page.getByRole('heading', { name: 'Practice Deck' })).toBeVisible();
+    await expect(page.locator('.topbar .brand-name')).toBeVisible();
     console.log('[smoke] reload did not resurface the missing-import crash');
   });
 

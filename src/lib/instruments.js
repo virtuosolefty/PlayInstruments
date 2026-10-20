@@ -1,8 +1,11 @@
-import { BOWED, bowedFinger, bowedMidi, bowedStringName } from './bowed.js';
-import { DRUM_BEATS, DRUM_PATH_STAGES, DRUM_STUDIES } from './drums.js';
-import { FRETTED, frettedMidi } from './fretted.js';
-import { GUITAR_CHORDS, GUITAR_COLORS, GUITAR_PATH_STAGES, GUITAR_SONGS, GUITAR_STUDIES, GUITAR_TUNING, guitarMidi } from './guitar.js';
-import { noteName } from './theory.js';
+import { BOWED, bowedFinger, bowedMidi, bowedStringName } from './strings/bowed.js';
+import { DRUM_BEATS, DRUM_PATH_STAGES, DRUM_STUDIES } from './struck/drums.js';
+import { FRETTED, frettedMidi, veenaSwara } from './strings/fretted.js';
+import { GUITAR_CHORDS, GUITAR_COLORS, GUITAR_PATH_STAGES, GUITAR_SONGS, GUITAR_STUDIES, GUITAR_TUNING, guitarMidi } from './strings/guitar.js';
+import { HANDPAN_PATH_STAGES, HANDPAN_SONGS, HANDPAN_STUDIES } from './struck/handpan.js';
+import { struckSetFor } from './struck/struckSets.js';
+import { TABLA_PATH_STAGES, TABLA_SONGS, TABLA_STUDIES } from './struck/tabla.js';
+import { noteName } from './music/theory.js';
 
 /**
  * One place that knows which instruments exist.
@@ -20,16 +23,16 @@ import { noteName } from './theory.js';
  * which the path is made of, then its `songs`, the ten easy tunes (or, on the
  * drums, beats) that are open from the start and belong to no stage.
  */
-export const INSTRUMENTS = ['piano', 'guitar', 'bass', 'violin', 'cello', 'drums'];
+export const INSTRUMENTS = ['piano', 'guitar', 'bass', 'violin', 'cello', 'veena', 'drums', 'tabla', 'handpan'];
 
 /**
- * What the pickers list: five instruments. The bass is a kind of guitar, so it
+ * What the pickers list: one button an instrument, eight in all, as the player chose. The bass is a kind of guitar, so it
  * sits behind the guitar's button, chosen with a small switch beside the
  * studio's controls (`TypeSwitch.jsx`). Underneath it stays an instrument of
  * its own, with its own tuning, lessons, path and saved place, so everything
  * keyed by an instrument id still works.
  */
-export const PICKER = ['piano', 'guitar', 'violin', 'cello', 'drums'];
+export const PICKER = ['piano', 'guitar', 'violin', 'cello', 'veena', 'drums', 'tabla', 'handpan'];
 const FAMILIES = Object.freeze({ guitar: Object.freeze(['guitar', 'bass']) });
 
 /** The picker button an instrument sits behind: the bass's is the guitar's. */
@@ -51,7 +54,10 @@ const INFO = {
   bass: { label: 'Bass', tagline: 'Low notes & bass lines', detail: 'Standard tuning · E A D G' },
   violin: { label: 'Violin', tagline: 'Fingerboard, tapes & bowing', detail: 'Tuned in fifths · G D A E' },
   cello: { label: 'Cello', tagline: 'Deep strings & first scales', detail: 'Tuned in fifths · C G D A' },
+  veena: { label: 'Veena', tagline: 'Swaras, varisais & a 3D veena', detail: 'Sa on D · Sa Pa Sa Pa' },
   drums: { label: 'Drums', tagline: 'Beats, fills & a 3D kit', detail: 'Nine pieces · pads, keys and MIDI' },
+  tabla: { label: 'Tabla', tagline: 'Bols, thekas & taals', detail: 'Dayan and bayan · six strokes' },
+  handpan: { label: 'Handpan', tagline: 'Ringing steel & grooves', detail: 'D Aegean · 18 notes' },
 };
 
 export const normalizeInstrument = id => (INSTRUMENTS.includes(id) ? id : 'piano');
@@ -86,6 +92,15 @@ const BASS_KIT = fretted('bass', {
   stage: 'model', model: 'guitar-bass', wound: () => true,
 });
 
+const VEENA_KIT = fretted('veena', {
+  ...FRETTED.veena, midi: (string, fret) => frettedMidi('veena', string, fret),
+  // Played on the downloaded veena (stageModels.js). Its two lower strings are wound, as on the real one.
+  stage: 'model', model: 'veena', wound: s => s < 2, tuningLabel: 'Sa on D',
+  // A note's swara, which a veena player names it by before its letter.
+  swara: veenaSwara,
+  openStrings: { lead: 'Sa, Pa, Sa, Pa, with the three drones beside them.', hint: 'Pluck the open sarani for Sa, then find Pa at the seventh fret and the Sa above at the twelfth.' },
+});
+
 const BOWED_COLORS = {
   violin: ['#e8b87a', '#d9a0c9', '#8fc2f0', '#b7e39a'],
   cello: ['#e79f7c', '#e8c27a', '#9fc8ee', '#a6dcc0'],
@@ -103,17 +118,29 @@ const bowedKit = id => ({
 });
 
 const DRUM_KIT = {
-  id: 'drums', label: 'Drums', drums: true, bowed: false, fretted: false,
+  id: 'drums', label: 'Drums', drums: true, struck: true, set: struckSetFor('drums'), bowed: false, fretted: false,
   lessons: DRUM_STUDIES, songs: DRUM_BEATS, songsLabel: 'Beats to play along to', studies: [...DRUM_STUDIES, ...DRUM_BEATS],
   pathStages: DRUM_PATH_STAGES, firstLesson: 'drums-meet-the-kit',
   studyKey: 'drumsStudyId', placeWord: 'drum',
 };
 
+/**
+ * A struck instrument (struck.js): the drums above, the tabla and the handpan. `set` is what it is played with,
+ * its pieces, keys and words; the studio, lanes and pads read the set.
+ */
+const struckKit = (id, { lessons, songs, songsLabel, pathStages }) => ({
+  id, label: INFO[id].label, struck: true, drums: false, bowed: false, fretted: false, set: struckSetFor(id),
+  lessons, songs, songsLabel, studies: [...lessons, ...songs], pathStages, firstLesson: lessons[0].id,
+  studyKey: `${id}StudyId`, placeWord: struckSetFor(id).word,
+});
+const TABLA_KIT = struckKit('tabla', { lessons: TABLA_STUDIES, songs: TABLA_SONGS, songsLabel: 'Thekas to play along to', pathStages: TABLA_PATH_STAGES });
+const HANDPAN_KIT = struckKit('handpan', { lessons: HANDPAN_STUDIES, songs: HANDPAN_SONGS, songsLabel: 'Tunes to play along to', pathStages: HANDPAN_PATH_STAGES });
+
 const STRING_KITS = {
-  guitar: GUITAR_KIT, bass: BASS_KIT,
+  guitar: GUITAR_KIT, bass: BASS_KIT, veena: VEENA_KIT,
   violin: bowedKit('violin'), cello: bowedKit('cello'),
 };
-const KITS = { ...STRING_KITS, drums: DRUM_KIT };
+const KITS = { ...STRING_KITS, drums: DRUM_KIT, tabla: TABLA_KIT, handpan: HANDPAN_KIT };
 
 export const isStringed = id => normalizeInstrument(id) in STRING_KITS;
 

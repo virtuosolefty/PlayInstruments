@@ -40,6 +40,7 @@ vi.mock('tone', () => {
     now: () => 0,
     loaded: vi.fn().mockResolvedValue(undefined),
     getContext: () => ({ lookAhead: 0 }),
+    getDestination: () => ({}),
     dbToGain: (db) => 10 ** (db / 20),
     Frequency: () => ({ toNote: () => 'C4' }),
     Gain: class extends Node {
@@ -49,6 +50,8 @@ vi.mock('tone', () => {
       }
     },
     Reverb: Node,
+    Limiter: Node,
+    WaveShaper: Node,
     Meter: class extends Node {
       getValue() {
         return -60;
@@ -209,7 +212,7 @@ describe('App', () => {
 
   it('scores synthetic MIDI once a run is playing', async () => {
     await mountApp(NO_COUNT_IN);
-    const { emitSyntheticMidi } = await import('./lib/midiInput.js');
+    const { emitSyntheticMidi } = await import('./lib/input/midiInput.js');
 
     await act(async () => {
       buttonWith('Play').click();
@@ -233,7 +236,7 @@ describe('App', () => {
 
   it('records a session to localStorage when stopped', async () => {
     await mountApp(NO_COUNT_IN);
-    const { emitSyntheticMidi } = await import('./lib/midiInput.js');
+    const { emitSyntheticMidi } = await import('./lib/input/midiInput.js');
 
     await act(async () => {
       buttonWith('Play').click();
@@ -270,7 +273,7 @@ describe('App', () => {
 
   it('judges nothing during the count-in', async () => {
     await mountApp();
-    const { emitSyntheticMidi } = await import('./lib/midiInput.js');
+    const { emitSyntheticMidi } = await import('./lib/input/midiInput.js');
 
     await act(async () => {
       buttonWith('Play').click();
@@ -373,7 +376,7 @@ describe('App', () => {
 
   it('keeps detailed performance measures collapsed until asked', async () => {
     await mountApp(NO_COUNT_IN);
-    const { emitSyntheticMidi } = await import('./lib/midiInput.js');
+    const { emitSyntheticMidi } = await import('./lib/input/midiInput.js');
     await act(async () => {
       buttonWith('Play').click();
       await new Promise((r) => setTimeout(r, 40));
@@ -405,7 +408,7 @@ describe('App', () => {
 
   it('brings the scoreboard in once a note is judged', async () => {
     await mountApp(NO_COUNT_IN);
-    const { emitSyntheticMidi } = await import('./lib/midiInput.js');
+    const { emitSyntheticMidi } = await import('./lib/input/midiInput.js');
     await act(async () => {
       buttonWith('Play').click();
       await new Promise((r) => setTimeout(r, 40));

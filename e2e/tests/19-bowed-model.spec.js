@@ -25,7 +25,7 @@ async function open(page, instrument, stageQuality) {
   await seedSettings(page, { renderer: 'gl', practiceInstrument: instrument, stageQuality }, { everyLoad: true });
   await page.goto('/');
   await expect(page.locator('.bowed-workspace')).toBeVisible({ timeout: 60_000 });
-  await page.evaluate(async () => { window.__notes = []; (await import('/src/lib/midiInput.js')).midiInput.onMessage(m => window.__notes.push(m)); });
+  await page.evaluate(async () => { window.__notes = []; (await import('/src/lib/input/midiInput.js')).midiInput.onMessage(m => window.__notes.push(m)); });
 }
 
 test('on the full stage the violin is the downloaded model, mapped for lessons and whole in free play', async ({ page }) => {

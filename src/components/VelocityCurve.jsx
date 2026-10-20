@@ -1,4 +1,4 @@
-import { applyCurve, IDENTITY_CURVE, isIdentity } from '../lib/velocity.js';
+import { applyCurve, IDENTITY_CURVE, isIdentity } from '../lib/input/velocity.js';
 
 /**
  * The correction curve, drawn.
@@ -51,7 +51,7 @@ export default function VelocityCurve({ curve = IDENTITY_CURVE, points = null })
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={
         active
           ? 'Your velocity curve: the range your keyboard reports, mapped onto the range the music is written in'
-          : 'No velocity correction — your keyboard is judged exactly as it reports'
+          : 'No velocity correction: your keyboard is judged exactly as it reports'
       }>
         {DYNAMICS.map(([label, at]) => (
           <g key={label}>

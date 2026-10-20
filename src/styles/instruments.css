@@ -1,7 +1,7 @@
 /* Instrument surfaces and compact desktop chrome. */
-.instrument-controls,.guitar-view-controls { display:flex; align-items:center; flex-wrap:wrap; gap:var(--sp-3); padding:6px var(--sp-4); flex-shrink:0; border-bottom:1px solid var(--line-soft); background:var(--bg-1); }
-.instrument-controls label,.guitar-view-controls label { display:flex; gap:6px; align-items:center; color:var(--text-dim); font-size: var(--fs-xs); }
-.instrument-controls select,.guitar-view-controls select { min-height: var(--control-h-sm); border:1px solid var(--line-strong); background:var(--bg-1); border-radius: var(--radius-sm); padding:2px 6px; font:inherit; color:var(--text); }
+.instrument-controls,.guitar-view-controls { display:flex; align-items:center; flex-wrap:wrap; gap:var(--sp-3); padding:var(--sp-1-5) var(--sp-4); flex-shrink:0; border-bottom:1px solid var(--line-soft); background:var(--bg-1); }
+.instrument-controls label,.guitar-view-controls label { display:flex; gap:var(--sp-1-5); align-items:center; color:var(--text-dim); font-size: var(--fs-xs); }
+.instrument-controls select,.guitar-view-controls select, .instrument-controls .listbox-trigger, .guitar-view-controls .listbox-trigger { min-height: var(--control-h-sm); border:1px solid var(--line-strong); background:var(--bg-1); border-radius: var(--radius-sm); padding:var(--sp-hair) var(--sp-1-5); font:inherit; color:var(--text); }
 .instrument-controls button { min-height: var(--control-h-sm); padding:3px var(--sp-2); font-size: var(--fs-xs); }
 .instrument-controls button[aria-pressed=true] { color:var(--accent); border-color:var(--accent); background:var(--accent-soft); }
 .octave-controls { display:flex; align-items:center; gap:var(--sp-2); font-size: var(--fs-xs); color:var(--text-dim); }
@@ -11,10 +11,10 @@
 .playable-piano { touch-action:none; }
 .playable-piano:focus-visible { outline:2px solid var(--accent); outline-offset:-3px; }
 .guitar-position-label { position:absolute; transform:translate(-50%,-50%); z-index:1; pointer-events:none; line-height:1; font: var(--fw-bold) var(--fs-md) var(--sans); color:var(--text); }
-.guitar-position-label.string { color:#fffaf0; background:#2b221de6; padding:2px var(--sp-1); border-radius: var(--radius-xs); }
+.guitar-position-label.string { color:var(--marker-fill); background:#2b221de6; padding:var(--sp-hair) var(--sp-1); border-radius: var(--radius-xs); }
 .guitar-stage { flex-shrink:0; overflow:hidden; }
 .guitar-stage-hint { top:8px; font-size: var(--fs-xs); letter-spacing:0; }
-.guitar-stage-hint { top:auto; bottom:6px; right:12px; background:var(--bg-1); padding:3px 6px; border-radius: var(--radius-xs); }
+.guitar-stage-hint { top:auto; bottom:6px; right:12px; background:var(--bg-1); padding:3px var(--sp-1-5); border-radius: var(--radius-xs); }
 .guitar-left-toggle { margin-left:auto; }
 .fret-numbers,.guitar-string { grid-template-columns:32px repeat(var(--frets,13),minmax(26px,1fr)); min-width:0; }
 .guitar-fretboard { --instrument-label-size:14px; }
@@ -24,21 +24,21 @@
 .guitar-string button { background:#382b25; border-right-color:#a7a09a; }
 .guitar-string button span { font-size:var(--instrument-label-size); }
 .guitar-string button::before { background:#d1c6b8; opacity:.6; }
-.guitar-string .chord-position span { background:#e8dfd2; border:1px solid #d7c8b2; color:#302821; }
-.guitar-string .target span { background:#30253e; color:#e3d8ff; border:2px solid #c4b0ff; box-shadow:none; }
-.guitar-string .held span { background:#8bdfb9; border:2px solid #bcf4d9; color:#173c2c; box-shadow:none; }
+.guitar-string .chord-position span { background:#e8dfd2; border:1px solid var(--marker-edge); color:var(--marker-text); }
+.guitar-string .target span { background:var(--marker-target); color:#e3d8ff; border:2px solid var(--marker-target-edge); box-shadow:none; }
+.guitar-string .held span { background:var(--marker-held); border:2px solid #bcf4d9; color:var(--marker-held-text); box-shadow:none; }
 .guitar-string .possible span { background:transparent; border:1px dashed #b8a88e; color:#d4c5aa; opacity:.65; }
 .guitar-string button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; z-index:2; }
 .chord-card-heading { display:flex; justify-content:space-between; align-items:center; gap:var(--sp-2); }
 .chord-card-heading h2 { font-size: var(--fs-2xl); margin:var(--sp-2) 0; font-weight: var(--fw-bold); }
 .chord-card-heading > span { color:var(--text-dim); font-size: var(--fs-sm); }
-.chord-choices { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.chord-choices { display:grid; grid-template-columns:repeat(4,1fr); gap:var(--sp-1-5); }
 .chord-choices button { min-height: var(--control-h-sm); font-size: var(--fs-md); padding:var(--sp-1); background:var(--bg-1); }
 .chord-choices button[aria-pressed=true] { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
-.chord-diagram { display:block; width:100%; height:205px; color:var(--text-dim); margin:8px auto; font: var(--fs-md) var(--sans); }
+.chord-diagram { display:block; width:100%; height:205px; color:var(--text-dim); margin:var(--sp-2) auto; font: var(--fs-md) var(--sans); }
 .chord-diagram text:not([fill]) { fill:var(--text-dim); }
 .strum-actions { display:flex; gap:var(--sp-2); margin-bottom:var(--sp-4); }
-.strum-actions button { flex:1; min-height: var(--control-h); font-size: var(--fs-sm); padding:6px; }
+.strum-actions button { flex:1; min-height: var(--control-h); font-size: var(--fs-sm); padding:var(--sp-1-5); }
 .chord-card > label { display:flex; flex-wrap:wrap; justify-content:space-between; gap:var(--sp-2); font-size: var(--fs-sm); margin:var(--sp-3) 0; color:var(--text-dim); }
 .chord-card > label input { display:block; width:100%; }
 .chord-card output { color:var(--text); }
@@ -47,22 +47,22 @@
 .guitar-workspace > .chord-card .eyebrow,.guitar-workspace > .chord-card .hint { display:none; }
 .guitar-workspace > .chord-card > label,.guitar-workspace > .chord-card .strum-actions { margin:0; }
 @media(min-width:901px) {
-  .studio-app { padding:0 var(--sp-4) var(--sp-3); gap:6px; }
-  .studio-app .topbar { min-height:48px; padding:6px 0; }
+  .studio-app { padding:0 var(--sp-4) var(--sp-3); gap:var(--sp-1-5); }
+  .studio-app .topbar { min-height:48px; padding:var(--sp-1-5) 0; }
   .studio-app .app-body { gap:var(--sp-3); }
   .studio-app .studio-header { padding:var(--sp-2) var(--sp-4); min-height:68px; flex-shrink:0; }
-  .studio-heading h2 { font-size: var(--fs-xl); margin:3px 0; line-height:1.25; }
+  .studio-heading h1 { font-size: var(--fs-xl); margin:3px 0; line-height:1.25; }
   .studio-heading .eyebrow { display:none; }
   .studio-header-actions { flex-wrap:nowrap; max-width:none; gap:var(--sp-2); }
   .studio-header-actions .workspace-switch { order:0; }
-  .studio-header-actions .workspace-switch button { padding:6px var(--sp-2); }
-  .instrument-picker button { min-width:74px; min-height: var(--control-h-sm); padding:6px var(--sp-2); gap:6px; }
-  .studio-app .controls { padding:6px var(--sp-4); gap:6px var(--sp-2); flex-shrink:0; }
+  .studio-header-actions .workspace-switch button { padding:var(--sp-1-5) var(--sp-2); }
+  .instrument-picker button { min-width:74px; min-height: var(--control-h-sm); padding:var(--sp-1-5) var(--sp-2); gap:var(--sp-1-5); }
+  .studio-app .controls { padding:var(--sp-1-5) var(--sp-4); gap:var(--sp-1-5) var(--sp-2); flex-shrink:0; }
   .studio-app .pad { padding:0 var(--sp-2); height: var(--control-h); min-height: var(--control-h); }
   .studio-app .pad-play { min-width:66px; }
   .studio-app .pad:nth-child(2) .cap,.studio-app .pad:nth-child(3) .cap,.studio-app .pad:nth-child(6) .cap { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
   .studio-app .pad:nth-child(2),.studio-app .pad:nth-child(3),.studio-app .pad:nth-child(6) { width:32px; min-width:32px; padding:0; justify-content:center; }
-  .studio-app .mode-switch { padding:2px; }
+  .studio-app .mode-switch { padding:var(--sp-hair); }
   .studio-app .mode-switch button { font-size: var(--fs-xs); padding:var(--sp-1) var(--sp-2); }
   .studio-app .options-toggle { font-size: var(--fs-xs); padding:var(--sp-2) var(--sp-2); }
   .stage-view-switch button { min-height: var(--control-h-sm); padding:3px var(--sp-2); font-size: var(--fs-xs); }
@@ -74,7 +74,7 @@
   .studio-app .guitar-workspace { overflow:visible; }
   .guitar-view-controls { order:-1; gap:var(--sp-3); }
   .guitar-view-controls .guitar-exercise { max-width:40%; }
-  .guitar-view-controls .guitar-exercise select { min-width:0; width:100%; max-width:215px; }
+  .guitar-view-controls .guitar-exercise select, .guitar-view-controls .guitar-exercise .listbox-trigger { min-width:0; width:100%; max-width:215px; }
   .guitar-tab { min-height:120px; }
   .guitar-next { padding:var(--sp-1) var(--sp-4); min-height:28px; }
   .studio-app .guitar-stage,.studio-app .guitar-stage-loading { height:var(--fretboard-height,230px); min-height:180px; flex:0 1 var(--fretboard-height,230px); }
@@ -82,8 +82,8 @@
   .studio-app.free-play .guitar-fret-controls:not(.with-stage) { margin:auto 0; }
   /* The same room for the strings whatever their number: six at 40px, four at 60px. */
   .studio-app.free-play .guitar-fret-controls:not(.with-stage) .guitar-string button { height:calc(240px / var(--strings, 6)); }
-  .guitar-fret-controls > summary { padding:5px 16px; }
-  .guitar-fretboard { padding:6px 16px; }
+  .guitar-fret-controls > summary { padding:5px var(--sp-4); }
+  .guitar-fretboard { padding:var(--sp-1-5) var(--sp-4); }
   .studio-app .guitar-string button { height:28px; }
   .guitar-chords { padding:var(--sp-1) var(--sp-4); flex-wrap:nowrap; }
   .guitar-chords > span { font-size: var(--fs-2xs); letter-spacing:0; margin-left:auto; }
@@ -97,7 +97,7 @@
   .studio-app .guitar-tab { min-height:120px; }
   .studio-app .chord-diagram { height:180px; }
   .studio-app .chord-card.section { padding:var(--sp-4) var(--sp-4); }
-  .chord-card-heading h2 { margin:6px 0; }
+  .chord-card-heading h2 { margin:var(--sp-1-5) 0; }
 }
 @media(prefers-reduced-motion:reduce) {
   .playable-piano *,.guitar-workspace * { animation:none!important; transition:none!important; }

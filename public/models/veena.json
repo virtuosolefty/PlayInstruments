@@ -1,0 +1,141 @@
+{
+  "name": "veena",
+  "credit": {
+    "title": "Indian Classical Music : Veena",
+    "author": "mayam3D",
+    "authorUrl": "https://sketchfab.com/mayam3D",
+    "source": "https://sketchfab.com/3d-models/indian-classical-music-veena-49d4fe5113414001b1c7e5a906865628",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "line": "\"Indian Classical Music : Veena\" (https://sketchfab.com/3d-models/indian-classical-music-veena-49d4fe5113414001b1c7e5a906865628) by mayam3D (https://sketchfab.com/mayam3D), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Modified: the frets moved to their equal-tempered places, the strings between nut and bridge replaced, scaled and re-encoded for Practice Deck."
+  },
+  "nutX": -6.05,
+  "scaleLength": 24.1,
+  "strings": [
+    {
+      "nut": [
+        -6.2404,
+        -0.016,
+        -0.3821
+      ],
+      "bridge": [
+        16.7789,
+        0.3639,
+        -0.4812
+      ],
+      "radius": 0.0087
+    },
+    {
+      "nut": [
+        -6.069,
+        -0.0092,
+        -0.1
+      ],
+      "bridge": [
+        19.3144,
+        0.2763,
+        -0.2026
+      ],
+      "radius": 0.0151
+    },
+    {
+      "nut": [
+        -6.0196,
+        0.0096,
+        0.1442
+      ],
+      "bridge": [
+        18.0307,
+        0.2974,
+        0.1096
+      ],
+      "radius": 0.0074
+    },
+    {
+      "nut": [
+        -5.871,
+        0.0156,
+        0.338
+      ],
+      "bridge": [
+        18.0761,
+        0.2955,
+        0.387
+      ],
+      "radius": 0.0075
+    }
+  ],
+  "frets": [
+    -4.6974,
+    -3.4207,
+    -2.2156,
+    -1.0782,
+    -0.0046,
+    1.0087,
+    1.9652,
+    2.868,
+    3.7201,
+    4.5243,
+    5.2835,
+    6,
+    6.6763,
+    7.3147,
+    7.9172,
+    8.4859,
+    9.0227,
+    9.5294,
+    10.0076,
+    10.459,
+    10.885
+  ],
+  "bounds": {
+    "min": [
+      -13.8048,
+      -9.5967,
+      -5.835
+    ],
+    "max": [
+      24.7134,
+      0.3926,
+      5.7378
+    ]
+  },
+  "parts": {
+    "part0": {
+      "min": [
+        -13.8048,
+        -9.5967,
+        -5.835
+      ],
+      "max": [
+        24.6747,
+        0.3926,
+        5.7378
+      ]
+    },
+    "stringEnds": {
+      "min": [
+        -12.4843,
+        -4.0885,
+        -0.51
+      ],
+      "max": [
+        24.7008,
+        0.3707,
+        0.3997
+      ]
+    },
+    "drones": {
+      "min": [
+        -3.3167,
+        -1.1847,
+        0.5974
+      ],
+      "max": [
+        24.7134,
+        0.1701,
+        2.1134
+      ]
+    }
+  }
+}

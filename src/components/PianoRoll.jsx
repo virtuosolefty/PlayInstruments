@@ -11,7 +11,7 @@
  */
 
 import { useEffect, useMemo, useRef } from 'react';
-import { buildKeyboardGeometry, displayRangeFor, keyAt } from '../lib/keyboard.js';
+import { buildKeyboardGeometry, displayRangeFor, keyAt, laneAt } from '../lib/piano/keyboard.js';
 import {
   COMBO_THRESHOLD,
   gridLines,
@@ -20,20 +20,25 @@ import {
   lanesFrom,
   rollLayout,
   timeWindow,
-} from '../lib/rollGeometry.js';
-import { PIANO_COLORS as COLORS, PIANO_HEIGHT, soundingNotes, stageChords } from '../lib/pianoStage.js';
-import { paintStageNotes, paintChordLabels, paintStrike } from '../lib/pianoStagePaint.js';
+} from '../lib/piano/rollGeometry.js';
+import { PIANO_COLORS as COLORS, PIANO_HEIGHT, soundingNotes, stageChords } from '../lib/piano/pianoStage.js';
+import { beatPulse, paintBeatPulse } from '../lib/practice/beatPulse.js';
+import { paintStageNotes, paintChordLabels, paintStrike } from '../lib/piano/pianoStagePaint.js';
 import { usePianoInteraction } from '../hooks/usePianoInteraction.js';
 import { referencePlaybackFor } from '../hooks/usePracticeEngine.js';
 import PianoAccess from './PianoAccess.jsx';
-import { drawKeyboard } from '../lib/pianoKeys.js';
+import { drawKeyboard } from '../lib/piano/pianoKeys.js';
+import { fingersSignature, keyFingers } from '../lib/piano/keyFingers.js';
 import {
   BLACK_H_RATIO,
   ROLL_FONT,
   roundRect,
-} from '../lib/rollPaint.js';
+} from '../lib/piano/rollPaint.js';
 
 
+
+/** How long the roll keeps drawing after the last change, so flashes and glows finish fading before it idles. */
+const SETTLE_MS = 1500;
 export default function PianoRoll({
   score,
   engine,
@@ -47,6 +52,8 @@ export default function PianoRoll({
   labels = 'note',
   ghost = null,
   bestCombo = 0,
+  // In a lesson, the finger each key is played with, on the key (keyFingers.js).
+  fingers = false,
 }) {
   const KEYBOARD_H = keyboardHeight;
   const chordsRef=useRef([]);
@@ -68,6 +75,7 @@ export default function PianoRoll({
 
   const accompanimentRef = useRef([]);
   const labelsRef = useRef(labels);
+  const fingersRef = useRef(fingers); fingersRef.current = fingers;
   labelsRef.current = labels;
   // Read from a ref like everything else the draw loop touches: the ghost
   // changes once per run, and re-rendering the canvas for it would be waste.
@@ -93,6 +101,8 @@ export default function PianoRoll({
   ppsRef.current = pixelsPerSecond;
   scoreRef.current = score;
   engineRef.current = engine;
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
   // Split out once per score rather than filtered on every frame.
   accompanimentRef.current = useMemo(
     () => (score?.notes ?? []).filter((n) => n.accompaniment),
@@ -105,7 +115,7 @@ export default function PianoRoll({
     const x = e.clientX-rect.left, y = e.clientY-rect.top, top = sizeRef.current.h-keyboardHeight;
     if (x<0 || x>rect.width || y<0 || y>rect.height) return null;
     if(y>=top) { const midi=keyAt(geom,x,y,top,keyboardHeight*BLACK_H_RATIO); return {midi,depth:(y-top)/(geom.keys.get(midi)?.black?keyboardHeight*BLACK_H_RATIO:keyboardHeight)}; }
-    return {time:Math.max(0,(engine.transportRef.current?.now()??0)+(top-y)/ppsRef.current)};
+    return {time:Math.max(0,(engine.transportRef.current?.now()??0)+(top-y)/ppsRef.current), lane:laneAt(geom,x)};
   }});
   // When the score has been fitted to a controller, draw exactly that
   // controller's keys — the on-screen keyboard then mirrors the hardware
@@ -164,9 +174,16 @@ export default function PianoRoll({
     return () => ro.disconnect();
   }, [range, keyboardHeight]);
 
+  // Anything outside the clock that changes the picture (a prop, a setting) wakes the idle draw loop.
+  const wokenAt = useRef(0);
+  useEffect(() => { wokenAt.current = performance.now(); });
+
   /* ------------------------------------------------------------ draw loop */
   useEffect(() => {
     let raf = 0;
+    // Idle frames are skipped: the canvas keeps its last picture once nothing has moved for SETTLE_MS, long enough
+    // for a hit's flash or a key's glow to finish. A paused studio was repainting all of this sixty times a second.
+    let lastSig = '', awakeUntil = 0;
 
     const draw = () => {
       raf = requestAnimationFrame(draw);
@@ -190,6 +207,10 @@ export default function PianoRoll({
       const session = engineNow.sessionRef.current;
       const now = transport ? transport.now() : 0;
       const nowMs = performance.now(); // wall clock, for anything that animates
+      let sig = `${now}|${w}|${h}|${dpr}|${ppsRef.current}|${input.hoverRef.current}|${currentScore?.id}`;
+      for (const [midi, press] of engineNow.activeInputRef.current) sig += `|${midi}${press.type}`;
+      if (sig !== lastSig) { lastSig = sig; awakeUntil = nowMs + SETTLE_MS; }
+      if (nowMs > awakeUntil && nowMs - wokenAt.current > SETTLE_MS) return;
 
       const { yFor, tTop, tBottom } = timeWindow({ hitLine, rollH }, now, pps);
 
@@ -320,6 +341,9 @@ export default function PianoRoll({
         1,
         Math.max(0, (combo - COMBO_THRESHOLD) / 12) + (record ? 0.35 : 0),
       );
+      // The line flashes on the beat through the count-in and while the metronome runs (beatPulse.js).
+      paintBeatPulse(ctx, { pulse: beatPulse(now, currentScore, { countIn: !!engineNow.countIn, metronome: !!settingsRef.current?.metronome, playing: !!engineNow.playing, calm: calmRef.current }),
+        from: { x: 0, y: hitLine }, to: { x: w, y: hitLine }, colour: COLORS.hitLine });
       /* ----------------------------------------------------- hit flourishes */
       const effects = engineNow.effectsRef?.current ?? [];
       for (let i = effects.length - 1; i >= 0; i -= 1) {
@@ -408,6 +432,8 @@ export default function PianoRoll({
         for (const [midi, press] of activeInputSig) sig += `|p${midi}${press.type}`;
         for (const [midi,note] of soundingNow) sig += `|t${midi}${note.hand}`;
         sig += `|playback${playback}`;
+        const keyFingerMap = fingersRef.current ? keyFingers(scoreRef.current?.notes, now) : null;
+        if (keyFingerMap) sig += `|f${fingersSignature(keyFingerMap)}`;
 
         if (keyboardCache.current.sig !== sig) {
           const layer = keyboardCache.current.canvas ?? document.createElement('canvas');
@@ -416,7 +442,7 @@ export default function PianoRoll({
           const kctx = layer.getContext('2d');
           kctx.setTransform(dpr, 0, 0, dpr, 0, 0);
           kctx.clearRect(0, 0, w, KEYBOARD_H);
-          drawKeyboard(kctx, geom, activeInputSig, soundingNow, w, 0, {height:keyboardHeight, labels:playingSettings.current.pianoLabels, octave:playingSettings.current.typingOctave, hover:input.hoverRef.current,playback});
+          drawKeyboard(kctx, geom, activeInputSig, soundingNow, w, 0, {height:keyboardHeight, labels:playingSettings.current.pianoLabels, octave:playingSettings.current.typingOctave, hover:input.hoverRef.current,playback,fingers:keyFingerMap});
           keyboardCache.current = { sig, canvas: layer };
         }
 

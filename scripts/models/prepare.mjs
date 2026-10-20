@@ -15,7 +15,7 @@
  *
  * Every instrument comes out the same size along its strings: 24.1 stage units
  * from the nut to the bridge, with the nut at x = −6.05, matching the guitar
- * built in code (src/lib/guitarNeck.js). The stage draws the strings between
+ * built in code (src/lib/strings/guitarNeck.js). The stage draws the strings between
  * nut and bridge itself, so they can vibrate and be played; of the model's own
  * strings only the ends beyond the nut and the bridge are kept.
  */
@@ -28,7 +28,9 @@ import { crossSectionRadius, fitLine, fitScale, lowestFirst, playingSpan, ringCe
 import { toWebp } from './images.mjs';
 import { quantizeFrame, quantizePart } from './quantize.mjs';
 import { RECIPES } from './recipes.mjs';
-import { asMetalRough, drumZonePart, leanPrimitive, showcaseTransform, wholePieces } from './showcase.mjs';
+import { simplifyParts } from './simplify.mjs';
+import { liftDarkMaterial, retoneMaterial } from './materialFinish.mjs';
+import { asMetalRough, drumZonePart, keyParts, leanPrimitive, showcaseTransform, wholePieces } from './showcase.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const NUT_X = -6.05;
@@ -51,6 +53,7 @@ function loadSource(name) {
       primitives.push({
         material: prim.material,
         materialName: json.materials?.[prim.material]?.name ?? '',
+        meshName: json.meshes[node.mesh].name ?? '',
         positions: transformPoints(read('POSITION'), matrix),
         normals: read('NORMAL') && transformNormals(read('NORMAL'), matrix),
         uvs: read('TEXCOORD_0'),
@@ -89,6 +92,7 @@ function findPieces(source, recipe) {
       const piece = { primIndex, index: i, material: prim.materialName, box: b, triangles: b.triangles, largest: i === largest };
       piece.part = recipe.classify(piece, model);
       piece.isFret = recipe.frets?.(piece, model) ?? false;
+      piece.isEvenFret = recipe.evenFrets?.(piece, model) ?? false;
       pieces.push(piece);
     });
     prim.parts = parts;
@@ -99,14 +103,44 @@ function findPieces(source, recipe) {
 function minOf(positions, k) { let v = Infinity; for (let i = k; i < positions.length; i += 3) if (positions[i] < v) v = positions[i]; return v; }
 function maxOf(positions, k) { let v = -Infinity; for (let i = k; i < positions.length; i += 3) if (positions[i] > v) v = positions[i]; return v; }
 
-/** The vertex positions of one piece, as xyz triples. */
-function piecePoints(source, piece) {
+/** The numbers of the vertices one piece is made of, within its primitive. */
+function pieceVertices(source, piece) {
   const prim = source.primitives[piece.primIndex], seen = new Set();
   for (let t = 0; t < prim.parts.ofTriangle.length; t++) {
     if (prim.parts.ofTriangle[t] !== piece.index) continue;
     for (let c = 0; c < 3; c++) seen.add(prim.indices[t * 3 + c]);
   }
-  return [...seen].map(v => [prim.positions[v * 3], prim.positions[v * 3 + 1], prim.positions[v * 3 + 2]]);
+  return [...seen];
+}
+
+/** The vertex positions of one piece, as xyz triples. */
+function piecePoints(source, piece) {
+  const prim = source.primitives[piece.primIndex];
+  return pieceVertices(source, piece).map(v => [prim.positions[v * 3], prim.positions[v * 3 + 1], prim.positions[v * 3 + 2]]);
+}
+
+/** How far past the nut, as a share of the scale, a bar can be and still be the nut: well short of the first fret's 5.6%. */
+const NUT_BAR = 0.02;
+
+/**
+ * Frets a model spaces evenly (the veena's), each slid along the strings to
+ * where equal temperament puts it, nearest the nut first, so the stage's fret
+ * maths (src/lib/strings/guitarNeck.js) lands on a fret the model has. Returns the
+ * source with those pieces moved, and where the frets now are along the strings.
+ */
+function placeEvenFrets(source, pieces, { along, nutAt, length }) {
+  // A bar at or behind the nut is the nut itself, and stays where it is.
+  const frets = pieces.filter(p => p.isEvenFret && (p.box.center[along] - nutAt) / length > NUT_BAR).sort((a, b) => Math.abs(a.box.center[along] - nutAt) - Math.abs(b.box.center[along] - nutAt));
+  const at = frets.map((_, i) => nutAt + length * (1 - 2 ** (-(i + 1) / 12)));
+  const moved = new Map();
+  frets.forEach((piece, i) => {
+    const prim = source.primitives[piece.primIndex];
+    if (!moved.has(piece.primIndex)) moved.set(piece.primIndex, Float32Array.from(prim.positions));
+    const positions = moved.get(piece.primIndex), shift = at[i] - piece.box.center[along];
+    for (const v of pieceVertices(source, piece)) positions[v * 3 + along] += shift;
+  });
+  const primitives = source.primitives.map((prim, i) => (moved.has(i) ? { ...prim, positions: moved.get(i) } : prim));
+  return { source: { ...source, primitives }, at };
 }
 
 /**
@@ -121,7 +155,8 @@ function measureStrings(source, pieces, recipe, model) {
   const along = recipe.lengthAxis, [across, sign] = recipe.axes[2];
   const strings = pieces.filter(p => p.part === 'string').map(piece => {
     const points = piecePoints(source, piece);
-    const span = playingSpan(ringCentres(points, along, model.length * 0.0015), 2);
+    const centres = ringCentres(points, along, model.length * 0.0015);
+    const span = recipe.playingSpan ? recipe.playingSpan(centres) : playingSpan(centres, 2);
     const [a, b] = [span.from, span.to].sort((p, q) => p[along] - q[along]);
     const [nut, bridge] = recipe.headAt === 'min' ? [a, b] : [b, a];
     const inside = points.filter(p => p[along] > Math.min(nut[along], bridge[along]) && p[along] < Math.max(nut[along], bridge[along]));
@@ -129,7 +164,9 @@ function measureStrings(source, pieces, recipe, model) {
     return { piece, nut, bridge, radius, side: sign * bridge[across] };
   });
   if (strings.length !== recipe.strings) throw new Error(`Expected ${recipe.strings} strings in the model, found ${strings.length}`);
-  return lowestFirst(strings, { rightHanded: recipe.rightHanded });
+  const ordered = lowestFirst(strings, { rightHanded: recipe.rightHanded });
+  // On the veena the highest string, not the lowest, is the one nearest the player.
+  return recipe.highestNearest ? ordered.reverse() : ordered;
 }
 
 /** The stage transform: turn the model's axes onto the stage's, scale, and put the nut at x = NUT_X on the strings' centreline. */
@@ -166,7 +203,10 @@ function buildParts(source, pieces, transform) {
     // Vertices are numbered within a primitive, so two primitives stay two, even under one part and one material.
     const key = `${piece.part}|${prim.material}|${piece.primIndex}`;
     if (!groups.has(key)) groups.set(key, { part: piece.part, material: prim.material, primIndex: piece.primIndex, triangles: [] });
-    groups.get(key).triangles.push(...piece.triangles);
+    // A loop, not a spread: a piece can hold hundreds of thousands of corners (the tabla's ropes), past what a
+    // call's arguments can carry.
+    const into = groups.get(key).triangles;
+    for (const corner of piece.triangles) into.push(corner);
   }
   return [...groups.values()].map(group => {
     const prim = source.primitives[group.primIndex];
@@ -274,8 +314,8 @@ function writeGlb(name, recipe, parts, encoded) {
  */
 function sourceFor(name, recipe) {
   const loaded = loadSource(name);
-  const materials = (loaded.json.materials ?? []).map(asMetalRough);
-  const kept = loaded.primitives.filter(prim => !recipe.omit?.(prim.materialName));
+  const materials = (loaded.json.materials ?? []).map(asMetalRough).map(material => recipe.liftDarkMaterials ? liftDarkMaterial(material) : material).map(material => retoneMaterial(material, recipe.retone));
+  const kept = loaded.primitives.filter(prim => !recipe.omit?.(prim.materialName, prim.meshName));
   return { ...loaded, json: { ...loaded.json, materials }, primitives: recipe.lean ? kept.map(prim => leanPrimitive(prim, materials[prim.material])) : kept };
 }
 
@@ -302,11 +342,39 @@ function drumPieces(source, zones, transform) {
   });
 }
 
+/**
+ * A piano's pieces, each key in a part of its own (`key-<midi>`, see `keyParts`) so that the stage can press and light
+ * it as its note plays; everything else stays in the part its primitive always was.
+ */
+function keyPieces(source, transform) {
+  const length = Math.max(...[0, 1, 2].map(k => Math.max(...source.primitives.map(p => maxOf(p.positions, k))) - Math.min(...source.primitives.map(p => minOf(p.positions, k)))));
+  const found = source.primitives.map(prim => {
+    const parts = connectedComponents(prim.indices, weldByPosition(prim.positions, length * 1e-6));
+    const boxes = describeComponents(prim.positions, prim.indices, parts).map(box => {
+      const lo = transform.apply(box.min), hi = transform.apply(box.max);
+      return { centre: lo.map((v, k) => (v + hi[k]) / 2), size: lo.map((v, k) => Math.abs(hi[k] - v)) };
+    });
+    return { parts, boxes };
+  });
+  const names = keyParts(found.flatMap(f => f.boxes));
+  let next = 0;
+  return found.flatMap(({ parts, boxes }, primIndex) => {
+    const own = boxes.map(() => names[next++]);
+    const triangles = new Map();
+    for (let t = 0; t < parts.ofTriangle.length; t++) {
+      const part = own[parts.ofTriangle[t]] ?? `part${primIndex}`;
+      if (!triangles.has(part)) triangles.set(part, []);
+      triangles.get(part).push(t);
+    }
+    return [...triangles].map(([part, list]) => ({ primIndex, part, triangles: list }));
+  });
+}
+
 async function prepareShowcase(name, recipe) {
   const source = sourceFor(name, recipe);
   const box = { min: [0, 1, 2].map(k => Math.min(...source.primitives.map(p => minOf(p.positions, k)))), max: [0, 1, 2].map(k => Math.max(...source.primitives.map(p => maxOf(p.positions, k)))) };
   const transform = showcaseTransform(box, recipe.axes);
-  const parts = buildParts(source, recipe.zones ? drumPieces(source, recipe.zones, transform) : wholePieces(source.primitives), transform);
+  const parts = await simplifyParts(buildParts(source, recipe.zones ? drumPieces(source, recipe.zones, transform) : recipe.keys ? keyPieces(source, transform) : wholePieces(source.primitives), transform), recipe.simplify);
   const encoded = await encodeMaterials(source, parts, recipe);
   const glb = writeGlb(name, recipe, parts, encoded);
   const bounds = parts.map(part => boundsOf(part.positions));
@@ -333,9 +401,9 @@ async function prepare(name) {
   const recipe = RECIPES[name];
   if (!recipe) throw new Error(`No recipe for "${name}"; known: ${Object.keys(RECIPES).join(', ')}`);
   if (recipe.showcase) return prepareShowcase(name, recipe);
-  const source = sourceFor(name, recipe);
-  const { pieces, model } = findPieces(source, recipe);
-  const strings = measureStrings(source, pieces, recipe, model);
+  const loaded = sourceFor(name, recipe);
+  const { pieces, model } = findPieces(loaded, recipe);
+  const strings = measureStrings(loaded, pieces, recipe, model);
   const along = recipe.lengthAxis;
   const average = points => [0, 1, 2].map(k => points.reduce((sum, p) => sum + p[k], 0) / points.length);
   const nutPoint = average(strings.map(s => s.nut)), bridgePoint = average(strings.map(s => s.bridge));
@@ -348,9 +416,12 @@ async function prepare(name) {
     fretFit = fitScale(fretsAt);
     nutAt = fretFit.nut; length = fretFit.length;
   }
+  const even = recipe.evenFrets ? placeEvenFrets(loaded, pieces, { along, nutAt, length }) : null;
+  const source = even?.source ?? loaded;
+  if (even) fretsAt = even.at;
   const origin = [...nutPoint]; origin[along] = nutAt;
   const transform = stageTransform(recipe, origin, SCALE_LENGTH / Math.abs(length));
-  const parts = buildParts(source, keptPieces(source, pieces, strings, along), transform);
+  const parts = await simplifyParts(buildParts(source, keptPieces(source, pieces, strings, along), transform), recipe.simplify);
   const encoded = await encodeMaterials(source, parts, recipe);
   const glb = writeGlb(name, recipe, parts, encoded);
 
@@ -367,7 +438,7 @@ async function prepare(name) {
     nutX: NUT_X,
     scaleLength: SCALE_LENGTH,
     strings: strings.map(s => ({ nut: round(transform.apply(s.nut)), bridge: round(transform.apply(s.bridge)), radius: +(s.radius * transform.scale).toFixed(4) })),
-    ...(fretsAt && { frets: fretsAt.map(z => +transform.apply(Object.assign([...origin], { [along]: z }))[0].toFixed(4)), fretFitWorst: +(fretFit.worst * transform.scale).toFixed(4) }),
+    ...(fretsAt && { frets: fretsAt.map(z => +transform.apply(Object.assign([...origin], { [along]: z }))[0].toFixed(4)), ...(fretFit && { fretFitWorst: +(fretFit.worst * transform.scale).toFixed(4) }) }),
     bounds: { min: [0, 1, 2].map(k => Math.min(...all.map(b => b.min[k]))), max: [0, 1, 2].map(k => Math.max(...all.map(b => b.max[k]))) },
     parts: partBounds,
   };

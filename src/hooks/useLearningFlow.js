@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { instrumentKit, normalizeInstrument, usesKit } from '../lib/instruments.js';
 import { playedMidi } from './usePracticeEngine.js';
-import { loadScoreFromUrl } from '../lib/score.js';
-import { midiInput } from '../lib/midiInput.js';
-import { dayKey } from '../lib/streaks.js';
-import { webglAvailable } from '../lib/webgl.js';
-import { learningRecord, lessonSettings, recommendedLesson, lessonOutcome, comfortableRate, lessonCanVisit, lessonReady, lessonWords } from '../lib/learning.js';
+import { loadScoreFromUrl } from '../lib/music/score.js';
+import { midiInput } from '../lib/input/midiInput.js';
+import { dayKey } from '../lib/learning/streaks.js';
+import { webglAvailable } from '../lib/stage/webgl.js';
+import { learningRecord, lessonSettings, recommendedLesson, lessonOutcome, comfortableRate, lessonCanVisit, lessonReady, lessonWords } from '../lib/learning/learning.js';
 
 const scores = new Map();
 function loadLesson(entry) {
   if (usesKit(entry.instrument)) return Promise.resolve(entry);
   if (!scores.has(entry.id)) scores.set(entry.id, loadScoreFromUrl(entry.url, entry)
-    .then(score => ({ ...score, composer: entry.composer, description: entry.description }))
+    .then(score => ({ ...score, composer: entry.composer, description: entry.description, handChanges: entry.handChanges ?? [] }))
     .catch(error => { scores.delete(entry.id); throw error; }));
   return scores.get(entry.id);
 }
@@ -77,7 +77,7 @@ export function useLearningFlow({ settings, setSettings, library, path, score, e
     };
     setSettings(s => ({ ...s, ...lessonSettings(step, next.rate), learningView: 'lesson', onboarded: true,
       lastPianoId: instrument === 'piano' ? id : s.lastPianoId,
-      ...(kit ? { [kit.studyKey]: id } : {}),
+      ...(kit ? { [kit.studyKey]: id } : { pianoRange: 'fit' }),
       learning: { ...s.learning, [instrument]: next },
     }));
   }, [entries, instrument, kit, halt, onLeaveFreePlay, setSettings]);
@@ -98,7 +98,7 @@ export function useLearningFlow({ settings, setSettings, library, path, score, e
       if (cancelled || token !== generation.current) return;
       if (instrument === 'piano') onScore(loaded);
       setSettings(s => ({ ...s, ...lessonSettings(latest.current.record.step, latest.current.record.rate),
-        ...(kit ? { [kit.studyKey]: lesson.id } : {}) }));
+        ...(kit ? { [kit.studyKey]: lesson.id } : { pianoRange: 'fit' }) }));
       setLoading(false);
     }).catch(err => {
       if (cancelled || token !== generation.current) return;

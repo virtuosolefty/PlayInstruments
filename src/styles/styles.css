@@ -66,7 +66,7 @@ body::after {
 
 button,
 select,
-input {
+input, .listbox-trigger {
   font: inherit;
   color: inherit;
 }
@@ -108,7 +108,7 @@ a:focus-visible,
 select:focus-visible,
 input:focus-visible,
 summary:focus-visible,
-:where([role='tab'], [tabindex]):focus-visible {
+:where([role='tab'], [tabindex]):focus-visible, .listbox-trigger:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
@@ -263,7 +263,7 @@ button.danger {
   box-shadow: 18px 0 38px rgb(0 0 0 / 45%);
   transform: translateX(-101%);
   visibility: hidden;
-  transition: transform 0.22s ease, visibility 0.22s;
+  transition: transform var(--dur-base) ease, visibility var(--dur-base);
 }
 
 .app-body.library-open .pane.left {
@@ -303,7 +303,7 @@ button.danger {
 /* The brand is the first thing to go: it is decoration next to a song title,
    a device status and a transport. */
 @media (max-width: 1200px) {
-  .brand h1,
+  .brand .brand-name,
   .brand .ver {
     display: none;
   }
@@ -347,7 +347,7 @@ button.danger {
 
   .controls {
     gap: var(--sp-2);
-    padding: 6px var(--sp-2);
+    padding: var(--sp-1-5) var(--sp-2);
   }
 
   /* The deck has to survive here without wrapping, and a wrapped row costs the
@@ -407,7 +407,7 @@ button.danger {
     box-shadow: -18px 0 38px rgb(0 0 0 / 45%);
     transform: translateX(101%);
     visibility: hidden;
-    transition: transform 0.22s ease, visibility 0.22s;
+    transition: transform var(--dur-base) ease, visibility var(--dur-base);
   }
 
   .app-body.feedback-open .pane.right {
@@ -437,7 +437,7 @@ button.danger {
 .warn-hint strong {
   display: block;
   color: var(--warn);
-  margin-bottom: 2px;
+  margin-bottom: var(--sp-hair);
 }
 
 /* Shown only where the feedback column has been folded away — App passes the
@@ -463,23 +463,7 @@ button.danger {
   font-weight: var(--fw-bold);
 }
 
-/* ============================================================== focus mode
-   While a run is playing, the setup chrome steps back. Opacity only: hiding or
-   collapsing any of it would reflow the toolbar at the exact moment you are
-   trying to land a note. Hovering the topbar brings it straight back. */
-.app.focused .setup {
-  opacity: 0.22;
-  transition: opacity var(--dur-slow) var(--ease-out);
-}
-
-.app.focused .topbar:hover .setup,
-.app.focused .setup:focus-within {
-  opacity: 1;
-}
-
-.setup {
-  transition: opacity var(--dur-base) var(--ease-out);
-}
+/* While a run plays, the chrome around the stage steps back: `.receded` in patterns.css. */
 
 /* ================================================================== topbar */
 .topbar {
@@ -516,7 +500,7 @@ button.danger {
     inset 0 1px 0 rgb(255 255 255 / 35%);
 }
 
-.brand h1 {
+.brand .brand-name {
   font-size: var(--fs-md);
   font-weight: var(--fw-bold);
   letter-spacing: var(--tracking-tight);
@@ -571,7 +555,7 @@ button.danger {
 
 /* Inside a chip the select is already sitting in a bordered box, so it drops
    its own frame and keeps only the chevron. */
-.chip select {
+.chip select, .chip .listbox-trigger {
   background-color: transparent;
   border: 0;
   box-shadow: none;
@@ -582,7 +566,7 @@ button.danger {
   background-position: right 2px center;
 }
 
-.chip select:hover {
+.chip select:hover, .chip .listbox-trigger:hover {
   background-color: transparent;
 }
 
@@ -696,7 +680,7 @@ button.danger {
 }
 
 .section-title button {
-  padding: 2px var(--sp-2);
+  padding: var(--sp-hair) var(--sp-2);
   font-size: var(--fs-xs);
   text-transform: none;
   letter-spacing: 0;
@@ -715,7 +699,7 @@ button.danger {
   list-style: none;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1-5);
 }
 
 .section.fold > summary::-webkit-details-marker {
@@ -765,7 +749,7 @@ button.danger {
   background: var(--bg-1);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  padding: 6px;
+  padding: var(--sp-1-5);
 }
 
 .octave-row button {
@@ -819,18 +803,18 @@ button.linky:hover:not(:disabled) {
 .fit-switch {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 2px;
+  gap: var(--sp-hair);
   background: var(--bg);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  padding: 2px;
+  padding: var(--sp-hair);
   margin: var(--sp-2) 0 var(--sp-2);
 }
 
 .fit-switch button {
   border: 0;
   background: transparent;
-  padding: 6px var(--sp-1);
+  padding: var(--sp-1-5) var(--sp-1);
   font-size: var(--fs-xs);
   border-radius: var(--radius-xs);
   color: var(--text-dim);
@@ -862,7 +846,7 @@ button.linky:hover:not(:disabled) {
 .flame {
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: var(--sp-1-5);
 }
 
 .flame .glyph {
@@ -949,7 +933,7 @@ button.linky:hover:not(:disabled) {
   font-size: var(--fs-2xs);
   padding: 1px var(--sp-1);
   border-radius: var(--radius-pill);
-  margin-left: 6px;
+  margin-left: var(--sp-1-5);
   vertical-align: 1px;
   white-space: nowrap;
   font-weight: var(--fw-medium);
@@ -1039,7 +1023,7 @@ button.linky:hover:not(:disabled) {
 
 .composer-works {
   display: grid;
-  gap: 2px;
+  gap: var(--sp-hair);
   margin-top: var(--sp-2);
 }
 
@@ -1066,7 +1050,7 @@ button.linky:hover:not(:disabled) {
 
 .work-listen {
   flex: none;
-  padding: 2px var(--sp-2);
+  padding: var(--sp-hair) var(--sp-2);
   font-size: var(--fs-2xs);
   color: var(--accent);
   border-color: transparent;
@@ -1079,7 +1063,7 @@ button.linky:hover:not(:disabled) {
 
 .composer-more {
   margin-top: var(--sp-2);
-  padding: 2px 0;
+  padding: var(--sp-hair) 0;
   border: 0;
   box-shadow: none;
   font-size: var(--fs-2xs);
@@ -1234,7 +1218,7 @@ button.linky:hover:not(:disabled) {
 }
 
 .song .by {
-  margin-left: 6px;
+  margin-left: var(--sp-1-5);
   font-size: var(--fs-xs);
   font-weight: var(--fw-regular);
   color: var(--text-faint);
@@ -1292,7 +1276,7 @@ button.linky:hover:not(:disabled) {
 /* Difficulty, said in words rather than in a glyph the earned stars already
    own. Green for approachable, amber for a step up, red for a real climb. */
 .level {
-  padding: 1px 6px;
+  padding: 1px var(--sp-1-5);
   border-radius: var(--radius-pill);
   font-size: var(--fs-2xs);
   white-space: nowrap;
@@ -1367,7 +1351,7 @@ button.linky:hover:not(:disabled) {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-  padding: 6px var(--sp-3);
+  padding: var(--sp-1-5) var(--sp-3);
   background: var(--bg-1) var(--panel-grain);
   border-bottom: 1px solid var(--line);
   box-shadow: var(--lift-strong), 0 8px 18px rgb(0 0 0 / 32%);
@@ -1420,7 +1404,7 @@ button.linky:hover:not(:disabled) {
 .pads {
   display: flex;
   align-items: stretch;
-  gap: 6px;
+  gap: var(--sp-1-5);
 }
 
 /* ---------------------------------------------------------------- legends
@@ -1458,7 +1442,7 @@ button.linky:hover:not(:disabled) {
   font-size: var(--fs-2xs);
   font-style: normal;
   color: var(--text-faint);
-  margin-right: 6px;
+  margin-right: var(--sp-1-5);
 }
 
 .mode-switch button.on .keycap {
@@ -1471,7 +1455,7 @@ button.linky:hover:not(:disabled) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: var(--sp-hair);
   height: var(--control-h);
   min-width: 54px;
   padding: 0 var(--sp-2);
@@ -1562,9 +1546,9 @@ button.linky:hover:not(:disabled) {
 .lcd {
   display: inline-flex;
   align-items: baseline;
-  gap: 8px;
+  gap: var(--sp-2);
   height: var(--control-h);
-  padding: 0 12px;
+  padding: 0 var(--sp-3);
   border-radius: var(--radius-sm);
   background: linear-gradient(180deg, #0a1214 0%, #070d0f 100%);
   box-shadow: var(--bezel-inset);
@@ -1590,19 +1574,19 @@ button.linky:hover:not(:disabled) {
   letter-spacing: var(--tracking-caps);
 }
 
-/* A segmented group is one control, so it occupies one control's height. Its
-   items derive their box from the group rather than from the button defaults,
-   which is what used to make a three-way switch 5px shorter than the button
-   sitting next to it. */
+/* A segmented group is one control: a trough with the chosen segment raised
+   inside it. The trough has no height of its own; it is its segments plus its
+   padding and border, as every segmented control is (flow.css), so the chosen
+   segment always sits centred in it. A fixed 40px trough around the studio's
+   40px segments once let the chosen one stand 5px out of it, top and bottom. */
 .mode-switch {
   display: inline-flex;
   align-items: stretch;
-  height: var(--control-h);
   background: var(--bg);
   border: 1px solid var(--line);
   border-radius: var(--control-r);
   padding: 3px;
-  gap: 2px;
+  gap: var(--sp-hair);
   box-shadow: inset 0 1px 3px rgb(0 0 0 / 35%);
 }
 
@@ -1612,7 +1596,7 @@ button.linky:hover:not(:disabled) {
   padding: 0 var(--sp-3);
   min-height: 0;
   font-size: var(--fs-sm);
-  border-radius: calc(var(--control-r) - 3px);
+  border-radius: calc(var(--control-r) - var(--radius-xs));
   color: var(--text-dim);
   box-shadow: none;
 }
@@ -1731,7 +1715,7 @@ button.io-slot:hover {
   display: inline-flex;
   align-items: flex-end;
   gap: 1px;
-  margin-left: 6px;
+  margin-left: var(--sp-1-5);
   height: 12px;
   flex: none;
 }
@@ -1751,7 +1735,7 @@ button.io-slot:hover {
 
 /* Inside a slot the select is already in a bordered frame, so it drops its own
    and keeps the chevron. */
-.io-slot select {
+.io-slot select, .io-slot .listbox-trigger {
   background-color: transparent;
   border: 0;
   box-shadow: none;
@@ -1762,7 +1746,7 @@ button.io-slot:hover {
   background-position: right 2px center;
 }
 
-.io-slot select:hover {
+.io-slot select:hover, .io-slot .listbox-trigger:hover {
   background-color: transparent;
 }
 
@@ -1789,7 +1773,7 @@ button.io-slot:hover {
 .toggle {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1-5);
   font-size: var(--fs-sm);
   color: var(--text-dim);
   cursor: pointer;
@@ -1889,7 +1873,7 @@ button.io-slot:hover {
   gap: 3px;
   font-family: var(--mono);
   font-size: var(--fs-xs);
-  padding: 2px var(--sp-2);
+  padding: var(--sp-hair) var(--sp-2);
   border-radius: var(--radius-pill);
   background: rgb(255 93 108 / 13%);
   border: 1px solid rgb(255 93 108 / 30%);
@@ -1956,7 +1940,7 @@ button.io-slot:hover {
 }
 
 .banner h3 {
-  margin: 0 0 6px;
+  margin: 0 0 var(--sp-1-5);
   font-size: var(--fs-md);
 }
 
@@ -1974,7 +1958,7 @@ button.io-slot:hover {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: var(--sp-1-5);
   pointer-events: none;
   z-index: 6;
 }
@@ -2195,7 +2179,7 @@ button.io-slot:hover {
   display: flex;
   align-items: baseline;
   justify-content: center;
-  gap: 6px;
+  gap: var(--sp-1-5);
   margin-bottom: var(--sp-4);
 }
 
@@ -2213,7 +2197,7 @@ button.io-slot:hover {
   font-style: normal;
   font-size: var(--fs-xs);
   color: var(--text-dim);
-  margin-left: 6px;
+  margin-left: var(--sp-1-5);
 }
 
 .report-score em.best {
@@ -2353,7 +2337,7 @@ button.io-slot:hover {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sp-hair);
 }
 
 .report-next strong {
@@ -2460,7 +2444,7 @@ button.io-slot:hover {
    should not feel like different features. */
 .calib-pass {
   text-align: center;
-  margin: var(--sp-3) 0 2px;
+  margin: var(--sp-3) 0 var(--sp-hair);
 }
 
 .calib-pass .calib-step {
@@ -2545,7 +2529,7 @@ button.io-slot:hover {
 
 /* =========================================================== earned stars */
 .earned {
-  margin-left: 6px;
+  margin-left: var(--sp-1-5);
   color: var(--warn);
   font-size: var(--fs-2xs);
   letter-spacing: var(--tracking-caps);
@@ -2594,7 +2578,7 @@ button.io-slot:hover {
   background: var(--now-soft);
   border: 1px solid var(--now-dim);
   color: var(--now);
-  padding: 6px var(--sp-3);
+  padding: var(--sp-1-5) var(--sp-3);
   border-radius: var(--radius-pill);
   font-size: var(--fs-sm);
   font-family: var(--mono);
@@ -2630,7 +2614,7 @@ button.io-slot:hover {
 .led {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1-5);
   font-size: var(--fs-2xs);
   text-transform: uppercase;
   letter-spacing: var(--tracking-caps);
@@ -2723,7 +2707,7 @@ button.io-slot:hover {
   background: var(--screen);
   border-radius: var(--radius-xs);
   overflow: hidden;
-  margin-top: 6px;
+  margin-top: var(--sp-1-5);
   box-shadow: inset 0 1px 2px rgb(0 0 0 / 70%);
 }
 
@@ -2845,7 +2829,7 @@ button.io-slot:hover {
   color: var(--text-faint);
   font-size: var(--fs-sm);
   font-style: italic;
-  padding: 6px 2px;
+  padding: var(--sp-1-5) var(--sp-hair);
 }
 
 /* ================================================================ history */
@@ -2916,7 +2900,7 @@ button.io-slot:hover {
   text-align: left;
   background: var(--bg-1);
   border-color: var(--line-soft);
-  padding: 6px var(--sp-2);
+  padding: var(--sp-1-5) var(--sp-2);
   font-size: var(--fs-sm);
 }
 
@@ -3170,7 +3154,7 @@ button.io-slot:hover {
 }
 
 .path-goal {
-  margin: 2px 0 var(--sp-2);
+  margin: var(--sp-hair) 0 var(--sp-2);
   font-size: var(--fs-2xs);
   color: var(--text-faint);
   line-height: 1.4;
@@ -3179,7 +3163,7 @@ button.io-slot:hover {
 /* Sits directly under the row it explains, indented past the mark column so it
    reads as belonging to that exercise rather than to the stage. */
 .path-blocked {
-  margin: 2px 0 var(--sp-2) 26px;
+  margin: var(--sp-hair) 0 var(--sp-2) 26px;
   font-size: var(--fs-2xs);
   color: var(--warn);
   line-height: 1.45;
@@ -3193,7 +3177,7 @@ button.io-slot:hover {
   align-items: center;
   gap: var(--sp-2);
   padding: var(--sp-1) var(--sp-2);
-  margin-bottom: 2px;
+  margin-bottom: var(--sp-hair);
   background: transparent;
   border-color: transparent;
   box-shadow: none;
@@ -3250,7 +3234,7 @@ button.io-slot:hover {
 .rungs {
   flex: none;
   display: flex;
-  gap: 2px;
+  gap: var(--sp-hair);
 }
 
 .rungs i {
@@ -3362,7 +3346,7 @@ button.io-slot:hover {
    middle of a custom dark interface. They are also the two most-touched
    controls in it, which is the worst possible pairing. */
 
-select {
+select, .listbox-trigger {
   appearance: none;
   -webkit-appearance: none;
   width: 100%;
@@ -3381,7 +3365,7 @@ select {
   transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
 }
 
-select:hover {
+select:hover, .listbox-trigger:hover {
   background-color: var(--bg-3);
   border-color: #3a465c;
 }
@@ -3464,10 +3448,10 @@ input[type='checkbox'] {
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1-5);
   font-size: var(--fs-xs);
   color: var(--text-faint);
-  padding: 2px 0;
+  padding: var(--sp-hair) 0;
 }
 
 .explain > summary::-webkit-details-marker {
@@ -3510,7 +3494,7 @@ input[type='checkbox'] {
 .row-end {
   display: flex;
   justify-content: flex-end;
-  margin-top: 6px;
+  margin-top: var(--sp-1-5);
 }
 
 /* Value and action on one line, each in its own register: the measurement in
@@ -3720,7 +3704,7 @@ input[type='checkbox'] {
   display: flex;
   justify-content: space-between;
   color: var(--text-dim);
-  margin-bottom: 2px;
+  margin-bottom: var(--sp-hair);
 }
 
 .tuning-panel em {

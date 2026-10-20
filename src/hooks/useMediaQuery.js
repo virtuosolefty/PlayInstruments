@@ -34,7 +34,9 @@ export function useMediaQuery(query) {
   return matches;
 }
 
-/** Below this the toolbar cannot hold every control without wrapping. */
-export const COMPACT_QUERY = '(max-width: 1200px)';
 /** Below this the feedback panel becomes a slide-over rather than a column. */
 export const NARROW_QUERY = '(max-width: 900px)';
+/** An upright phone: the same test phone.css lays the studio out for. */
+export const PHONE_QUERY = '(max-width: 600px) and (min-height: 521px)';
+/** A short landscape screen, such as a phone held sideways: the same test landscape.css lays the studio out for; 960px wide at most, so a short desktop window keeps its layout. */
+export const SHORT_LANDSCAPE_QUERY = '(orientation: landscape) and (max-height: 520px) and (max-width: 960px)';

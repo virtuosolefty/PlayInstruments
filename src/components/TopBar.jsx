@@ -2,15 +2,19 @@ import LevelMeter from './LevelMeter.jsx';
 import Icon from './Icon.jsx';
 import { useState } from 'react';
 import HelpDialog from './HelpDialog.jsx';
+import AppearanceDialog from './AppearanceDialog.jsx';
 import { useDialog } from '../hooks/useDialog.js';
+import { useOnline } from '../hooks/useOnline.js';
 
 /**
  * Three destinations on the left, sound and input in one group on the right,
  * and everything you reach for once a week behind More. On a phone the
  * destinations are the tab bar along the bottom of the screen (chrome.css).
  */
-export default function TopBar({ midiState, micListening = false, micChosen = false, midiChosen = false, deviceName = null, audioReady, audioLabel, onStartAudio, libraryOpen, onToggleLibrary, score, onLeaveDrill, theme, onToggleTheme, onSetup, onTuner, onProgress, onLearn, learningHome, storageProblem }) {
+export default function TopBar({ midiState, micListening = false, micChosen = false, midiChosen = false, deviceName = null, audioReady, audioLabel, onStartAudio, libraryOpen, onToggleLibrary, score, onLeaveDrill, theme, onToggleTheme, onSetup, onTuner, onProgress, onLearn, learningHome, storageProblem, settings, setSettings, onSearch, onTour }) {
+  const online = useOnline();
   const [helpOpen, setHelpOpen] = useState(false);
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const closeMenu = () => setMenuOpen(false);
   const menuRef = useDialog({ open: menuOpen, onClose: closeMenu });
@@ -24,7 +28,7 @@ export default function TopBar({ midiState, micListening = false, micChosen = fa
     ? 'Your browser could not save recent changes. This session may not be available after you leave.'
     : 'Progress and preferences are saved in this browser. Export a backup from Library → Progress.';
   return <header className="topbar">
-    <div className="brand"><i className="mark" aria-hidden="true" /><h1>Practice Deck</h1></div>
+    <div className="brand"><i className="mark" aria-hidden="true" /><span className="brand-name">Practice Deck</span></div>
     <nav className="topbar-nav" aria-label="Main">
       <button className="nav-link" aria-current={learningHome ? 'page' : undefined} onClick={onLearn}><Icon name="target" size={18} />Learning path</button>
       <button className="nav-link" aria-expanded={libraryOpen} onClick={onToggleLibrary}><Icon name="panel" size={18} />Library</button>
@@ -34,6 +38,8 @@ export default function TopBar({ midiState, micListening = false, micChosen = fa
     <div className="spacer" />
     {/* Saving is silent while it works; it takes space in the bar only when it has failed. */}
     {storageProblem && <span className="saved-locally save-problem" role="status" title={saveNote}><i />Changes not saved</span>}
+    {!online && <span className="saved-locally offline-note" role="status" title="No connection. Practice, progress and saving all work on this device; new pieces and sounds wait for the connection."><i />Offline</span>}
+    {onSearch && <button className="search-trigger" onClick={onSearch} aria-keyshortcuts="Control+K Meta+K" title="Find pieces, lessons and actions (Ctrl+K)"><Icon name="search" size={16} /><span className="search-label">Search</span><kbd>Ctrl K</kbd></button>}
     <div className="sound-input" role="group" aria-label="Sound and input">
       <button className={`setup-trigger ${missing ? 'missing' : ''}`} onClick={onSetup} title={inputTitle}><span className={'connection-dot ' + (connected || micListening ? 'connected' : missing ? 'missing' : '')} /><Icon name="sliders" size={16} className="setup-icon" /><span className="setup-label">{inputLabel}</span></button>
       <div className="io-strip" aria-label="Sound">
@@ -46,10 +52,12 @@ export default function TopBar({ midiState, micListening = false, micChosen = fa
         <button onClick={() => { closeMenu(); setHelpOpen(true); }}><Icon name="help" />Help</button>
         <button onClick={() => { closeMenu(); onTuner(); }}><Icon name="tuner" />Tuner</button>
         <button onClick={() => { closeMenu(); onToggleTheme(); }} aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}><Icon name={theme === 'light' ? 'moon' : 'sun'} />{theme === 'light' ? 'Dark theme' : 'Light theme'}</button>
+        {setSettings && <button onClick={() => { closeMenu(); setAppearanceOpen(true); }}><Icon name="palette" />Appearance</button>}
         <button onClick={() => { closeMenu(); onProgress(); }}><Icon name="download" />Back up progress</button>
         <p className={`saved-locally menu-status ${storageProblem ? 'save-problem' : ''}`} title={saveNote}><i />{storageProblem ? 'Changes not saved' : 'Saved on this device'}</p>
       </div></>}
     </div>
-    {helpOpen && <HelpDialog onClose={() => setHelpOpen(false)} />}
+    {helpOpen && <HelpDialog onClose={() => setHelpOpen(false)} onTour={onTour ? () => { setHelpOpen(false); onTour(); } : null} />}
+    {appearanceOpen && <AppearanceDialog settings={settings} setSettings={setSettings} onClose={() => setAppearanceOpen(false)} />}
   </header>;
 }

@@ -2,10 +2,10 @@ import PieceArt from './PieceArt.jsx';
 import Icon from './Icon.jsx';
 import { useMemo, useRef, useState } from 'react';
 import Collections from './Collections.jsx';
-import { assessFit, describeFit } from '../lib/arrange.js';
-import { shortName } from '../lib/collections.js';
-import { atTempo } from '../lib/path.js';
-import { noteName } from '../lib/theory.js';
+import { assessFit, describeFit } from '../lib/music/arrange.js';
+import { shortName } from '../lib/learning/collections.js';
+import { atTempo } from '../lib/learning/path.js';
+import { noteName } from '../lib/music/theory.js';
 
 /**
  * Difficulty is deliberately not stars. Earned stars sit inches away on the
@@ -16,7 +16,7 @@ import { noteName } from '../lib/theory.js';
 const LEVEL = ['', 'easy', 'easy+', 'medium', 'hard', 'hard+'];
 
 const BADGE_LABEL = {
-  fits: '✓ fits',
+  fits: <><Icon name="check" size={11} />fits</>,
   shift: '↕ octave',
   fold: '⤢ folds',
 };
@@ -55,7 +55,7 @@ function EarnedStars({ count, rate = 1 }) {
       className="earned"
       title={slow ? `Best: ${count} of 5 stars, played at ${pct}%` : `Best: ${count} of 5 stars at full speed`}
     >
-      {'★'.repeat(count)}
+      {Array.from({ length: count }, (_, i) => <Icon key={i} name="starFill" size={11} />)}
       {slow && <i className="at-rate">{pct}%</i>}
     </span>
   );
@@ -136,7 +136,7 @@ export default function SongLibrary({
                 suggestedId === song.id ? 'suggested' : ''
               }`}
               onClick={() => onPick(song)}
-              title={`${song.title} — ${song.composer}`}
+              title={`${song.title}, ${song.composer}`}
             >
               {/* One line per piece, not two. Nineteen pieces at two lines each
                   was still most of two screens for a list whose whole job is
@@ -163,7 +163,7 @@ export default function SongLibrary({
         </div>
         {hidden > 0 && (
           <p className="hint">
-            {hidden} piece{hidden === 1 ? '' : 's'} hidden — they need more keys than you have. Switch fitting to
+            {hidden} piece{hidden === 1 ? '' : 's'} hidden: they need more keys than you have. Switch fitting to
             “Fit my keys” to play them anyway.
           </p>
         )}

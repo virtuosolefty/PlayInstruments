@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { VIEW } from '../lib/bowedGeometry.js';
+import { VIEW } from '../lib/strings/bowedGeometry.js';
 import { Bridge, FHoles, PEGS, Pegbox, Pegs, Scroll, Tailpiece } from './BowedHardware.jsx';
 
 /**

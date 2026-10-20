@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { TUNING } from '../lib/rollPaint.js';
+import { TUNING } from '../lib/piano/rollPaint.js';
 
 /**
  * The animation constants, live.

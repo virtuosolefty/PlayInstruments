@@ -1,6 +1,7 @@
 import Icon from './Icon.jsx';
 import StreakStrip from './StreakStrip.jsx';
 import BackupPanel from './BackupPanel.jsx';
+import TeacherShare from './TeacherShare.jsx';
 
 /**
  * The practice habit, plus everything you have earned a rating on.
@@ -9,7 +10,7 @@ import BackupPanel from './BackupPanel.jsx';
  * is what makes this worth opening, and it turns a flat library into a record
  * of where you have actually got to.
  */
-export default function ProgressTab({ days, goalMinutes, onGoalChange, library, starsBySong, onPick, onRestored, onBeginner }) {
+export default function ProgressTab({ days, goalMinutes, onGoalChange, library, starsBySong, onPick, onRestored, onBeginner, pieces = library }) {
   const rated = library
     .map((song) => ({ song, stars: starsBySong[song.id] ?? 0 }))
     .filter((entry) => entry.stars > 0)
@@ -55,6 +56,7 @@ export default function ProgressTab({ days, goalMinutes, onGoalChange, library, 
         )}
       </div>
 
+      <TeacherShare pieces={pieces} />
       <BackupPanel onRestored={onRestored} />
     </>
   );

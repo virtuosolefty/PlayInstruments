@@ -4,7 +4,7 @@
    dark in both themes. */
 
 /* The pop-up of pictures. */
-.model-chooser-overlay { position: fixed; inset: 0; z-index: var(--z-dialog); display: flex; align-items: center; justify-content: center; padding: var(--sp-4); background: rgb(6 9 14 / 80%); overflow-y: auto; }
+.model-chooser-overlay { position: fixed; inset: 0; z-index: var(--z-dialog); display: flex; align-items: center; justify-content: center; padding: var(--sp-4); background: var(--model-scrim); overflow-y: auto; }
 .model-chooser { width: min(760px, 100%); }
 .model-chooser-lead { margin: 0 0 var(--sp-4); color: var(--text-dim); font-size: var(--fs-sm); }
 .model-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--sp-3); margin: 0; padding: 0; list-style: none; }
@@ -12,7 +12,8 @@
 .model-card:hover { border-color: var(--accent); }
 /* The one on show carries a ring as well as the accent, so colour is not the only sign. */
 .model-card[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
-.model-picture { display: block; aspect-ratio: 8 / 5; margin-bottom: var(--sp-1); border-radius: var(--radius-sm); overflow: hidden; background: #24232c; }
+.model-picture { display: block; aspect-ratio: var(--model-picture-aspect); margin-bottom: var(--sp-1); border-radius: var(--radius-sm); overflow: hidden; background: var(--model-picture-bg); }
+.model-card[data-instrument="cello"] .model-picture { aspect-ratio: var(--model-portrait-aspect); }
 .model-picture img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .model-card.no-picture .model-picture img { display: none; }
 .model-card strong { font-size: var(--fs-md); }
@@ -23,33 +24,43 @@
 /* The instrument shown in place of the stage's own. It covers the stage and its
    labels; the stage's bottom bar, with the way back to Learn, stays above it. */
 /* Lit from the middle, lighter than the stage: several of these instruments are black, and need something to stand against. */
-.model-viewer { position: absolute; inset: 0; z-index: 1; background: radial-gradient(ellipse at 50% 46%, #7d7b90 0%, #4b4958 48%, #2a2932 100%); touch-action: none; }
+.model-viewer { position: absolute; inset: 0; z-index: 1; background: radial-gradient(ellipse at 50% 46%, var(--viewer-glow) 0%, var(--viewer-mid) 48%, var(--viewer-edge) 100%); touch-action: none; }
 .model-viewer canvas { display: block; width: 100%; height: 100%; cursor: grab; }
 .model-viewer canvas:active { cursor: grabbing; }
 .model-viewer-preparing { position: absolute; inset: 0; display: grid; place-items: center; color: var(--text-dim); font-size: var(--fs-xs); pointer-events: none; }
-.model-viewer .model-reset { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); }
+.model-viewer-preparing span { padding: var(--sp-3) var(--sp-4); background: var(--model-loading-bg); border-radius: var(--radius); color: var(--text); }
+.model-viewer .model-reset { position: absolute; top: var(--sp-3); left: 50%; transform: translateX(-50%); }
+.model-drum-labels { position: absolute; inset: 0; pointer-events: none; }
+.model-drum-label { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; min-height: var(--control-h); min-width: var(--control-h); padding: var(--sp-1) var(--sp-2); background: var(--bg-1); color: var(--text); font-size: var(--fs-2xs); border: 1px solid var(--line-strong); border-radius: var(--radius-pill); }
 .guitar-stage:has(.model-viewer) .guitar-stage-bottom { z-index: 2; }
 /* The stage's own title names the instrument that is played: hidden while another stands in its place, in the viewer or on the stage's own rig. */
 .guitar-stage:has(.model-caption) .guitar-stage-top, .guitar-stage:has(.model-viewer) .drum-labels { visibility: hidden; }
 
-.model-caption { position: absolute; z-index: 2; inset: 12px auto auto 18px; display: flex; flex-direction: column; gap: 2px; max-width: 55%; pointer-events: none; }
+.model-caption { position: absolute; z-index: 2; inset: var(--sp-3) auto auto 18px; display: flex; flex-direction: column; gap: var(--sp-hair); max-width: 55%; pointer-events: none; }
 .model-caption strong { color: var(--text); font-size: var(--fs-sm); }
 .model-caption span { color: var(--text-dim); font-size: var(--fs-2xs); }
 .model-caption a { color: inherit; text-decoration: underline; pointer-events: auto; }
 .model-caption a:hover { color: var(--text); }
+/* The artist's name is the one part of a credit set in full strength, on the stage and in Help. */
+.model-caption .model-artist, .model-credit strong, .artist-name { color: var(--text); font-weight: var(--fw-bold); }
+.model-by { color: var(--text-dim); font-size: var(--fs-xs); }
+.model-credit { color: var(--text-dim); font-size: var(--fs-2xs); white-space: nowrap; }
+.model-credit a { color: inherit; text-decoration: none; }
+.model-credit a:hover strong, .model-credit a:focus-visible strong { text-decoration: underline; }
 
 .model-change { position: absolute; z-index: 2; inset: 10px 18px auto auto; min-height: var(--control-h-sm); padding: var(--sp-1) var(--sp-3); background: color-mix(in srgb, var(--bg) 72%, transparent); border: 1px solid var(--line-strong); border-radius: var(--control-r); color: var(--text); font-size: var(--fs-xs); }
 .model-change:hover { border-color: var(--accent); color: var(--accent); }
 .model-change:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-.model-notice { position: absolute; z-index: 2; inset: 12px auto auto 50%; transform: translateX(-50%); max-width: 70%; padding: var(--sp-1) var(--sp-3); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--bg) 80%, transparent); color: var(--text); font-size: var(--fs-xs); text-align: center; }
+.model-notice { position: absolute; z-index: 2; inset: var(--sp-3) auto auto 50%; transform: translateX(-50%); max-width: 70%; padding: var(--sp-1) var(--sp-3); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--bg) 80%, transparent); color: var(--text); font-size: var(--fs-xs); text-align: center; }
 .model-notice:empty { display: none; }
 
 @media (max-width: 900px) {
-  .model-change { inset: 8px 12px auto auto; min-height: var(--control-h); }
-  .model-caption { inset: 10px auto auto 12px; }
+  .model-change { inset: var(--sp-2) var(--sp-3) auto auto; min-height: var(--control-h); }
+  .model-caption { inset: 10px auto auto var(--sp-3); }
 }
 @media (max-width: 600px) {
   .model-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .model-caption span { display: none; }
+  /* The artist stays on a phone; the model's title and licence are in Help. */
+  .model-caption .model-source { display: none; }
 }

@@ -6,12 +6,21 @@
    ------------------------------------------------------- colour meanings
    Four hues, four jobs, and nothing borrowing another's:
 
-     violet (--accent)  the app's own surface — what you can click, what you
-                        have chosen, and its readouts about your progress
+     accent (--accent)  the app's own surface — what you can click, what you
+                        have chosen, and its readouts about your progress.
+                        Violet in the light theme; in the dark, the one chosen
+                        under "dark accents" below (ivory unless changed)
      blue   (--now)     the music's position — where the piece is now, what
                         to play next, which piece to start
      good / bad         the verdict on what you actually played
      amber  (--warn)    difficulty, and caution */
+
+/* Fallback faces sized like the real ones (measured in Chromium against Inter, Fraunces and JetBrains Mono), so the
+   page does not move when the real fonts arrive: the welcome page jumped about 30px a quarter of a second after it
+   appeared. A platform without the local font skips the face and goes on down the stack. */
+@font-face { font-family: "Inter Fallback"; src: local("Arial"); size-adjust: 106.4%; ascent-override: 91.2%; descent-override: 22.6%; line-gap-override: 0%; }
+@font-face { font-family: "Fraunces Fallback"; src: local("Times New Roman"); size-adjust: 92.2%; ascent-override: 106.3%; descent-override: 28.2%; line-gap-override: 0%; }
+@font-face { font-family: "JetBrains Mono Fallback"; src: local("Courier New"); size-adjust: 100%; ascent-override: 102%; descent-override: 30%; line-gap-override: 0%; }
 
 :root {
   /* Radii: keycaps and thin marks, chips and inner segments, controls (--control-r),
@@ -25,17 +34,30 @@
   /* Three control heights. A segmented control is as tall as a button, so its
      segments take the small step; the one primary action on a view takes the
      large one. */
-  --control-h-sm: 32px;
+  --control-h-sm: 40px;
   --control-h: 40px;
   --control-h-lg: 48px;
   --control-r: 8px;
   --control-pad: 0 12px;
 
+  /* Overlay sizes (patterns.css): the appearance dialog, the Ctrl+K palette,
+     a colour swatch, the palette's icon box, the tour's pointer, and how long
+     a loading shimmer takes to cross. */
+  --dialog-w-sm: 520px;
+  --palette-w: 600px;
+  --palette-h: 560px;
+  --swatch: 14px;
+  --icon-box: 24px;
+  --tip-arrow: 12px;
+  --dur-shimmer: 1.6s;
+
   /* Loaded in main.jsx. The stack still names system faces after them: if the
      woff2 is slow or blocked, the app should render in something rather than
      wait. */
-  --mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --sans: "Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --mono: "JetBrains Mono Variable", "JetBrains Mono Fallback", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sans: "Inter Variable", "Inter Fallback", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Titles only: page, piece and lesson headings. Controls, labels and body stay --sans. */
+  --display: "Fraunces Variable", "Fraunces Fallback", Georgia, "Times New Roman", serif;
 
   /* Type scale. 11px is the floor: this is an app you read from a metre away
      while sitting at a keyboard, not from phone distance. */
@@ -56,8 +78,10 @@
   --tracking-tight: -0.03em;
   --tracking-caps: 0.08em;
 
-  /* Spacing, in multiples of four. */
+  /* Spacing, in multiples of four, with two half steps the stylesheets kept reaching for: a hairline gap and 6px. */
+  --sp-hair: 2px;
   --sp-1: 4px;
+  --sp-1-5: 6px;
   --sp-2: 8px;
   --sp-3: 12px;
   --sp-4: 16px;
@@ -95,6 +119,51 @@
   --hit-line: #f8efff;
   --shadow: var(--elev-3);
   --guitar-played: #167b63;
+  --model-picture-bg: #24232c;
+  --model-dark-material: #48484e;
+  --model-picture-aspect: 8 / 5;
+  --model-portrait-aspect: 3 / 4;
+  --viewer-glow: #7d7b90;
+  --viewer-mid: #4b4958;
+  --viewer-edge: #2a2932;
+  --model-loading-bg: var(--bg-1);
+  --model-scrim: rgb(6 9 14 / 80%);
+
+  /* The string instruments' materials (strings.css): wood, metal and the
+     fingerboard's marks. Like the stage, one value in both themes. */
+  /* wood */
+  --wood-grain-light: #ffffff06; --wood-grain-dark: #0000000f; --rosewood-1: #472b1d;
+  --rosewood-2: #331f16; --rosewood-3: #2a1911; --rosewood-4: #37231a; --rosewood-shade: #1f1510;
+  --bone: #efe5cf; --bone-shade: #b9a887; --binding: #e9dcc0; --pearl-1: #fbf9ff;
+  --pearl-2: #e6eef2; --pearl-3: #c9dcd8; --pearl-edge: #0006;
+  /* metal */
+  --fret-1: #8e9196; --fret-2: #f4f6f8; --fret-3: #a7aaaf; --fret-shadow: #0007;
+  /* the veena: frets of brass on a bed of dark wax, and its swaras marked in brass */
+  --wax-1: #1d1611; --wax-2: #120d0a; --brass-1: #6e4f1e; --brass-2: #e6c06a; --brass-3: #8a6a2c;
+  --swara-bg: #e6c06a2e; --swara-edge: #e6c06a99; --swara-text: #f3ead9;
+  /* the handpan's 2D map: nitrided steel, gold as on the D Aegean in Ember Steel */
+  --pan-shell-1: #7a5a2c; --pan-shell-2: #3b2a15; --pan-rim: #c79a52; --pan-field: #3a2c18; --pan-field-under: #2a2117;
+  --pan-field-edge: #c79a52; --pan-dimple: #c79a5266; --pan-text: #f3ead9; --pan-gu: #0b0b10;
+  /* the tabla's picture: its stroke marks sit on the drums, so they carry their own dark ground */
+  --mark-bg: #0e0d12e6; --mark-text: #f1eee8;
+  --string-plain-1: #ffffff; --string-plain-2: #b9bcc0; --string-plain-3: #7c8085;
+  --string-shadow: #0008; --string-wound: #c9a36a; --string-wound-dark: #8d6a3f;
+  --string-wound-light: #e2c48f;
+  /* labels on the guitar */
+  --fret-label-bg: #fff9eee6; --fret-label-text: #2c2119; --fret-label-ring: #ffffff30;
+  --fret-label-shadow: #0009; --finger-inverse: #f4efff; --finger-inverse-shadow: #000a;
+  --viewer-centre: #34313a; --viewer-rim: #202029;
+  /* violin and cello fingerboard */
+  --bowed-zone-hover: #ffffff12; --bowed-zone-bow-hover: #ffffff24; --bowed-zone-focus: #a594ff30;
+  --bowed-tape: #f4ebd6; --bowed-shadow: #000; --bowed-wind: #14110f; --bowed-glint: #fff;
+  --bowed-sounding: #86e8ca; --bowed-name: #f3e9d6; --bowed-caption: #fff3dc;
+  --marker-fill: #fffaf0; --marker-fill-hover: #fffaf0e6; --marker-edge: #d7c8b2;
+  --marker-text: #302821; --marker-target: #30253e; --marker-target-edge: #c4b0ff;
+  --marker-target-text: #efe8ff; --marker-held: #8bdfb9; --marker-held-edge: #e9fff5;
+  --marker-held-text: #173c2c; --marker-possible: #e6d3a6; --marker-chord: #efe4d2;
+  --marker-chord-edge: #c9a877; --bow-hair: #fbf7ec; --bow-hair-edge: #b9ab8f;
+  --bow-stick: #5a2a10; --bow-stick-edge: #2e1406; --bow-frog: #15100e; --bow-frog-edge: #3a2d27;
+  --on-played: #fff; --on-played-soft: #ddfff4;
 
   /* Left from the hardware look. They resolve to `none` in both themes but
      rules in styles.css still read them inside shadow and background lists. */
@@ -114,17 +183,17 @@
 
 /* ---------------------------------------------------------------- light */
 :root, :root[data-theme="light"] {
-  --bg: #f2f0eb; --bg-1: #fffefa; --bg-2: #eeedf5; --bg-3: #e0dfeb;
+  --bg: #f5f3ee; --bg-1: #fffefa; --bg-2: #eeedf5; --bg-3: #e7e5ef;
   /* --line and --line-soft divide; --line-strong is the edge of a control,
      and holds 3:1 against --bg, --bg-1, --bg-2 and --accent-soft. */
-  --line: #cbcbd7; --line-soft: #e4e2e9; --line-strong: #80809a;
+  --line: #cbcbd7; --line-soft: #e4e2e9; --line-strong: #77778f;
   /* --text-faint, --warn and --now hold 4.5:1 on every surface up to --bg-3. */
   --text: #25243b; --text-dim: #595b70; --text-faint: #5f6174;
   --accent: #6251b7; --accent-dim: #8b7fcc; --accent-soft: #eeeaf9; --on-accent: #ffffff;
   --brand: #6251b7;
   /* --good sits toward blue so it does not share a lightness and an axis with
      --bad for a red–green colour-blind player. */
-  --good: #0f6b7a; --bad: #b53954; --warn: #855610; --info: #2f62ab; --now: #2f62ab; --now-soft: #e4ecf8;
+  --good: #0f6b7a; --bad: #a9304b; --warn: #855610; --info: #2f62ab; --now: #2f62ab; --now-soft: #e4ecf8;
   --screen: #f5f3ee;
   --pad-face: #fffefa; --pad-face-hover: #f0edf8;
   /* A segmented control: the well it sits in, and its chosen segment. */
@@ -135,7 +204,7 @@
   /* Surfaces and states that differ by more than a colour between the themes. */
   --app-wash: none; --header-wash: none;
   --primary-bg: #6251b7; --primary-border: #6251b7; --primary-shadow: none;
-  --armed-bg: #0f6b7a; --armed-border: #0f6b7a; --armed-text: #ffffff; --armed-shadow: none;
+  --armed-bg: var(--primary-bg); --armed-border: var(--primary-border); --armed-text: var(--on-accent); --armed-shadow: var(--primary-shadow);
   --field-bg: #eeedf5; --overlay-bg: #fffefa;
   --scrim: rgb(37 36 59 / 38%); --scrim-blur: none;
   --selection: rgb(98 81 183 / 22%); --scrollbar: #c5c3d2;
@@ -153,8 +222,9 @@
    piano, guitar, violin and cello play in the same dark room in both themes. */
 :root[data-theme="dark"], .stage-dark {
   --bg: #0b0b10; --bg-1: #131319; --bg-2: #1a1a22; --bg-3: #24242e;
-  --line: #2c2c38; --line-soft: #1f1f28; --line-strong: #686880;
-  --text: #ededf3; --text-dim: #a6a6b5; --text-faint: #8b8b9c;
+  --line: #2c2c38; --line-soft: #1f1f28; --line-strong: #74748a;
+  --text: #ededf3; --text-dim: #a6a6b5; --text-faint: #9696a7;
+  --now-dim: #4d86c6;
   --accent: #a594ff; --accent-dim: #6f5fe0; --accent-soft: #1f1b36; --on-accent: #120d2b;
   --brand: #a594ff;
   --good: #5ad79a; --bad: #ff6b82; --warn: #f5b94f; --info: #6eb4ff; --now: #6eb4ff; --now-soft: #10203a;
@@ -169,10 +239,12 @@
   --studio-shadow: 0 0 0 1px rgb(255 255 255 / 2%), 0 24px 60px -24px rgb(0 0 0 / 70%), var(--lift);
   --app-wash: radial-gradient(1100px 520px at 12% -12%, rgb(124 108 255 / 9%), transparent 62%), radial-gradient(900px 480px at 100% 0%, rgb(90 184 255 / 5%), transparent 60%);
   --header-wash: radial-gradient(ellipse 60% 120% at 100% 0%, rgb(165 148 255 / 10%), transparent 70%);
-  --primary-bg: linear-gradient(180deg, #b6a9ff, #9582ff); --primary-border: #b6a9ff;
-  --primary-shadow: 0 8px 24px -8px rgb(149 130 255 / 65%), inset 0 1px 0 rgb(255 255 255 / 35%);
-  --armed-bg: linear-gradient(180deg, #6ee7b0, #3fcf8e); --armed-border: #6ee7b0; --armed-text: #06281a;
-  --armed-shadow: 0 8px 24px -8px rgb(63 207 142 / 60%), inset 0 1px 0 rgb(255 255 255 / 35%);
+  /* One flat violet with a hairline of light on top: a violet-to-blue gradient read as generated, and no gate can
+     measure text on a gradient. The label measures 7.40:1 on it. */
+  --primary-bg: #a594ff; --primary-border: #a594ff;
+  --primary-shadow: inset 0 1px 0 rgb(255 255 255 / 30%);
+  --armed-bg: var(--primary-bg); --armed-border: var(--primary-border); --armed-text: var(--on-accent);
+  --armed-shadow: var(--primary-shadow);
   --field-bg: #0b0b10; --overlay-bg: #16161d;
   --scrim: rgb(5 5 8 / 62%); --scrim-blur: blur(3px);
   --selection: rgb(165 148 255 / 35%); --scrollbar: #2e2e3a;
@@ -181,4 +253,49 @@
   color-scheme: dark;
 }
 
+/* ----------------------------------------------------------------- dark accents
+   The dark room's one accent, chosen under More → Appearance and set as data-accent on the root (appearance.js).
+   The stage spends blue, green, red and amber on meaning, so each choice stays clear of all four. Distance in
+   OKLab ×100 from the nearest: ivory 14.6, silver 18.3, copper 10.6, against 9.8 for the violet above. With
+   no data-accent the violet stands. Ivory and silver are neutrals, so colour stops marking what is clickable:
+   their text links carry an underline (styles.css). */
+:root[data-theme="dark"][data-accent="ivory"], :root[data-accent="ivory"] .stage-dark {
+  --accent: #ece3cf; --accent-dim: #8f8775; --accent-soft: #23201a; --on-accent: #17140e; --brand: #ece3cf;
+  --primary-bg: #ece3cf; --primary-border: #ece3cf; --selection: rgb(236 227 207 / 24%);
+  --app-wash: radial-gradient(1100px 520px at 12% -12%, rgb(236 227 207 / 4%), transparent 62%), radial-gradient(900px 480px at 100% 0%, rgb(90 184 255 / 5%), transparent 60%);
+  --header-wash: radial-gradient(ellipse 60% 120% at 100% 0%, rgb(236 227 207 / 6%), transparent 70%);
+  --bowed-zone-focus: #ece3cf30; --marker-target: #2a261f; --marker-target-edge: #ece3cf; --marker-target-text: #fbf7ee;
+}
+:root[data-theme="dark"][data-accent="silver"], :root[data-accent="silver"] .stage-dark {
+  --accent: #dfe5ef; --accent-dim: #8b93a3; --accent-soft: #1c1f26; --on-accent: #0f131a; --brand: #dfe5ef;
+  --primary-bg: #dfe5ef; --primary-border: #dfe5ef; --selection: rgb(223 229 239 / 24%);
+  --app-wash: radial-gradient(1100px 520px at 12% -12%, rgb(223 229 239 / 4%), transparent 62%), radial-gradient(900px 480px at 100% 0%, rgb(90 184 255 / 5%), transparent 60%);
+  --header-wash: radial-gradient(ellipse 60% 120% at 100% 0%, rgb(223 229 239 / 6%), transparent 70%);
+  --bowed-zone-focus: #dfe5ef30; --marker-target: #22252c; --marker-target-edge: #dfe5ef; --marker-target-text: #f5f7fb;
+}
+/* Copper sits in the same warm family as the left hand's amber notes, so it is the one choice that is not the default. */
+:root[data-theme="dark"][data-accent="copper"], :root[data-accent="copper"] .stage-dark {
+  --accent: #e8956b; --accent-dim: #b8673f; --accent-soft: #2a1b14; --on-accent: #1f0f06; --brand: #e8956b;
+  --primary-bg: #e8956b; --primary-border: #e8956b; --selection: rgb(232 149 107 / 30%);
+  --app-wash: radial-gradient(1100px 520px at 12% -12%, rgb(232 149 107 / 8%), transparent 62%), radial-gradient(900px 480px at 100% 0%, rgb(90 184 255 / 5%), transparent 60%);
+  --header-wash: radial-gradient(ellipse 60% 120% at 100% 0%, rgb(232 149 107 / 10%), transparent 70%);
+  --bowed-zone-focus: #e8956b30; --marker-target: #3a2419; --marker-target-edge: #f0b08e; --marker-target-text: #fff1e8;
+}
+/* True black, for OLED screens that switch black pixels off: the dark theme with the page at #000 and no glow. */
+:root[data-theme="dark"][data-black], :root[data-theme="dark"][data-black] .stage-dark {
+  --bg: #000; --bg-1: #0a0a0d; --bg-2: #121217; --bg-3: #1b1b22; --screen: #000; --field-bg: #000;
+  --seg-trough: #000; --line-soft: #17171e; --overlay-bg: #101014; --app-wash: none; --header-wash: none;
+}
+/* Larger text, for reading the guide from an instrument: every text size up by about a fifth. The stage, the
+   keys and the controls' hit areas keep their size, which browser zoom would not. */
+:root[data-text="large"] {
+  --fs-2xs: 13px; --fs-xs: 14px; --fs-sm: 16px; --fs-md: 18px; --fs-lg: 22px; --fs-xl: 28px; --fs-2xl: 34px; --fs-3xl: 42px;
+}
+
 .stage-dark { color: var(--text); }
+
+@media (max-width: 900px) { :root { --control-h-sm: 44px; --control-h: 44px; } }
+/* A touch screen at any width (a tablet held sideways is wider than 900px): controls a fingertip can hit. */
+@media (pointer: coarse) { :root { --control-h-sm: 44px; --control-h: 44px; } }
+/* Phone text (ui-ux-pro-max readable-font-size): body at 16px, secondary at 14px, on screens 600px wide or less. */
+@media (max-width: 600px) { :root { --fs-md: 16px; --fs-sm: 14px; } }

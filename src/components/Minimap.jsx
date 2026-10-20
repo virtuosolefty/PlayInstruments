@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { PIANO_COLORS } from '../lib/pianoStage.js';
-import { secondsPerBar } from '../lib/passages.js';
-import { loopLabel, moveLoopBoundary } from '../lib/loopSelection.js';
+import { PIANO_COLORS } from '../lib/piano/pianoStage.js';
+import { secondsPerBar } from '../lib/music/passages.js';
+import { loopLabel, moveLoopBoundary } from '../lib/practice/loopSelection.js';
 
 const HEIGHT = 40;
 // With no loop set the timeline is a slim position strip; the canvas is drawn at
@@ -32,7 +32,7 @@ function timelineColors(el) {
  * piece or the marks change, so the sixty-times-a-second work is one blit and a
  * playhead rather than a redraw of every note.
  */
-export default function Minimap({ theme = 'light', score, troubleSpots = [], loop, engine, onSeek, onLoopChange }) {
+export default function Minimap({ theme = 'light', score, troubleSpots = [], loop, engine, onSeek, onLoopChange, onChooseBar }) {
   const canvasRef = useRef(null);
   const wrapRef = useRef(null);
   const sizeRef = useRef({ w: 0, h: HEIGHT, dpr: 1 });
@@ -41,6 +41,7 @@ export default function Minimap({ theme = 'light', score, troubleSpots = [], loo
   engineRef.current = engine;
   const colorsRef = useRef(null);
   const loopRef = useRef(loop);
+  const layerVersion = useRef(0);
   loopRef.current = loop;
 
   const range = useMemo(() => {
@@ -57,6 +58,7 @@ export default function Minimap({ theme = 'light', score, troubleSpots = [], loo
 
     const layer = layerRef.current ?? document.createElement('canvas');
     layerRef.current = layer;
+    layerVersion.current += 1;
     layer.width = Math.floor(w * dpr);
     layer.height = Math.floor(HEIGHT * dpr);
     const ctx = layer.getContext('2d');
@@ -137,11 +139,16 @@ export default function Minimap({ theme = 'light', score, troubleSpots = [], loo
   /* ------------------------------------------------------------ draw loop */
   useEffect(() => {
     let raf = 0;
+    // Only when the playhead or the picture under it has moved: a paused piece was repainted every frame.
+    let drawn = '';
     const draw = () => {
       raf = requestAnimationFrame(draw);
       const canvas = canvasRef.current;
       const layer = layerRef.current;
       if (!canvas || !layer) return;
+      const at = `${engineRef.current?.transportRef?.current?.now() ?? 0}|${layerVersion.current}|${canvas.width}`;
+      if (at === drawn) return;
+      drawn = at;
 
       const { w, dpr } = sizeRef.current;
       const ctx = canvas.getContext('2d');
@@ -180,7 +187,10 @@ export default function Minimap({ theme = 'light', score, troubleSpots = [], loo
     // The strip takes the press as well as the canvas, so the slim timeline has a 24px target.
     if (e.target !== canvasRef.current && e.target !== wrapRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
-    onSeek?.(Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * (score?.duration ?? 0));
+    const time = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * (score?.duration ?? 0);
+    onSeek?.(time);
+    // A click on the strip also chooses the bar it lands in, for the inspector; the arrow keys only seek.
+    onChooseBar?.(time);
   };
 
   const duration = score?.duration ?? 0;

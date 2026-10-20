@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { seedSettings } from '../helpers/studio.js';
+import { seedSettings, STAGE_TIMEOUT } from '../helpers/studio.js';
+import { setRenderer } from '../helpers/workspace.js';
 
 const stage = page => page.locator('.guitar-stage');
 const detail = page => page.getByRole('group', { name: '3D detail' });
@@ -24,13 +25,13 @@ async function chooseDetail(page, name) {
   const old = await stage(page).locator('canvas').elementHandle();
   await detail(page).getByRole('button', { name, exact: true }).click();
   await expect.poll(() => old.evaluate(canvas => canvas.isConnected), { timeout: 30_000 }).toBe(false);
-  await expect(stage(page).locator('canvas')).toBeVisible();
+  await expect(stage(page).locator('canvas')).toBeVisible({ timeout: STAGE_TIMEOUT });
 }
 
 test.beforeEach(async ({ page }) => {
   await seedSettings(page, { renderer: 'gl', practiceInstrument: 'guitar' });
   await page.goto('/');
-  await expect(stage(page).locator('canvas')).toBeVisible();
+  await expect(stage(page).locator('canvas')).toBeVisible({ timeout: STAGE_TIMEOUT });
 });
 
 test('automatic detail suits the renderer, and a chosen detail is remembered', async ({ page }) => {
@@ -63,7 +64,7 @@ test('the full stage can be forced and starts cleanly', async ({ page }) => {
 });
 
 test('picking on the neck still works after the detail is changed', async ({ page }) => {
-  await page.evaluate(async () => { window.__notes = []; (await import('/src/lib/midiInput.js')).midiInput.onMessage(m => window.__notes.push(m)); });
+  await page.evaluate(async () => { window.__notes = []; (await import('/src/lib/input/midiInput.js')).midiInput.onMessage(m => window.__notes.push(m)); });
   await page.getByRole('group', { name: 'Workspace', exact: true }).getByRole('button', { name: 'Free play', exact: true }).click();
   await openSettings(page);
   await chooseDetail(page, 'Light');
@@ -80,13 +81,18 @@ test('picking on the neck still works after the detail is changed', async ({ pag
 test('3D detail is offered only where the 3D string stage is showing', async ({ page }) => {
   await openSettings(page);
   await expect(detail(page)).toBeVisible();
-  await page.getByRole('button', { name: '2D Trainer', exact: true }).click();
+  await page.keyboard.press('Escape');
+  // 2D or 3D is chosen on the stage; the detail in Instrument settings follows it.
+  await setRenderer(page, '2D Trainer');
+  await openSettings(page);
   await expect(detail(page)).toHaveCount(0);
-  await page.getByRole('button', { name: '3D Stage', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await setRenderer(page, '3D Stage');
+  await openSettings(page);
   await expect(detail(page)).toBeVisible();
   await page.keyboard.press('Escape');
   await page.getByRole('group', { name: 'Practice instrument' }).getByRole('button', { name: 'Piano', exact: true }).click();
-  await openSettings(page);
   await expect(page.getByRole('group', { name: 'Stage appearance' })).toBeVisible();
+  await openSettings(page);
   await expect(detail(page)).toHaveCount(0);
 });

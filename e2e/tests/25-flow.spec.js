@@ -85,7 +85,7 @@ test('Input & sound is three steps, with everything else under More options', as
   await open(page, { practiceInstrument: 'piano' });
   await page.getByRole('button', { name: 'Input & sound', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Your instrument, ready to play.' });
-  await expect(dialog.locator('.setup-step .setup-section-title')).toHaveText(['✓Choose how you play', '✓Check you are heard', '3Check the sound']);
+  await expect(dialog.locator('.setup-step .setup-section-title')).toHaveText(['Choose how you play', 'Check you are heard', '3Check the sound']);
   const more = dialog.locator('.setup-more');
   await expect(more).not.toHaveAttribute('open', '');
   await more.locator('> summary').click();
@@ -153,7 +153,7 @@ test.describe('with a controller', () => {
     await expect(toast).toHaveCount(0);
     const dialog = page.getByRole('dialog', { name: 'Your instrument, ready to play.' });
     await expect(dialog.getByRole('button', { name: /^MIDI controller/ })).toHaveAttribute('aria-pressed', 'true');
-    await expect(dialog.getByRole('combobox', { name: 'MIDI input' })).toHaveValue('late');
+    await expect(dialog.getByRole('combobox', { name: 'MIDI input' })).toHaveAttribute('data-value', 'late');
     expect(errors).toEqual([]);
   });
 });

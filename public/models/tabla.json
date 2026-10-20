@@ -1,0 +1,29 @@
+{
+  "name": "tabla",
+  "credit": {
+    "title": "tabla drums",
+    "author": "Marcel Porsiel",
+    "authorUrl": "https://sketchfab.com/Marcemellow",
+    "source": "https://sketchfab.com/3d-models/tabla-drums-707f113d390648bba988f25dcc484650",
+    "license": "CC BY-NC 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-nc/4.0/",
+    "line": "\"tabla drums\" (https://sketchfab.com/3d-models/tabla-drums-707f113d390648bba988f25dcc484650) by Marcel Porsiel (https://sketchfab.com/Marcemellow), licensed under CC BY-NC 4.0 (https://creativecommons.org/licenses/by-nc/4.0/). Modified: each drum made a part of its own, surface geometry simplified, scaled and re-encoded for Practice Deck."
+  },
+  "showcase": true,
+  "view": {
+    "azimuthDeg": 0,
+    "elevationDeg": 38
+  },
+  "bounds": {
+    "min": [
+      -11.9998,
+      0,
+      -6.2114
+    ],
+    "max": [
+      12,
+      9.5226,
+      6.2114
+    ]
+  }
+}

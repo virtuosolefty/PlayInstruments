@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { composersIn, shortName } from '../lib/collections.js';
+import { composersIn, shortName } from '../lib/learning/collections.js';
 
 /**
  * Browse by who wrote it.
@@ -58,7 +58,7 @@ export default function Collections({ library, activeComposer, onPick, onListen 
                 <button
                   className="ghost work-listen"
                   onClick={() => onListen(song)}
-                  title="Hear it played through — nothing is scored"
+                  title="Hear it played through. Nothing is scored."
                 >
                   ▶ listen
                 </button>
@@ -73,7 +73,7 @@ export default function Collections({ library, activeComposer, onPick, onListen 
             <ul className="composer-notes">
               {current.songs.map((song) => (
                 <li key={song.id}>
-                  <strong>{song.title}</strong> — {song.description}
+                  <strong>{song.title}</strong>: {song.description}
                 </li>
               ))}
             </ul>

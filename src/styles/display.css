@@ -1,0 +1,26 @@
+/* ------------------------------------------------------------ display type
+   Titles in a serif, the interface in Inter: the pairing the best-made
+   AI-built apps share, and the one thing on screen that says teaching rather
+   than dashboard. Only headings that name a page, a piece, a lesson or a
+   section take it; controls, labels, numbers and body copy stay --sans.
+   One italic word in violet carries a title's point ("your first song"). */
+.learning-home h1,
+.learning-home h2,
+.studio-heading h1,
+.lesson-guide h2,
+.step-card h2,
+.inspector h2 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.learning-home h1 em,
+.lesson-guide h2 em,
+.step-card h2 em {
+  font-style: italic;
+  font-weight: 500;
+  color: var(--accent);
+}

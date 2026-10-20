@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDialog } from '../hooks/useDialog.js';
-import { audio } from '../lib/audio.js';
-import { midiInput } from '../lib/midiInput.js';
-import { fitCurve, IDENTITY_CURVE, MIN_NOTES_PER_PASS } from '../lib/velocity.js';
+import { audio } from '../lib/audio/audio.js';
+import { midiInput } from '../lib/input/midiInput.js';
+import { fitCurve, IDENTITY_CURVE, MIN_NOTES_PER_PASS } from '../lib/input/velocity.js';
 import VelocityCurve from './VelocityCurve.jsx';
 
 /** Enough notes to take a median from without making it a chore. */
@@ -127,7 +127,7 @@ export default function TouchCalibrator({ current = IDENTITY_CURVE, onApply, onC
           <>
             <p>
               Your controller decides how hard it thinks you played, and every controller decides differently. Small
-              keyboards especially cannot report a really quiet note at all — which the app currently reads as a
+              keyboards especially cannot report a really quiet note at all, which the app currently reads as a
               player who hits everything at the same weight.
             </p>
             <p className="hint">
@@ -174,7 +174,7 @@ export default function TouchCalibrator({ current = IDENTITY_CURVE, onApply, onC
                  worse than leaving it uncalibrated, which is the one outcome
                  this whole feature has to avoid. */
               <p>
-                That didn&apos;t give a usable range — {result.reason}. Nothing has changed; try again when you
+                That didn&apos;t give a usable range: {result.reason}. Nothing has changed; try again when you
                 are ready.
               </p>
             )}

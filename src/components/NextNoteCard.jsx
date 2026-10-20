@@ -1,5 +1,5 @@
-import { pianoLabel } from '../lib/instrumentView.js';
-import { noteInstruction } from '../lib/learning.js';
+import { pianoLabel } from '../lib/strings/instrumentView.js';
+import { noteInstruction } from '../lib/learning/learning.js';
 
 /**
  * The computer key that plays a piano note at the chosen keyboard octave

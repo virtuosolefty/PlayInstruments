@@ -67,8 +67,8 @@ test('with the microphone as the input, a lesson hears the real notes and does n
   // Chosen on an earlier visit, the microphone does not come on because the page was opened.
   await expect(page.locator('.setup-label')).toHaveText('Microphone off');
   await page.evaluate(async () => {
-    const { midiInput } = await import('/src/lib/midiInput.js');
-    const { audio } = await import('/src/lib/audio.js');
+    const { midiInput } = await import('/src/lib/input/midiInput.js');
+    const { audio } = await import('/src/lib/audio/audio.js');
     window.__heard = []; window.__sounded = 0; window.__buzzed = 0;
     midiInput.onMessage(message => { if (message.type === 'noteon') window.__heard.push([message.midi, message.source]); });
     const attack = audio.attack.bind(audio), cue = audio.errorCue.bind(audio);
@@ -106,7 +106,7 @@ test('Input & sound offers the microphone, says what it hears, and what it canno
   await expect(dialog.locator('.setup-mic-limits')).toContainText('single notes');
   await expect(dialog.locator('.setup-mic-limits')).toContainText('Nothing is recorded');
   // The first note in the file is the A string.
-  await expect(dialog.locator('.setup-microphone .setup-detected')).toHaveText('✓ Heard A2 from your guitar.', { timeout: 25_000 });
+  await expect(dialog.locator('.setup-microphone .setup-detected')).toHaveText('Heard A2 from your guitar.', { timeout: 25_000 });
   // The choice is kept, and the microphone stays on behind the dialog.
   await dialog.getByRole('button', { name: 'Done' }).click();
   await expect(page.locator('.setup-label')).toHaveText('Microphone on');
@@ -123,5 +123,5 @@ test('the microphone is not offered for the drums, which have no one pitch to he
   await page.getByRole('button', { name: 'Input & sound', exact: true }).click();
   const microphone = page.getByRole('group', { name: 'Input preference' }).getByRole('button', { name: /Microphone/ });
   await expect(microphone).toBeDisabled();
-  await expect(microphone).toContainText('Not for drums');
+  await expect(microphone).toContainText('Not for the drums');
 });

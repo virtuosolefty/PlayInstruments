@@ -1,16 +1,17 @@
 import { test, expect } from '@playwright/test';
+import { STAGE_TIMEOUT } from '../helpers/studio.js';
 
 test('the compact Three.js keyboard picks raised black and white keys across its full width',async({page})=>{
-  await page.addInitScript(()=>localStorage.setItem('piano-practice-coach:v1',JSON.stringify({version:1,songs:{},settings:{onboarded:true,settingsVersion:4,renderer:'gl',pianoRange:'full',pianoHeight:104}})));
+  await page.addInitScript(()=>localStorage.setItem('piano-practice-coach:v1',JSON.stringify({version:1,songs:{},settings:{onboarded:true,studioTourDone:true,settingsVersion:4,renderer:'gl',pianoRange:'full',pianoHeight:104}})));
   await page.goto('/');
-  await expect(page.locator('.roll-gl canvas')).toHaveCount(2);
+  await expect(page.locator('.roll-gl canvas')).toHaveCount(2, { timeout: STAGE_TIMEOUT });
   await page.getByRole('group',{name:'Workspace',exact:true}).getByRole('button',{name:'Free play',exact:true}).click();
   await page.getByRole('button',{name:'Focus',exact:true}).click();
   await expect(page.getByRole('gridcell')).toHaveCount(88);
   const grid=page.getByRole('grid');
   await expect.poll(async()=>{const b=await grid.boundingBox();return b.y+b.height;}).toBeGreaterThan(page.viewportSize().height-30);
   const picks=await grid.evaluate(async el=>{
-    const [{buildKeyboardGeometry},{PIANO_CAMERA,stagedCamera,projectOnto,acrossAt},{midiInput}]=await Promise.all([import('/src/lib/keyboard.js'),import('/src/lib/rollCamera.js'),import('/src/lib/midiInput.js')]);
+    const [{buildKeyboardGeometry},{PIANO_CAMERA,stagedCamera,projectOnto,acrossAt},{midiInput}]=await Promise.all([import('/src/lib/piano/keyboard.js'),import('/src/lib/piano/rollCamera.js'),import('/src/lib/input/midiInput.js')]);
     window.__pianoPicks=[];midiInput.onMessage(m=>window.__pianoPicks.push(m));
     const rect=el.getBoundingClientRect(),w=el.clientWidth,h=el.clientHeight;
     const geometry=buildKeyboardGeometry(21,108,w);

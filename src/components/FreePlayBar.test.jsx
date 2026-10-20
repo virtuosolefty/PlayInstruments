@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import FreePlayBar, { explorerName } from './FreePlayBar.jsx';
 import { Stars } from './PathTab.jsx';
 import { instrumentKit } from '../lib/instruments.js';
-import { emitSyntheticMidi } from '../lib/midiInput.js';
+import { emitSyntheticMidi } from '../lib/input/midiInput.js';
 
 let container, root;
 const render = ui => act(() => root.render(ui));
@@ -67,12 +67,12 @@ describe('a lesson’s stars', () => {
   it('are five, filled as far as the best run, from the first finished run', () => {
     render(<Stars count={3} />);
     expect(stars().getAttribute('aria-label')).toBe('3 of 5 stars');
-    expect(stars().textContent).toBe('★★★★★');
-    expect(stars().querySelector('i').textContent).toBe('★★');
+    expect(stars().querySelectorAll('svg')).toHaveLength(5);
+    expect(stars().querySelectorAll('i svg')).toHaveLength(2);
     // Finished with no stars yet (a guided run): five empty ones, not nothing.
     render(<Stars count={0} shown />);
     expect(stars().getAttribute('aria-label')).toBe('0 of 5 stars');
-    expect(stars().querySelector('i').textContent).toBe('★★★★★');
+    expect(stars().querySelectorAll('i svg')).toHaveLength(5);
   });
 
   it('are not shown for a lesson that has not been finished', () => {

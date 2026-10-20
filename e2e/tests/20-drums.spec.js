@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { collectErrors, seedSettings } from '../helpers/studio.js';
 import { watchSound } from '../helpers/sound.js';
 import { chooseWorkspace as workspace } from '../helpers/workspace.js';
+import { choose, openList } from '../helpers/listbox.js';
 
 /**
  * The drums: lanes to read, a 3D kit to hit, and a pad for each drum. A hit
@@ -16,9 +17,9 @@ const stage = page => page.locator('.drum-stage');
 const pads = page => page.getByRole('group', { name: 'Drum pads' });
 const pad = (page, name) => pads(page).getByRole('button', { name, exact: true });
 const notes = (page, type = 'noteon') => page.evaluate(kind => window.__notes.filter(m => m.type === kind).map(m => m.midi), type);
-const listen = page => page.evaluate(async () => { window.__notes = []; (await import('/src/lib/midiInput.js')).midiInput.onMessage(m => window.__notes.push(m)); });
+const listen = page => page.evaluate(async () => { window.__notes = []; (await import('/src/lib/input/midiInput.js')).midiInput.onMessage(m => window.__notes.push(m)); });
 const send = (page, midi) => page.evaluate(async note => {
-  const { emitSyntheticMidi } = await import('/src/lib/midiInput.js');
+  const { emitSyntheticMidi } = await import('/src/lib/input/midiInput.js');
   emitSyntheticMidi({ type: 'noteon', midi: note, velocity: 0.8, source: 'test-controller' });
   emitSyntheticMidi({ type: 'noteoff', midi: note, velocity: 0, source: 'test-controller' });
 }, midi);
@@ -37,14 +38,16 @@ test('the drums open with lanes to read, a 3D kit to hit and the pads a click aw
   await open(page, { renderer: 'gl' });
   await expect(stage(page).locator('canvas')).toBeVisible({ timeout: 60_000 });
   await expect(stage(page)).toHaveAttribute('data-ready', 'true', { timeout: 60_000 });
-  await expect(page.getByRole('group', { name: 'Practice instrument' }).getByRole('button')).toHaveText(['Piano', 'Guitar', 'Violin', 'Cello', 'Drums']);
+  await expect(page.getByRole('group', { name: 'Practice instrument' }).getByRole('button')).toHaveText(['Piano', 'Guitar', 'Violin', 'Cello', 'Veena', 'Drums', 'Tabla', 'Handpan']);
   // Meet the kit plays every piece but the open hi-hat, which shares the closed one's cymbals.
   await expect(page.locator('.drum-lanes')).toHaveAttribute('data-lanes', '8');
   await expect(page.locator('.drum-label')).toHaveCount(8, { timeout: 30_000 });
   await expect(page.locator('.guitar-next')).toContainText('Kick · press K');
   // Six lessons, then the ten beats under a heading of their own.
-  await expect(page.getByLabel('Drum exercise').locator('optgroup').nth(0).locator('option')).toHaveCount(6);
-  await expect(page.getByLabel('Drum exercise').locator('optgroup').nth(1).locator('option')).toHaveCount(10);
+  const exercises = await openList(page.getByRole('combobox', { name: 'Drum exercise' }));
+  await expect(exercises.getByRole('group').nth(0).getByRole('option')).toHaveCount(7);
+  await expect(exercises.getByRole('group').nth(1).getByRole('option')).toHaveCount(10);
+  await page.keyboard.press('Escape');
   // On a wide screen the pads fold away under the kit, and open for anyone who wants them.
   await expect(pads(page)).toBeHidden();
   await page.getByText('Show drum pads · keyboard accessible').click();
@@ -134,7 +137,7 @@ test('on the 2D trainer the pads are the whole kit, and work from the keyboard',
   await expect.poll(() => notes(page)).toEqual([43]);
   await expect.poll(async () => (await notes(page, 'noteoff')).length).toBe(1);
   // A study has its own lanes: the backbeat is kick and snare alone.
-  await page.getByLabel('Drum exercise').selectOption('drums-backbeat');
+  await choose(page.getByLabel('Drum exercise'), 'drums-backbeat');
   await expect(page.locator('.drum-lanes')).toHaveAttribute('data-lanes', '2');
   await expect(page.locator('.studio-header')).toContainText('Kick and snare');
   expect(errors).toEqual([]);
@@ -182,7 +185,7 @@ test('a new drummer confirms sound, hears that a wrong drum is a different drum,
   const errors = collectErrors(page);
   await open(page, { learningView: 'home' });
   await page.getByRole('button', { name: /Start my first lesson/ }).click();
-  await expect(page.locator('.studio-heading h2')).toHaveText('Meet the kit');
+  await expect(page.locator('.studio-heading h1')).toHaveText('Meet the kit');
   await watchSound(page);
   await page.getByRole('button', { name: 'Play a test note', exact: true }).click();
   await expect.poll(() => page.evaluate(() => window.__studioHeardSound)).toBe(true);
@@ -196,9 +199,9 @@ test('a new drummer confirms sound, hears that a wrong drum is a different drum,
   await expect(page.locator('.lesson-bar [aria-current="step"]')).toContainText('Listen');
   await expect(page.locator('.lesson-note-feedback')).toContainText('You found Kick');
 
-  // The glossary is the drummer's own: no middle C, no finger numbers.
-  await page.getByRole('button', { name: /A little help with the terms/ }).click();
-  await expect(page.locator('.lesson-glossary')).toContainText('The kick is played with your foot');
+  // The glossary is the drummer's own, tapped where the word appears: no middle C, no finger numbers.
+  await page.locator('.lesson-cues').getByRole('button', { name: 'kick', exact: true }).click();
+  await expect(page.locator('.lesson-cues .term-meaning:visible')).toContainText('played with your foot');
   expect(errors).toEqual([]);
 });
 
@@ -209,12 +212,13 @@ test('a guided drum phrase waits for each drum in turn and saves the lesson', as
     learningView: 'lesson', errorCues: false,
     learning: { drums: { lessonId: 'drums-meet-the-kit', step: 'follow', rate: 0.65, soundConfirmed: true, firstNoteDone: true, listened: true, followed: false, practised: false, completed: {} } },
   });
-  await expect(page.locator('.lesson-guide h2')).toHaveText('Find each drum. Take your time.');
+  // On a wide screen the step is on the stage card; the guide says what the lesson is for.
+  await expect(page.locator('.step-card h2')).toHaveText('Find each drum. Take your time.');
   await expect(page.getByRole('button', { name: 'Play this step', exact: true })).toBeEnabled();
   await page.getByRole('button', { name: 'Play this step', exact: true }).click();
   // Hit whichever drums the music is waiting for, as a learner reading the hint would.
   await page.evaluate(async () => {
-    const { emitSyntheticMidi } = await import('/src/lib/midiInput.js');
+    const { emitSyntheticMidi } = await import('/src/lib/input/midiInput.js');
     const midiOf = { Kick: 36, Snare: 38, 'Hi-hat': 42, 'Open hat': 46, 'High tom': 50, 'Mid tom': 47, 'Floor tom': 43, Crash: 49, Ride: 51 };
     let lastAt = 0;
     window.__followTimer = setInterval(() => {
@@ -236,7 +240,7 @@ test('a guided drum phrase waits for each drum in turn and saves the lesson', as
   await expect(page.locator('.lesson-bar [aria-current="step"]')).toContainText('Practice');
   await page.getByRole('button', { name: 'Save & leave' }).click();
   // The guided run finished the lesson, which opens the next one; it passed no check.
-  await expect(page.locator('.learning-roadmap > header')).toContainText('1 / 6 lessons finished · 0 checks passed');
+  await expect(page.locator('.learning-roadmap > header')).toContainText('1 / 7 lessons finished · 0 checks passed');
   await expect(page.locator('.learning-stage-lessons button').filter({ hasText: 'Four on the floor' })).toBeEnabled();
   expect(errors).toEqual([]);
 });

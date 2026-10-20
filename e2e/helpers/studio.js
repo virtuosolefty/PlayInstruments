@@ -13,7 +13,7 @@ import { STORAGE_KEY } from './storage.js';
 export async function seedSettings(page, settings = {}, { everyLoad = false } = {}) {
   await page.addInitScript(({ key, saved, always }) => {
     if (always || !localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify({ version: 1, songs: {}, settings: saved }));
-  }, { key: STORAGE_KEY, saved: { settingsVersion: 5, onboarded: true, countInBars: 0, ...settings }, always: everyLoad });
+  }, { key: STORAGE_KEY, saved: { settingsVersion: 5, onboarded: true, studioTourDone: true, countInBars: 0, ...settings }, always: everyLoad });
 }
 
 /**
@@ -32,3 +32,11 @@ export function collectErrors(page, { ignore } = {}) {
   });
   return errors;
 }
+
+/**
+ * How long to wait for a 3D stage to appear. Headless Chromium draws WebGL in
+ * software, and on a busy machine the first frame of a stage can take far
+ * longer than an assertion's usual 8 seconds; the stage is still correct when
+ * it arrives. Used only where a test waits for a 3D canvas.
+ */
+export const STAGE_TIMEOUT = 30_000;

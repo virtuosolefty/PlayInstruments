@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
+import ModelCredit from './ModelCredit.jsx';
 import { useStageView } from '../hooks/useStageView.js';
-import { buildBowedRig } from '../lib/bowedRig.js';
-import { bowedLabels, placeText } from '../lib/bowedStageView.js';
-import { dotLook } from '../lib/guitarStageView.js';
-import { guitarFeedback } from '../lib/instrumentView.js';
+import { buildBowedRig } from '../lib/strings/bowedRig.js';
+import { bowedLabels, placeText } from '../lib/strings/bowedStageView.js';
+import { dotLook } from '../lib/strings/guitarStageView.js';
+import { guitarFeedback } from '../lib/strings/instrumentView.js';
 import { bringModel, loadRig, otherRigs } from '../lib/stage/otherRigs.js';
 import { STAGE_TIERS } from '../lib/stage/quality.js';
 import { runStage } from '../lib/stage/stageRunner.js';
 import { createStudio } from '../lib/stage/studio.js';
-import { findModel } from '../lib/stageModels.js';
+import { findModel } from '../lib/stage/stageModels.js';
 import ResetViewButton from './ResetViewButton.jsx';
 import StageLabels from './StageLabels.jsx';
 import StageViewSwitch from './StageViewSwitch.jsx';
 import WholeModels from './WholeModels.jsx';
+import { STAGE_COLORS } from '../lib/stage/stageColors.js';
 
 const NO_POSITIONS = new Map();
 /** A bowed string sustains: it shimmers for as long as the bow is on it, rather than dying away as a plucked one does. */
@@ -29,7 +31,7 @@ function bowedHooks(el, latest, pointed) {
   let tally = '', labelled = '', showing = [], bowed = null;
   return {
     paint(rig, now) {
-      const { engine, target, selection, activePositions, labelMode, labelSize } = latest.current;
+      const { engine, target, selection, activePositions, labelMode, labelSize, technique } = latest.current;
       const active = engine.activeInputRef.current, positions = activePositions?.current ?? NO_POSITIONS;
       const counts = { held: 0, possible: 0, target: 0 }, markers = [];
       let changed = false;
@@ -61,13 +63,14 @@ function bowedHooks(el, latest, pointed) {
         if (sounding !== !!lit.get(wire)) {
           lit.set(wire, sounding);
           changed = true;
-          wire.material.emissive.set(sounding ? '#3fbc98' : '#000000');
+          wire.material.emissive.set(sounding ? STAGE_COLORS.hit : 0);
           wire.material.emissiveIntensity = sounding ? 0.35 : 0;
         }
         const y = wire.userData.restY + (sounding && !calm.matches ? Math.sin(now * SHIMMER.speed + s) * SHIMMER.size : 0);
         if (wire.position.y !== y) { wire.position.y = y; changed = true; }
       });
-      if (rig.bow.play(bowing, { now, still: calm.matches })) changed = true;
+      // Plucked with the fingers, the bow is put down: only the plucked string moves.
+      if (rig.bow.play(technique === 'fingers' ? null : bowing, { now, still: calm.matches })) changed = true;
       // Which string the bow is on, for anything that needs to know without reading the picture.
       if (bowing !== bowed) { bowed = bowing; if (bowing === null) delete el.dataset.bowing; else el.dataset.bowing = bowing; }
       showing = markers;
@@ -145,7 +148,7 @@ const otherBowed = (id, kit, maxFret) => loadRig(id, (owned, model) => ({ ...bui
  * play. The SVG fingerboard (BowedStage.jsx) stays the light tier and the
  * fallback: `onUnavailable` is called if the model or the graphics give out.
  */
-export default function BowedStage3D({ kit, engine, maxFret, labelMode = 'fingers', labelSize = 14, target = null, selection = null, activePositions, onBow, onLift, theme = 'light', quality = 'auto', view = 'lesson', onUnavailable }) {
+export default function BowedStage3D({ kit, engine, maxFret, labelMode = 'fingers', labelSize = 14, target = null, selection = null, activePositions, onBow, onLift, theme = 'light', quality = 'auto', view = 'lesson', onUnavailable, technique = 'bow' }) {
   const host = useRef(null);
   const latest = useRef(null);
   const controls = useRef(null);
@@ -168,7 +171,7 @@ export default function BowedStage3D({ kit, engine, maxFret, labelMode = 'finger
   const rigs = useRef(null);
   // Another instrument is being shown over this one (WholeModels.jsx): it is there to look at, not to bow.
   const [looking, setLooking] = useState(false);
-  latest.current = { kit, engine, target, selection, activePositions, onBow, onLift, onUnavailable, labelMode, labelSize, view, closeUp, flip: 1, modelId };
+  latest.current = { kit, engine, target, selection, activePositions, onBow, onLift, onUnavailable, labelMode, labelSize, view, closeUp, flip: 1, modelId, technique };
   const stage = id => { setStageNotice(''); setChosen(old => ({ ...old, [kit.id]: id })); };
   const offersWhole = view === 'freePlay' && showcase;
   const whole = offersWhole && !closeUp;
@@ -235,15 +238,16 @@ export default function BowedStage3D({ kit, engine, maxFret, labelMode = 'finger
   // The bowing stretch by the bridge is in view only when the whole instrument is.
   const hint = hover ? placeText(kit, hover)
     : whole && looking ? 'Drag to turn · Fingerboard to play'
-    : whole ? 'Drag to turn · hold by the bridge to bow an open string · Fingerboard for the finger places'
+    : whole ? `Drag to turn · ${technique === 'fingers' ? 'press by the bridge to pluck' : 'hold by the bridge to bow'} an open string · Fingerboard for the finger places`
+    : technique === 'fingers' ? `Press to pluck · it rings away by itself${turnable ? ' · drag the background to turn' : ''}`
     : `Press and hold to bow · drag along a string to slide${turnable ? ' · drag the background to turn' : ''}`;
   return <div className="guitar-stage bowed-stage-3d" ref={host} role="group" aria-label={`Three-dimensional ${name}`} data-view={view}>
-    <div className="guitar-stage-top"><div><strong>{kit.label}</strong><span>{selection ? 'First position · press and hold to bow' : `Tuned in fifths · ${kit.tuning.map((_, s) => kit.stringName(s).note).join(' ')}`}</span></div></div>
+    <div className="guitar-stage-top"><div><strong>{kit.label}</strong><span>{selection ? `First position · ${technique === 'fingers' ? 'press to pluck' : 'press and hold to bow'}` : `Tuned in fifths · ${kit.tuning.map((_, s) => kit.stringName(s).note).join(' ')}`}</span></div></div>
     {/* The labels only echo what the 2D finger buttons below say in full, so assistive technology is spared them. */}
     <StageLabels labels={labels} labelSize={labelSize} decorative />
     {!ready && <div className="bowed-stage-preparing" role="status">Preparing your {name}…</div>}
     {ready && whole && preparing && <div className="stage-status" role="status">Preparing the {findModel(preparing)?.label.toLowerCase() ?? 'instrument'}…</div>}
     <WholeModels instrument={kit.id} active={whole} quality={quality} onShowing={setLooking} staged={modelId} onStage={stage} stageNotice={stageNotice} />
-    <div className="guitar-stage-bottom"><span className="guitar-stage-legend"><i className="played" />Played <i className="next" />{target ? 'Next note' : 'Hover'}{selection && <><i className="root" />Scale</>}</span><span className="guitar-stage-end">{offersWhole && <StageViewSwitch label="Fingerboard" short="Fingers" value={whole ? 'whole' : 'learn'} onChange={setStageView} />}{turnable && (turned || resetFocused) && <ResetViewButton turned={turned} onReset={resetView} onFocusChange={setResetFocused} />}<span className="guitar-stage-hint" role="status">{hint}</span></span></div>
+    <div className="guitar-stage-bottom"><span className="guitar-stage-legend"><i className="played" />Played <i className="next" />{target ? 'Next note' : 'Hover'}{selection && <><i className="root" />Scale</>}</span><span className="guitar-stage-end">{offersWhole && <StageViewSwitch label="Fingerboard" short="Fingers" value={whole ? 'whole' : 'learn'} onChange={setStageView} />}{turnable && (turned || resetFocused) && <ResetViewButton turned={turned} onReset={resetView} onFocusChange={setResetFocused} />}{ready && !looking && modelId === kit.id && <ModelCredit id={kit.model} />}<span className="guitar-stage-hint" role="status">{hint}</span></span></div>
   </div>;
 }

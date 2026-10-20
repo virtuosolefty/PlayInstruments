@@ -3,13 +3,13 @@
  * its songs (on the drums, its beats) under a heading of their own, so a tune
  * someone came for is not lost among the scales.
  *
- * @param {object} props
- * @param {{ lessons: object[], songs: object[], songsLabel: string }} props.kit from instruments.js
+ * @param {{ lessons: object[], songs: object[], songsLabel: string }} kit from instruments.js
+ * @returns {{ label: string, options: { value: string, label: string }[] }[]} for a Listbox's `groups`
  */
-export default function StudyOptions({ kit }) {
-  const option = study => <option key={study.id} value={study.id}>{study.title}</option>;
-  return <>
-    <optgroup label="Lessons">{kit.lessons.map(option)}</optgroup>
-    <optgroup label={kit.songsLabel}>{kit.songs.map(option)}</optgroup>
-  </>;
+export function studyGroups(kit) {
+  const option = study => ({ value: study.id, label: study.title });
+  return [
+    { label: 'Lessons', options: kit.lessons.map(option) },
+    { label: kit.songsLabel, options: kit.songs.map(option) },
+  ];
 }

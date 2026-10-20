@@ -10,7 +10,7 @@ import { act, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useStageView } from '../hooks/useStageView.js';
-import { STRING_FONT_MAX } from '../lib/guitarStageView.js';
+import { STRING_FONT_MAX } from '../lib/strings/guitarStageView.js';
 import ResetViewButton from './ResetViewButton.jsx';
 import StageLabels from './StageLabels.jsx';
 import StageViewSwitch from './StageViewSwitch.jsx';

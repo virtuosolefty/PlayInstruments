@@ -10,7 +10,7 @@ import {
   StaveNote,
   Voice,
 } from 'vexflow/bravura';
-import { toMeasures } from '../lib/notation.js';
+import { toMeasures } from '../lib/music/notation.js';
 
 // A five-line stave is 40px of lines, but it needs room above and below for
 // ledger lines, stems and beams — squeezing the two together clips exactly the

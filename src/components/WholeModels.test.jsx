@@ -11,7 +11,7 @@ import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ModelChooser from './ModelChooser.jsx';
 import WholeModels from './WholeModels.jsx';
-import { modelsFor } from '../lib/stageModels.js';
+import { modelsFor } from '../lib/stage/stageModels.js';
 
 vi.mock('./ModelViewer.jsx', () => ({
   default: ({ model, onFailed }) => <div data-testid="viewer" data-model={model.id}><button onClick={() => onFailed('no graphics')}>break</button></div>,
@@ -92,7 +92,7 @@ describe('the pop-up of instruments to choose from', () => {
 
 describe('the whole-instrument view\'s choice of instrument', () => {
   it('offers nothing where there is nothing to choose', async () => {
-    await render(<WholeModels instrument="piano" active />);
+    await render(<WholeModels instrument="harp" active />);
     expect(container.innerHTML).toBe('');
     expect(dialog()).toBeNull();
   });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SHOWCASE_SIZE, asMetalRough, drumZonePart, leanPrimitive, showcaseTransform, wholePieces } from './showcase.mjs';
+import { SHOWCASE_SIZE, asMetalRough, drumZonePart, keyParts, leanPrimitive, showcaseTransform, wholePieces } from './showcase.mjs';
 
 const UPRIGHT = [[0, 1], [1, 1], [2, 1]];
 const corners = ({ min, max }) => [min[0], max[0]].flatMap(x => [min[1], max[1]].flatMap(y => [min[2], max[2]].map(z => [x, y, z])));
@@ -142,5 +142,38 @@ describe('finding which drum a piece of a kit belongs to', () => {
 
   it('is null for a piece in no box', () => {
     expect(drumZonePart(zones, piece([50, 1, 2]))).toBeNull();
+  });
+});
+
+describe('a piano whose keys answer to playing', () => {
+  // A keyboard of 88 keys, front toward +z, among some case pieces of other shapes.
+  const keyboard = (front = 1) => {
+    const boxes = [{ centre: [0, 5, 0], size: [24, 6, 20] }, { centre: [0, 1, 3], size: [0.3, 0.3, 0.3] }];
+    let white = 0;
+    for (let midi = 21; midi <= 108; midi++) {
+      const black = [1, 3, 6, 8, 10].includes(midi % 12);
+      const x = -12 + (black ? white - 0.5 : white + 0.5) * 0.46;
+      boxes.push(black ? { centre: [x, 3.3, 6 * front], size: [0.22, 0.25, 2] } : { centre: [x, 3, 6.6 * front], size: [0.42, 0.4, 3.4] });
+      if (!black) white += 1;
+    }
+    return boxes;
+  };
+
+  it('names each of the 88 keys by its note, lowest at the player\'s left', () => {
+    const names = keyParts(keyboard());
+    expect(names.filter(Boolean)).toHaveLength(88);
+    expect(names[0]).toBeNull();
+    expect(names[1]).toBeNull();
+    // In the fixture the keys follow the case pieces in note order.
+    expect(names.slice(2)).toEqual(Array.from({ length: 88 }, (_, i) => `key-${21 + i}`));
+  });
+
+  it('turns the order round when the keyboard faces the other way', () => {
+    const turned = keyboard(-1).map(box => ({ ...box, centre: [-box.centre[0], box.centre[1], box.centre[2]] }));
+    expect(keyParts(turned).slice(2)).toEqual(Array.from({ length: 88 }, (_, i) => `key-${21 + i}`));
+  });
+
+  it('names nothing when there is no full keyboard to find', () => {
+    expect(keyParts(keyboard().slice(0, 60)).every(name => name === null)).toBe(true);
   });
 });

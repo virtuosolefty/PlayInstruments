@@ -1,25 +1,30 @@
 {
   "name": "piano-practice-coach",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "version": "1.0.0",
   "type": "module",
   "description": "Piano and guitar practice studio with Web MIDI, interactive tablature, Three.js stages and real-time music feedback.",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/build-public-pages.mjs",
+    "build": "vite build && node scripts/build/build-public-pages.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "songs": "node scripts/build-songs.mjs",
-    "icons": "node scripts/build-icons.mjs",
-    "shoot": "node scripts/shoot.mjs",
-    "check:browser": "node scripts/check-browser.mjs",
+    "songs": "node scripts/songs/build-songs.mjs",
+    "icons": "node scripts/build/build-icons.mjs",
+    "design:sync": "node scripts/build/sync-design-system.mjs",
+    "shoot": "node scripts/dev/shoot.mjs",
+    "check:browser": "node scripts/dev/check-browser.mjs",
     "test:e2e": "playwright test",
     "test:studio": "playwright test --config e2e/config/studio.config.js e2e/tests/00-smoke.spec.js e2e/tests/01-core-flows.spec.js e2e/tests/06-studio-guitar.spec.js e2e/tests/07-desktop-studio.spec.js e2e/tests/08-instrument-interactions.spec.js",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
+    "@fontsource-variable/fraunces": "^5.3.0",
     "@fontsource-variable/inter": "^5.3.0",
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@tonejs/midi": "^2.0.28",

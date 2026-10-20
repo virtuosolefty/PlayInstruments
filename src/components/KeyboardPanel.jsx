@@ -1,12 +1,14 @@
+import Listbox from './Listbox.jsx';
 import { useState } from 'react';
 import KeyboardMap from './KeyboardMap.jsx';
 import Explain from './Explain.jsx';
+import Icon from './Icon.jsx';
 import VelocityCurve from './VelocityCurve.jsx';
-import { IDENTITY_CURVE, isIdentity } from '../lib/velocity.js';
-import { AUTO_PROFILE, KEYBOARD_PROFILES } from '../lib/devices.js';
-import { FIT_MODES, describeFit } from '../lib/arrange.js';
-import { INSTRUMENT_MODES } from '../lib/midiOutput.js';
-import { noteName } from '../lib/theory.js';
+import { IDENTITY_CURVE, isIdentity } from '../lib/input/velocity.js';
+import { AUTO_PROFILE, KEYBOARD_PROFILES } from '../lib/input/devices.js';
+import { FIT_MODES, describeFit } from '../lib/music/arrange.js';
+import { INSTRUMENT_MODES } from '../lib/input/midiOutput.js';
+import { noteName } from '../lib/music/theory.js';
 
 const FIT_CHOICES = [
   [FIT_MODES.OFF, 'As written', 'Play the piece exactly as written. Notes past your keys stay unreachable.'],
@@ -111,25 +113,20 @@ export default function KeyboardPanel({
       {piano && (
         <>
           <h3 className="setup-section-title">Your keyboard</h3>
-          <select
+          <Listbox
             className="picker"
-            aria-label="Keyboard"
+            label="Keyboard"
             value={profileId}
-            onChange={(e) => onProfileChange(e.target.value)}
+            onChange={onProfileChange}
             title="Pick your controller, or let the app read it from the MIDI port name"
-          >
-            <option value={AUTO_PROFILE}>
-              Auto{autoDetected ? ` — ${autoDetected.label}` : ''}
-            </option>
-            {KEYBOARD_PROFILES.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.label} · {p.keyCount} keys
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: AUTO_PROFILE, label: `Auto${autoDetected ? `: ${autoDetected.label}` : ''}` },
+              ...KEYBOARD_PROFILES.map((p) => ({ value: p.id, label: `${p.label} · ${p.keyCount} keys` })),
+            ]}
+          />
 
           <p className="hint device-name">
-            {deviceName ? `Reading ${deviceName}` : 'No controller connected — using the profile above.'}
+            {deviceName ? `Reading ${deviceName}` : 'No controller connected, so the profile above is used.'}
           </p>
 
           <KeyboardMap window={keyWindow} range={pieceRange} onMove={onMoveWindow} />
@@ -154,7 +151,7 @@ export default function KeyboardPanel({
             </button>
           </div>
           <Explain label="How the octave follows">
-            Press OCT+ or OCT− on the controller and play any key — the window catches up on its own.
+            Press OCT+ or OCT− on the controller and play any key: the window catches up on its own.
             It is not remembered between sessions, because the hardware forgets it too when you unplug.
           </Explain>
 
@@ -205,19 +202,14 @@ export default function KeyboardPanel({
 
         {external && (
           <>
-            <select
+            <Listbox
               className="picker"
-              aria-label="MIDI output"
+              label="MIDI output"
               value={selectedOutputId ?? ''}
-              onChange={(e) => onSelectOutput(e.target.value)}
+              onChange={onSelectOutput}
               title="Which MIDI port your instrument is listening on"
-            >
-              {outputs.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.name}
-                </option>
-              ))}
-            </select>
+              options={outputs.map((o) => ({ value: o.id, label: o.name }))}
+            />
             <label className="toggle" style={{ marginTop: 8 }}>
               <input
                 type="checkbox"
@@ -239,9 +231,10 @@ export default function KeyboardPanel({
                 kind of well-meant guess that caused the bug above it. */}
             {forwardInput && echoRisk && (
               <p className="hint warn-hint">
-                <strong>You will probably hear every note twice.</strong> You are sending to{' '}
-                <em>{echoRisk}</em>, which is the controller you are playing — so your plugin is
-                almost certainly already hearing you directly. Untick the box above.
+                <Icon name="warning" size={14} />
+                <span><strong>You will probably hear every note twice.</strong> You are sending to{' '}
+                <em>{echoRisk}</em>, which is the controller you are playing, so your plugin is
+                almost certainly already hearing you directly. Untick the box above.</span>
               </p>
             )}
           </>
@@ -282,7 +275,7 @@ export default function KeyboardPanel({
               </label>
             </div>
             <Explain label="Naming your samples">
-              Bounce a few notes out of Mini Grand — one per octave is plenty — and name them for the pitch they
+              Bounce a few notes out of Mini Grand (one per octave is plenty) and name them for the pitch they
               record (<code>C4.wav</code>, <code>Ds3.wav</code>). The app reads the pitch from the filename and plays
               everything in between by shifting the nearest sample.
             </Explain>

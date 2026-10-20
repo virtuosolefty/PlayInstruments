@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { playInput } from '../lib/playInput.js';
+import { playInput } from '../lib/input/playInput.js';
 import { stringKit } from '../lib/instruments.js';
 
 /**

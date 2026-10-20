@@ -1,0 +1,113 @@
+/* ------------------------------------------------------------ studio layout
+   The studio as a canvas with its tools around it, after the best-made
+   AI-built tools: the view switch on the stage, the transport in one bar
+   under the keys, an inspector beside the stage, the shortcuts in the footer. */
+
+/* The footer lists the keys that work (ShortcutLegend). Space always shows;
+   the rest only where there is room and a keyboard to press them on. */
+.shortcut-legend { display: inline-flex; flex-wrap: nowrap; align-items: center; justify-content: flex-end; gap: var(--sp-1) var(--sp-3); }
+.shortcut { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.shortcut > span { margin-inline-start: var(--sp-hair); }
+.shortcut-legend .shortcut:not(:first-child) { display: none; }
+@media (min-width: 1180px) and (hover: hover) and (pointer: fine) {
+  .shortcut-legend .shortcut:not(:first-child) { display: inline-flex; }
+}
+
+/* The view switch on the stage (StageViews.jsx). It hangs from a zero-height
+   anchor placed just above the stage, so it sits over the top of whichever
+   stage shows (roll, score or both) without taking a row of its own. */
+.stage-views-anchor { position: relative; height: 0; z-index: 7; }
+.stage-views { position: absolute; top: var(--sp-2); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: var(--sp-2); max-width: calc(100% - 2 * var(--sp-3)); }
+.stage-music-view, .stage-appearance { display: inline-flex; padding: 3px; gap: var(--sp-hair); background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--elev-2); }
+.stage-music-view button, .stage-appearance button { min-height: 30px; padding: 0 var(--sp-3); border: 0; border-radius: var(--radius-sm); background: transparent; box-shadow: none; color: var(--text-dim); font-size: var(--fs-xs); font-weight: var(--fw-medium); white-space: nowrap; }
+.stage-music-view button:hover:not(:disabled), .stage-appearance button:hover:not(:disabled) { background: var(--bg-3); color: var(--text); box-shadow: none; }
+.stage-music-view button[aria-pressed="true"], .stage-appearance button[aria-pressed="true"] { background: var(--seg-on); color: var(--text); box-shadow: var(--seg-on-shadow); }
+.stage-appearance button { min-width: 38px; padding: 0 var(--sp-2); font-family: var(--mono); }
+.stage-appearance button:disabled { opacity: .45; cursor: not-allowed; }
+.stage-music-view .view-short { display: none; }
+/* In a workspace's tool row the 2D / 3D switch is one more tool, not a floating panel. */
+.string-tools .stage-appearance { box-shadow: none; background: var(--bg-2); }
+.drum-view-controls { justify-content: flex-end; }
+@media (max-width: 600px) {
+  .stage-music-view .view-long { display: none; }
+  .stage-music-view .view-short { display: inline; }
+  .stage-music-view button, .stage-appearance button { min-height: 44px; min-width: 44px; }
+}
+
+/* An instrument's tuning or frets sits between the caption and the keys, and
+   is what gives way when the footer runs short; the keys list keeps its room. */
+.studio-footer > .footer-meta { flex: 0 1 auto; min-width: 0; margin-inline-start: auto; overflow: hidden; text-overflow: ellipsis; }
+.studio-footer > span:last-child:has(.shortcut-legend) { flex: none; overflow: visible; }
+
+/* The transport under the keys (App.jsx renders the deck after the stage on
+   wide screens). A bar along the bottom of the stage: a line above it, none
+   below, and its zone that only held Practice settings is gone, since that
+   button now sits in the header beside Focus. */
+@media (min-width: 901px) {
+  .studio-app .pane.center > .controls.deck { border-top: 1px solid var(--line-soft); border-bottom: 0; }
+  .studio-app .controls.deck .zone-sound:not(:has(.show-feedback)) { display: none; }
+  .practice-settings-slot { display: contents; }
+  .practice-settings-slot .options-toggle { min-height: var(--control-h); }
+}
+/* Beside Instrument settings it follows the same rule: a named button from
+   1441px, an icon with its name kept for screen readers below that. */
+@media (min-width: 901px) and (max-width: 1440px) {
+  .practice-settings-slot .options-toggle { padding: 0 var(--sp-2); }
+  .practice-settings-slot .options-toggle span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .studio-footer:has(.shortcut-legend .shortcut:nth-child(2)) > .footer-meta { display: none; }
+}
+
+/* The inspector (BarInspector.jsx): the bar you chose, beside the stage. */
+.inspector { display: grid; gap: var(--sp-3); }
+.inspector-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+.inspector .eyebrow { font: var(--fw-bold) var(--fs-2xs) var(--sans); letter-spacing: var(--tracking-caps); color: var(--text-dim); }
+.inspector-close { min-height: 32px; width: 32px; padding: 0; display: grid; place-items: center; }
+.inspector h2 { margin: 0; font-size: var(--fs-2xl); line-height: 1.15; color: var(--text); }
+.bar-density { display: flex; align-items: flex-end; gap: 3px; height: 44px; }
+.bar-density button { flex: 1; min-width: 3px; height: var(--h); min-height: 0; padding: 0; border: 0; border-radius: var(--radius-xs); background: var(--bg-3); box-shadow: none; }
+.bar-density button:hover:not(:disabled) { background: var(--accent-dim); box-shadow: none; }
+.bar-density button[aria-pressed="true"] { background: var(--accent); }
+.inspector dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-1-5) var(--sp-4); margin: 0; font-size: var(--fs-sm); }
+.inspector dt { color: var(--text-dim); }
+.inspector dd { margin: 0; text-align: end; font-variant-numeric: tabular-nums; }
+.inspector-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.inspector-actions button { min-height: 36px; font-size: var(--fs-sm); }
+.inspector .hint { margin: 0; font-size: var(--fs-xs); color: var(--text-dim); }
+.inspector .hand-fingers { display: block; white-space: nowrap; }
+.inspector .hand-fingers small { margin-inline-end: var(--sp-2); color: var(--text-dim); font-size: var(--fs-xs); }
+/* In a lesson only 2D / 3D shows, at the top left, clear of the step card on the right. */
+.stage-views.in-lesson { left: var(--sp-4); transform: none; }
+.inspector .chosen-note { color: var(--accent); font-weight: var(--fw-bold); }
+
+/* Touch screens at any width: the stage's switches, the instrument picker's icons and the
+   discovery cards' hearts at a fingertip's size (the audit measured tablets). */
+@media (pointer: coarse) {
+  .stage-music-view button, .stage-appearance button { min-height: 44px; min-width: 44px; }
+  .instrument-picker > button { min-width: 44px; }
+  .discovery-art button { min-width: 44px; min-height: 44px; }
+}
+
+/* On a stage narrower than a laptop's (a tablet held sideways, 901 to 1180px) the step card would cover the falling
+   notes, so it sits in the page above the stage instead of on it. */
+@media (min-width: 901px) and (max-width: 1180px) {
+  .step-card-anchor { height: auto; padding: var(--sp-2) var(--sp-3) 0; }
+  .step-card { position: static; width: auto; box-shadow: none; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--sp-4); align-items: center; }
+  .step-card .step-count, .step-card h2, .step-card .step-line { grid-column: 1; }
+  .step-card .lesson-actions { grid-column: 2; grid-row: 1 / span 3; }
+}
+/* A struck instrument (the drums, the tabla, the handpan) has its lanes and its instrument side by side, with no
+   empty corner for the card: at any width it sits in the page above them, so neither is covered. */
+.studio-app:has(.drums-workspace) .step-card-anchor { height: auto; padding: var(--sp-2) var(--sp-3) 0; }
+.studio-app:has(.drums-workspace) .step-card { position: static; width: auto; box-shadow: none; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--sp-4); align-items: center; }
+.studio-app:has(.drums-workspace) .step-card :is(.step-count, h2, .step-line) { grid-column: 1; }
+.studio-app:has(.drums-workspace) .step-card .lesson-actions { grid-column: 2; grid-row: 1 / span 3; }
+/* The rest of the touch targets the tablet check measured, at the specificity of the rules that sized them down. */
+@media (pointer: coarse) {
+  .studio-app .studio-header .studio-header-actions .instrument-picker > button { min-width: 44px; }
+  .studio-app .lesson-bar li button { min-height: 44px; min-width: 44px; }
+  .studio-app .close-feedback, .studio-app .lesson-guide details > summary { min-height: 44px; }
+  .studio-app .practice-settings-slot .options-toggle { min-width: 44px; }
+  .studio-app .controls .pad, .studio-app .controls .pad:nth-child(n) { min-width: 44px; }
+  .studio-app .step-card .lesson-actions button { min-height: 44px; }
+}
+@media (pointer: coarse) { .learning-home details > summary { min-height: 44px; } }

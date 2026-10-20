@@ -25,7 +25,7 @@ export default function PathProgress({ benchmark, decay, badges = [], streak }) 
               </span>
             </div>
             <p className="hint">
-              How far off the beat you sat on the benchmark scale, first run against latest — same
+              How far off the beat you sat on the benchmark scale, first run against latest. Same
               exercise, same tempo, so the two are genuinely comparable.{' '}
               {benchmark.overallDelta !== 0 && (
                 <>
@@ -47,7 +47,7 @@ export default function PathProgress({ benchmark, decay, badges = [], streak }) 
             <strong>
               {decay.healed} of {decay.total}
             </strong>{' '}
-            trouble spots have gone quiet — places you used to fumble and no longer do.
+            trouble spots have gone quiet: places you used to fumble and no longer do.
           </p>
         )}
       </div>
@@ -72,7 +72,7 @@ export default function PathProgress({ benchmark, decay, badges = [], streak }) 
         {streak?.freezes > 0 && (
           <p className="hint">
             {streak.freezes} rest day{streak.freezes === 1 ? '' : 's'} banked. Miss a day and one is
-            spent automatically — a streak that dies on one missed Tuesday is one nobody restarts.
+            spent automatically. A streak that dies on one missed Tuesday is one nobody restarts.
           </p>
         )}
       </div>

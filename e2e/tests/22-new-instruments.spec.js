@@ -10,7 +10,7 @@ import { chooseWorkspace as workspace } from '../helpers/workspace.js';
  */
 
 const notes = page => page.evaluate(() => window.__notes.filter(m => m.type === 'noteon').map(m => m.midi));
-const listen = page => page.evaluate(async () => { window.__notes = []; (await import('/src/lib/midiInput.js')).midiInput.onMessage(m => window.__notes.push(m)); });
+const listen = page => page.evaluate(async () => { window.__notes = []; (await import('/src/lib/input/midiInput.js')).midiInput.onMessage(m => window.__notes.push(m)); });
 const picker = page => page.getByRole('group', { name: 'Practice instrument' });
 
 /** Opens an instrument's studio as a returning player would find it. */
@@ -23,10 +23,10 @@ async function open(page, instrument, settings = {}) {
 
 const kind = (page, name) => page.getByRole('group', { name: 'Instrument type' }).getByRole('button', { name, exact: true });
 
-test('the picker offers five instruments, and the bass is a kind of guitar', async ({ page }) => {
+test('the picker offers eight instruments, and the bass is a kind of guitar', async ({ page }) => {
   const errors = collectErrors(page);
   await open(page, 'piano');
-  await expect(picker(page).getByRole('button')).toHaveText(['Piano', 'Guitar', 'Violin', 'Cello', 'Drums']);
+  await expect(picker(page).getByRole('button')).toHaveText(['Piano', 'Guitar', 'Violin', 'Cello', 'Veena', 'Drums', 'Tabla', 'Handpan']);
   await picker(page).getByRole('button', { name: 'Violin', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Violin studio' })).toBeVisible();
   await expect(page.getByRole('group', { name: 'Instrument type' })).toHaveCount(0);
@@ -35,7 +35,7 @@ test('the picker offers five instruments, and the bass is a kind of guitar', asy
     await expect(kind(page, family)).toHaveAttribute('aria-pressed', 'true');
     await kind(page, other).click();
     await expect(page.getByRole('region', { name: region })).toBeVisible();
-    await expect(page.locator('.studio-heading h2')).toHaveText('Meet the four strings');
+    await expect(page.locator('.studio-heading h1')).toHaveText('Meet the four strings');
     // The family's own button stays pressed, and comes back to the kind last used.
     await expect(picker(page).getByRole('button', { name: family, exact: true })).toHaveAttribute('aria-pressed', 'true');
     await picker(page).getByRole('button', { name: 'Piano', exact: true }).click();
@@ -67,11 +67,11 @@ test('the bass has a learning path, a first lesson and its ten songs on the home
   await open(page, 'bass', { learningView: 'home' });
   await expect(page.getByRole('group', { name: 'Learning instrument' }).getByRole('button', { name: 'Guitar', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(kind(page, 'Bass')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('.next-lesson-card h3')).toHaveText('Meet the four strings');
-  await expect(page.locator('.learning-roadmap > header')).toContainText('0 / 6 lessons finished');
+  await expect(page.locator('.next-lesson-card h2')).toHaveText('Meet the four strings');
+  await expect(page.locator('.learning-roadmap > header')).toContainText('0 / 7 lessons finished');
   await page.getByRole('group', { name: 'Song collections' }).getByRole('button', { name: 'Songs you already know' }).click();
-  await expect(page.locator('.discovery-card h4')).toHaveCount(10);
-  await expect(page.locator('.discovery-card h4').first()).toHaveText('Hot Cross Buns');
+  await expect(page.locator('.discovery-card h3')).toHaveCount(10);
+  await expect(page.locator('.discovery-card h3').first()).toHaveText('Au Clair de la Lune');
   expect(errors).toEqual([]);
 });
 

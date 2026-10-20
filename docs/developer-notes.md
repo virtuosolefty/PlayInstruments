@@ -1,38 +1,88 @@
 # Practice Deck
 
+## Tabla, handpan and veena
+
+Added 19 October 2026. The pickers now hold eight buttons: piano, guitar (with the bass behind it), violin, cello, veena, drums, tabla and handpan. On a phone the learning home lays them out in two rows of four.
+
+### Struck instruments: one framework for the drums, the tabla and the handpan
+
+- **A set** (`src/lib/struck/struck.js`, `struckSet`) is what a struck instrument is played with: its pieces (id, short name, label, note, key, hand, group), extra notes a controller may send for a piece (`aliases`), and its words. From it come `forMidi`, `canonical`, the computer keys, the lanes and the instruction line. `struckStudy` and `parseBeats` turn a lesson written as beat text (`-` rests, `a+b` splits a beat, two pieces on one beat sound together) into a score the matcher, history and lanes already understand.
+- **Which sets there are** is `src/lib/struck/struckSets.js`: `STRUCK`, `struckSetFor`, `isStruck`. The drums keep their own `drums.js` and are wrapped there; `noun: 'Drum'` keeps "Drum studio" and "Drum exercise", which the others take from the kit's label.
+- **One studio.** `DrumWorkspace.jsx` takes an `instrument` and reads its set: the lanes, pads, explorer card and keys are the drums' own components taking a set, and `STAGES` picks the 3D stage (`DrumStage`, `TablaStage`, `HandpanStage`). `usePracticeEngine.playedMidi` turns a controller's note into the piece it means with `set.canonical`.
+- **The tabla** (`src/lib/struck/tabla.js`): six strokes, Na Tin Tun Te on the dayan (right hand) and Ge Ke on the bayan, each on its own key (N T U E G K). Bols are words: Dha is Na + Ge, Dhin is Tin + Ge, and `upNext` says "Dha · Na + Ge · press N + G". Seven lessons up to Teentaal, ten thekas. Its sound is synthesized (`tablaVoice.js`): the dayan's ringing strokes from tuned partials, the closed strokes from noise, Ge from a membrane synth. `TablaStage.jsx` shows the downloaded tabla and lights the drum a stroke falls on (`buildDrumModelRig`).
+- **The tabla's model is CC BY-NC 4.0** (Marcel Porsiel). The player chose to use it and keep the app free: Practice Deck must not be sold or monetised while it ships this model. `modelCredits.js` carries the licence per credit (`NON_COMMERCIAL`), so Help and the model file say so. It is on `OWN_STAGE_MODELS` in `stageModels.js`, not in the whole-instrument view.
+- **The handpan** (`src/lib/struck/handpan.js`, `handpanModel.js`, `HandpanStage.jsx`) is a D Aegean 18 built in code, in the shape of the pans at ayasainstruments.com, which was a visual reference only (the site was rate-limited, so the player's screenshot of their D Aegean 18 was used). Eleven notes on top, ding D3 in the middle and the rest climbing in a zig-zag, keys A to `'`; seven underneath on Z to M. Each field is a dimple with a dome, a ring torus marks the next note, and a struck field gives and springs back. **Top / Underside** turns the pan over; a lesson whose next notes are all underneath turns it by itself. The flip finishes on the first frame past its time, however late that frame comes.
+
+### The veena
+
+- **Kit** (`src/lib/strings/fretted.js`, beside the bass): `VEENA_TUNING` is A1 D2 A2 D3, Pa Sa Pa Sa with Sa on D; string 1 is the sarani. Lessons are written in swaras (`swaras('s r g m p d n S')`, frets on the sarani) in Mayamalavagowla, the raga Carnatic students start in; `theory.js` knows it as a mode (`mayamalavagowla`), so a wrong note is judged against the raga, and the lesson's key reads "Mayamalavagowla on D". The ten songs are arranged from Sa with a reach of twelve frets, so they stay on the sarani as a veena player would play them. The left hand slides one finger (`veenaFinger`).
+- **Swaras in the words.** `kit.swara` (`veenaSwara`) puts the swara before the note name in Up next and the lesson instruction: "Pa · A3 · string 1 · fret 7 · finger 1". `kit.tuningLabel` ("Sa on D") and `kit.openStrings` give the stage header and the free-play card the veena's own words.
+- **Model** (mayam3D, CC BY 4.0), played by `FrettedModelStage.jsx` like the bass, at full detail. Three things in the recipe (`scripts/models/recipes.mjs`) are new:
+  - `playingSpan: crestSpan(0, 1)`: the veena's strings climb steeply from the pegs to the nut, rise gently to the bridge and fall away to the tailpiece, so the playing length is from where they level out to their crest.
+  - `highestNearest`: the sarani lies nearest the player, beside the drone strings, so the strings are ordered with the highest nearest. `modelNeck` (`guitarNeck.js`) now places fret numbers and the playable surface on whichever side is outward.
+  - `evenFrets`: the model spaces its 21 frets evenly. `placeEvenFrets` in `prepare.mjs` slides each to its equal-tempered place along the measured strings, so every fret the stage marks is a fret on the model; the bar at the nut stays where it is. `veena.test.js` checks the prepared frets against `fretX`.
+- The three drone strings are kept as a part of their own (`drones`) and are not played. `MODEL_STRINGS.veena` gives the drawn strings veena gauges, the two lower ones wound.
+- **Sound** is a plucked voice with strong upper partials and a long ring, for the buzzing jivari bridge.
+
+### What you hear is what you see, and a handpan that sounds like one (20 October)
+
+- **The whole-instrument view's models have their own voices.** Until now the voice followed only the instrument practised, so the bass guitar in the guitar's view played the guitar's sound, the electric violin the violin's and the electronic kit the acoustic kit's (checked in the browser for every model). `WholeModels.jsx` now tells `shownModel.js` which model stands in the instrument's place; App passes it to `soundFor` (`technique.js`), which picks the voice: the bass guitar plays the bass voice an octave down (`audio.setInstrumentType(voice, { transpose: -12 })`, since its strings answer to the guitar's of the same name), the electric violin a brighter bowed voice with no body (`BOWED['violin-electric']`), the electronic kit `buildDrumVoice(Tone, out, 'electronic')`. A plucked violin stays plucked. The antique cello and the grand piano keep the instrument's voice. Spec 21 checks each.
+- **The handpan voice** (`handpanVoice.js`) replaces the plucked-string table entry, which was one additive tone whose partials all faded together and which a key's release cut off after about 1.3 s. Each strike is the note, a twin a slow beat above it (the shimmer), the octave tuned 3 cents wide and the twelfth, each a sine with its own fade (to 60 dB down: the note about 6 s at the ding and 3 s at the top, the octave 0.4 of that, the twelfth 0.22), the fields tuned to its octave and twelfth ringing quietly along, and a pink-noise thud below 900 Hz, all under a 5.2 kHz low-pass. A release does nothing; `releaseAll` damps. The fades are shaped on a gain directly: Tone's envelope turns a `decay` of 6 s into a time constant of `ln(7)/ln(200)`, about 0.37 s, which falls 60 dB in 2.5 s. Partials that have died away are let go at the next strike, not in `onstop`: `Tone.Offline` runs every stop callback before it renders, so letting go there silenced offline renders.
+- **Measured** by rendering both voices offline in the browser as a 150 ms key tap (the script is not kept in the repo; `handpanVoice.test.js` checks the structure): D3 old 1.3 s audible, partials 0 / −5 / −9 dB fading together; new 5.5 s audible, 0 / −9 / −18 dB, fades 6.0 / 2.9 / 3.4 s (the twelfth held up by A4 ringing along), a 2 dB shimmer near 1 Hz, spectral centroid 208 Hz against 257.
+- **No clipping** (20 October, found by the edge-case pass). With no limiter, eleven handpan notes struck hard peaked at 2.04 times full scale (the 19 October voice clipped too). Every sound now leaves through `buildOutput` (`audioOutput.js`): the master gain, a limiter at -1 dB, then a soft safety stage, a wave shaper that leaves everything under 85% of full scale exactly as it is and bends only peaks the limiter is too slow for, so nothing passes full scale. It is built inside a guard in `audio.js`: if it cannot be, the app plays through a plain gain, as before. The handpan voice is also a third quieter.
+- **Search finds a lesson by its description** (`useCommandPalette.js`), ranked below title matches, so "underside" finds the handpan's "Under the shell".
+
+Tests: `struckInstruments.test.js`, `veena.test.js`, `modelCredits.test.js`, `stageModels.files.test.js`, and in the browser `e2e/tests/31-world-instruments.spec.js` (studio config).
+
+### Next steps after the new instruments (20 October)
+
+From a ui-ux-pro-max pass over the new instruments; the player kept nine cards (plan artifact, collection `nextDecisions`). The tabla card carried the note "have the tabla instrument shown here", so its 2D view is a picture of the real tabla, not a drawing.
+
+- **The handpan's 2D view is the pan** (`HandpanMap.jsx`): the ding in the middle, the ten top notes round it at the angles the 3D pan uses (`fieldPlace`, from `handpan.js`), the underside beside it turned over (mirrored) round the gu. Every field is a button with the pads' behaviour (plays on pointer-down, plays from a key-less click, named "E5, underside, key M"). The pans size from the height they have (`--pan-d`): large in free play, smaller beside a lesson's lanes (where the captions drop), stacked on a phone. Colours are the `--pan-*` tokens.
+- **The tabla's 2D view is the tabla** (`TablaMap.jsx`, `tablaMap.js`): `public/media/tabla-from-above.webp` is the 3D model rendered by the app's own studio from the player's seat, higher up, and both heads were measured in it when it was made (`PICTURE.heads`, percent of the picture). Each bol's mark sits where it is struck (`STROKE_PLACES[id].at`, a share of the head's radius: Na on the rim, Tin inside it, Tun and Te on the dayan's black centre, Ge on the bayan's open skin, Ke on its centre). A narrow picture keeps each mark to its key (a container query). The marks are buttons named by the bol's label ("Na, the rim, key N"). If the model is ever changed, render and measure again with `node scripts/media/render-tabla-picture.mjs` (dev server running) and copy the heads it prints into `PICTURE.heads`.
+- **The 3D tabla lights the place struck** (`stage/tablaZones.js`): a ring per stroke on its head, from the same `STROKE_PLACES` zones; each head is measured from the model's vertices (`measureHeads`: the rim from the highest ring, the skin from the highest point well inside it). The next stroke's ring glows; a struck one flashes in its verdict's colour. The whole drum no longer glows for the next stroke, and only gives a little when struck. A tap on a ring plays that stroke (the centre plays Tun); elsewhere on a drum, Na or Ge as before.
+- **The veena's board is its own** (`strings.css`, `.veena-workspace`): the board's tokens re-pointed to dark wax and brass (`--wax-*`, `--brass-*`), and no inlay dots. On the sarani, frets in the piece's raga or scale (`keyPitchClassSet(score.key)`) show their swara at rest (`button.swara`, `--swara-*`); a place showing the next note, a chord shape or a held note keeps that.
+- **Free play on a phone opens on the instrument** (`<details class="folded-card">` in `GuitarWorkspace.jsx` and `DrumWorkspace.jsx`): on a phone the free-play card (chords, open strings, keys and tips) folds into one line under the instrument; `foldedSummary` writes the line ("Open strings · Sa Pa Sa Pa" on the veena). The handpan's card lists its first two keys and "Show all 18 keys" (`StruckCard`, more than nine pieces).
+- **The library's instruments on a phone**: two rows of four, as on the learning home (`clarity.css`).
+- **No jump on the welcome page**: fallback faces with the real fonts' metrics (`tokens.css`: "Inter Fallback" on Arial, "Fraunces Fallback" on Times New Roman, "JetBrains Mono Fallback" on Courier New; size-adjust and ascent/descent overrides measured in Chromium). Layout shift went from 0.107 (phone) and 0.091 (desktop) to 0; spec 31 checks it stays under 0.05.
+- **A drone** (`drone.js`, `droneVoice.js`): for the veena and the handpan, a tanpura's four strings (Pa, Sa, Sa, low Sa on D) plucked in turn every 1.2 s on the voice's own timer, each ringing through the next. `audio.setDrone(notes, levelDb)`; asked for before sound starts, it waits. App asks for it while the instrument has one, the setting `drone` is on and the learning home is not showing. A Drone button sits beside the metronome in a lesson and in the free-play bar; Practice settings has its volume (`droneLevel`, -30 to 0 dB, default -12, about 10 dB under a struck note). At 901 to 1440px the metronome and drone buttons are icons (`.pad-metronome`, `.pad-drone`).
+- Spoken bols were kept out, as the card recommended: browser voices mispronounce them.
+
+Tests: `nextSteps.test.js` (map places, tabla marks and zones, the drone's cycle, the folded line), and in the browser spec 31 (the pan map, the tabla picture, the veena's swaras and drone, phone free play, the library row, the welcome page's layout shift).
+
 ## Reach: installing, opening lessons, songs, more instruments and the microphone
 
 Added October 2026, in four parts, each to remove something that kept a newcomer out.
 
 ### Installing, two names, and the film songs
 
-- **Installing from GitHub Pages.** The site is served from `/PlayInsturments/`, so every address in `public/manifest.webmanifest` is relative (`start_url` and `scope` are `./`): a manifest address that starts at the root points at somebody else's page there. A phone asks for PNG icons, so `npm run icons` (`scripts/build-icons.mjs`) draws `public/icons/` from `public/favicon.svg`: 192 and 512 pixels, a maskable 512 with the background to the edges, and a 180 pixel one for iOS. There is no service worker, so the installed app still needs a connection.
+- **Installing from GitHub Pages.** The site is served from `/PlayInsturments/`, so every address in `public/manifest.webmanifest` is relative (`start_url` and `scope` are `./`): a manifest address that starts at the root points at somebody else's page there. A phone asks for PNG icons, so `npm run icons` (`scripts/build/build-icons.mjs`) draws `public/icons/` from `public/favicon.svg`: 192 and 512 pixels, a maskable 512 with the background to the edges, and a 180 pixel one for iOS. There is no service worker, so the installed app still needs a connection.
 - **Input & sound**, in the top bar, is what was called Instrument setup; it shared a first word with **Instrument settings** beside the instrument picker and the two were easily confused. It reads **Microphone on** or **Controller connected** when either is.
 - **The stage's playable view has its own name.** Free play's view switch read Learn | Whole instrument under a workspace switch that reads Learn | Free play. The first button now says what it shows: **Fretboard** (guitar, bass), **Fingerboard** (violin, cello) or **Practice kit** (drums). `StageViewSwitch.jsx` takes it as `label`; the value behind it is still `'learn'`.
-- **Film songs are local only.** Six film songs in `public/songs/songs.json` are marked `localOnly`. They are there when the app is run from a clone and are left out of a public build: `scripts/build-public-pages.mjs`, when `GITHUB_PAGES` or `PUBLIC_SITE_URL` is set, rewrites `dist/songs/songs.json` without them and deletes their MIDI files (`scripts/public-library.mjs` decides which). `npm run songs` carries them over, since it does not write them. `scripts/public-library.test.mjs` fails if a song tagged `film-music` is not marked. The files are still in the public repository; taking them out of it, and its history, is a separate decision. Two credits were wrong and are corrected (Rowdy Baby is Yuvan Shankar Raja's, the Theevandi theme Kailas Menon's). No song called "Anjathe Pookkal" could be found, so that entry's credit is unverified.
+- **Film songs are local only.** Six film songs in `public/songs/songs.json` are marked `localOnly`. They are there when the app is run from a clone and are left out of a public build: `scripts/build/build-public-pages.mjs`, when `GITHUB_PAGES` or `PUBLIC_SITE_URL` is set, rewrites `dist/songs/songs.json` without them and deletes their MIDI files (`scripts/songs/public-library.mjs` decides which). `npm run songs` carries them over, since it does not write them. `scripts/songs/public-library.test.mjs` fails if a song tagged `film-music` is not marked. The files are still in the public repository; taking them out of it, and its history, is a separate decision. Two credits were wrong and are corrected (Rowdy Baby is Yuvan Shankar Raja's, the Theevandi theme Kailas Menon's). No song called "Anjathe Pookkal" could be found, so that entry's credit is unverified.
 
 ### Finishing a lesson opens the next one
 
-`src/lib/path.js` keeps two things apart that used to be one. **Finished** is one complete run of a lesson, guided (Wait for me) or timed, at any speed: it opens the next lesson, the next stage once every lesson in a stage is finished, and the stage's recital piece. **Stars** are as before: three at the written tempo pass a lesson's check, four master it, and only a timed run at tempo earns them. `exerciseState` reports `finished` beside `passed` and `mastered`; a stage has `finished` beside `cleared`; `pathState` counts `finishedCount` beside `passedCount`, and its `currentId` is the first open lesson not yet finished, then the first whose check is not passed. An abandoned run (stored without stars) opens nothing.
+`src/lib/learning/path.js` keeps two things apart that used to be one. **Finished** is one complete run of a lesson, guided (Wait for me) or timed, at any speed: it opens the next lesson, the next stage once every lesson in a stage is finished, and the stage's recital piece. **Stars** are as before: three at the written tempo pass a lesson's check, four master it, and only a timed run at tempo earns them. `exerciseState` reports `finished` beside `passed` and `mastered`; a stage has `finished` beside `cleared`; `pathState` counts `finishedCount` beside `passedCount`, and its `currentId` is the first open lesson not yet finished, then the first whose check is not passed. An abandoned run (stored without stars) opens nothing.
 
 The words on the learning home, the Path tab, the lesson guide and the end-of-run report say the same: `blockerHelp` now explains why a lesson has no stars, never why the next one is shut. The lesson guide offers **Move on to the next lesson** beside its own next step once a lesson is finished.
 
 ### Ten songs for every instrument
 
-`src/lib/easySongs.js` holds ten tunes everybody knows, written once in sol-fa (`d r m f s l t`, with marks for octave and length), all traditional or out of copyright. `arrangeTune` puts each in a key that sits in an instrument's first position: every note goes on the string just below it (the chart a method book prints), and `fitTonic` takes the first key on the instrument's list in which every note lands on an open string or a tape, or failing that within reach. `pianoTune` gives the melody from middle C, which `npm run songs` writes as MIDI, with a fingering where the tune sits under one hand. The drums have ten beats instead (`DRUM_BEATS` in `drums.js`).
+`src/lib/music/easySongs.js` holds ten tunes everybody knows, written once in sol-fa (`d r m f s l t`, with marks for octave and length), all traditional or out of copyright. `arrangeTune` puts each in a key that sits in an instrument's first position: every note goes on the string just below it (the chart a method book prints), and `fitTonic` takes the first key on the instrument's list in which every note lands on an open string or a tape, or failing that within reach. `pianoTune` gives the melody from middle C, which `npm run songs` writes as MIDI, with a fingering where the tune sits under one hand. The drums have ten beats instead (`DRUM_BEATS` in `drums.js`).
 
 A kit (`instruments.js`) now has `lessons` (what its path is made of), `songs` and `studies` (both). Songs are on no path and open from the start; they appear as the second collection on the learning home, in the library, and under their own heading in each workspace's Exercise list (`StudyOptions.jsx`).
 
 ### The bass
 
-`INSTRUMENTS` is piano, guitar, bass, violin, cello, drums. A string kit is `fretted` or `bowed`.
+`INSTRUMENTS` is piano, guitar, bass, violin, cello, veena, drums, tabla, handpan (the last three since 19 October). A string kit is `fretted` or `bowed`.
 
 **The pickers list five.** The bass is a kind of guitar, so `PICKER` (`instruments.js`) lists piano, guitar, violin, cello and drums, and the guitar has a small **Guitar | Bass** switch (`TypeSwitch.jsx`) in the studio's controls, on the learning home and in the library. Underneath, the bass stays an instrument of its own, with its own tuning, lessons, path, saved place and sound, so nothing keyed by an instrument id changed. `familyOf`, `variantsOf` and `chooseVariant` do the mapping; `settings.variants` remembers which kind the family was last on.
 
 A ukulele and a viola were added with the bass and taken out again on 10 October 2026: the ukulele had no 3D model, and the viola was the violin's lessons a fifth lower on the violin's model. Settings saved for either fall back safely (`normalizeInstrument` gives the piano; `chooseVariant` gives the violin for a remembered viola).
 
-- **The bass** is in `src/lib/fretted.js` (tuning and lessons) and is played in the guitar's studio: `GuitarWorkspace.jsx` takes an `instrument` and reads everything from its kit. It has no chords; `OpenStringsCard.jsx` takes the chord explorer's place.
-- **What the 3D stage shows** is `kit.stage`: `'drawn'` for the guitar (the one built in code, and its model for the whole view); `'model'` for the bass, which is played on the downloaded bass guitar at full detail (`FrettedModelStage.jsx`, with the drawn fretboard at light detail or if the model fails). The stage's painting, labels and pointer handling are shared in `src/lib/frettedStage.js`; `stageLabels`, `hoverText` and `buildModelGuitarRig` take the instrument's tuning, pitch lookup and colours.
+- **The bass** is in `src/lib/strings/fretted.js` (tuning and lessons) and is played in the guitar's studio: `GuitarWorkspace.jsx` takes an `instrument` and reads everything from its kit. It has no chords; `OpenStringsCard.jsx` takes the chord explorer's place.
+- **What the 3D stage shows** is `kit.stage`: `'drawn'` for the guitar (the one built in code, and its model for the whole view); `'model'` for the bass, which is played on the downloaded bass guitar at full detail (`FrettedModelStage.jsx`, with the drawn fretboard at light detail or if the model fails). The stage's painting, labels and pointer handling are shared in `src/lib/strings/frettedStage.js`; `stageLabels`, `hoverText` and `buildModelGuitarRig` take the instrument's tuning, pitch lookup and colours.
 - **Sound.** `audio.js` builds each plucked voice from one table and each bowed voice from another: the bass is heavier and louder than the guitar, the cello darker and slower to speak than the violin.
 - **Five in the pickers.** Below 1300px the studio header shows icons, with the name of the instrument chosen (`strings.css`). The learning home's picker wraps under its heading, and on a phone it and the header sheet's take two rows. `InstrumentIcon` has a drawing for the bass, used where it is shown on its own (the setup dialog, the tuner).
 
@@ -54,7 +104,7 @@ Added 10 October 2026. New styles are in `src/styles/flow.css`; `e2e/tests/25-fl
 
 After the bass was folded into the guitar, the app was gone over screen by screen. What changed, and why:
 
-- **The welcome page's pictures were a month out of date.** `public/media/*-studio.png` showed a top bar and studio layout that no longer existed. `scripts/shoot-instruments.mjs` now takes all five on the real graphics card at full detail; retake them whenever the studio's look changes.
+- **The welcome page's pictures were a month out of date.** `public/media/*-studio.png` showed a top bar and studio layout that no longer existed. `scripts/media/shoot-instruments.mjs` now takes all five on the real graphics card at full detail; retake them whenever the studio's look changes.
 - **The theme follows the device on a first visit** (`lib/theme.js`); a theme the visitor has chosen always wins. The welcome page uses the same rule without loading the studio.
 - **Each screen names itself in the browser tab** (`lib/pageTitle.js`): "Meet the four strings · Bass — Practice Deck".
 - **A Tuner button sits in a string instrument's own controls** (a `view-tool` button in `GuitarWorkspace` and `BowedWorkspace`), not only under More. In free play it is in the free-play bar instead.
@@ -66,37 +116,129 @@ After the bass was folded into the guitar, the app was gone over screen by scree
 
 A real instrument can be played into the app, one note at a time.
 
-- **Hearing a pitch.** `src/lib/pitch.js` finds the pitch of a tenth of a second of sound with the YIN method: the shortest shift at which the sound lines up with itself is one cycle of the note. That is what lets it hear a low string as the note it is when its overtones are louder than its fundamental. It works on plain arrays and is tested on tones made in code, from a bass guitar's low E to the top of a violin.
-- **From pitches to notes.** `src/lib/noteTracker.js` turns thirty readings a second into notes that begin and end: a note begins when the same pitch has been heard twice running, ends after three quiet readings, and begins again if it comes back clearly louder than it had fallen to (a string plucked twice, a bow changing direction).
-- **The microphone** is `src/lib/micInput.js`: one microphone that the tuner and the note input each `hold` while they need it, released when the last lets go. `listenPlan` sets how much sound is read for the sound card's rate: thinned at 96 kHz and above, shorter at a headset's 16 kHz. It asks the browser to cancel the app's own sound and not to suppress noise or level the volume, which are made for speech and treat a held note as noise. What it hears is analysed and discarded; nothing is recorded or sent.
+- **Hearing a pitch.** `src/lib/input/pitch.js` finds the pitch of a tenth of a second of sound with the YIN method: the shortest shift at which the sound lines up with itself is one cycle of the note. That is what lets it hear a low string as the note it is when its overtones are louder than its fundamental. It works on plain arrays and is tested on tones made in code, from a bass guitar's low E to the top of a violin.
+- **From pitches to notes.** `src/lib/input/noteTracker.js` turns thirty readings a second into notes that begin and end: a note begins when the same pitch has been heard twice running, ends after three quiet readings, and begins again if it comes back clearly louder than it had fallen to (a string plucked twice, a bow changing direction).
+- **The microphone** is `src/lib/input/micInput.js`: one microphone that the tuner and the note input each `hold` while they need it, released when the last lets go. `listenPlan` sets how much sound is read for the sound card's rate: thinned at 96 kHz and above, shorter at a headset's 16 kHz. It asks the browser to cancel the app's own sound and not to suppress noise or level the volume, which are made for speech and treat a held note as noise. What it hears is analysed and discarded; nothing is recorded or sent.
 - **Playing notes in.** With **Microphone** chosen under Input & sound (`settings.inputMethod === 'mic'`), `useMicNotes` (`hooks/useMicInput.js`) sends each note heard through the same path as a controller's, marked `source: 'mic'` and stamped `MIC_LATENCY_MS` earlier, which is about how long it takes to be sure of a note. The practice engine does not sound a note from the microphone (`soundsInput`): the instrument already has, and the app's own sound would go back in. That covers the wrong-note buzz too. Chosen on an earlier visit, the microphone still waits for the first click or key press before it comes on, and the top bar reads **Microphone off** until then. While the tuner is open the microphone stays on but notes are not played in.
-- **The tuner** (`TunerDialog.jsx`, under More, and from Input & sound) shows the note, a needle half a semitone either way, and on a string instrument which string is nearest and which way to turn its peg. `src/lib/tuner.js` decides all of it: `steadyPitch` takes the median of the last few readings, and within 5 cents is in tune.
+- **The tuner** (`TunerDialog.jsx`, under More, and from Input & sound) shows the note, a needle half a semitone either way, and on a string instrument which string is nearest and which way to turn its peg. `src/lib/input/tuner.js` decides all of it: `steadyPitch` takes the median of the last few readings, and within 5 cents is in tune.
 - **What it cannot do.** It hears one pitch at a time, so a chord or a strum is not recognised, and it is not offered for the drums. With the accompaniment or the metronome on, headphones keep the app's sound out of the microphone.
 - **Tests.** `pitch.test.js`, `noteTracker.test.js`, `tuner.test.js` and `micInput.test.js` (the last with a made-up microphone and clock). In the browser, `e2e/tests/23-microphone.spec.js` gives Chromium a WAV file as its microphone (`e2e/helpers/fakeMicrophone.js` makes plucked-string notes), so the tuner and a lesson are tested on real sound through the browser's own microphone path. That is a clean signal: a real room, a cheap microphone and a real string have not been tried.
+
+## Clarity: what you can read at a glance
+
+Added 18 October 2026, from a before/after plan the user chose change by change. Styles are in `src/styles/clarity.css`, loaded last; `e2e/tests/27-clarity.spec.js` covers the phone deck and the acoustic kit on the stage.
+
+- **Top bar.** Input & sound and Enable sound are two pills; while sound is off, Enable sound is tinted violet as the bar's one call to action.
+- **Instrument icons** (`InstrumentIcon`, `StudioHeader.jsx`) are one drawn set on a 24-unit grid with one stroke: the violin leans with its bow, the cello stands on its endpin, guitar and bass lie on the diagonal. Each icon sits on its label's centre line.
+- **Lesson steps** are a stepper: numbered dots on a rail, a tick for each step behind you, the current one ringed. It uses `:has()`; the upright phone keeps its one-chip summary.
+- **The desktop deck** is one row from 1280px: the four tools are quiet icons that turn violet while on, and from 1440px the clock shows the piece's length and Play is wider. **On an upright phone** the deck is one row of Play, the mode and **More controls**; the tools, tempo and settings open beneath it. The zones dissolve into a twelve-column grid (`display: contents`), so no control is rendered twice. The mode reads "Wait" on a phone; the rest of its name stays for screen readers.
+- **The report** (`PracticeReport.jsx`) shows the score, or the share played, as a ring; notes, timing and dynamics as three tiles; one primary button (the recommended step, or Run again when there is none); Listen back on the left and the replay actions on the right. Close and the Coach toggle are icon buttons in the corner.
+- **The learning home** opens on a banner of the instrument (its `media/<instrument>-studio.png`) and a stage strip, one segment per lesson. Practice days are dots that fill with a tick. On a phone the instruments are one row, icon over name.
+- **The library** shows difficulty as a three-bar meter; the word stays for screen readers.
+- **Guitar, bass, violin and cello: View.** Frets or reach, labels, label size, neck height and left-handed are in a View pop-over (`ViewOptions.jsx`, which closes on Escape and on a press outside). Tuner and View sit at the end of the Up next row; the toolbar keeps only Guitar/Bass and the exercise, or goes. Browser tests open it with `openView` (`e2e/helpers/workspace.js`).
+- **Phones put the instrument first.** The strings' options follow the stage, which is at least 240px tall, and a phone starts at first position (`visibleFrets`, `instrumentView.js`) until the player chooses the whole neck. A phone's piano fits the piece until a range is picked in the Range menu (`pianoRangeChosen`); the menu shows what is drawn.
+- **Piano stage** (`rollScene.js`). On a real graphics card the keys and case reflect the studio's soft boxes; software rendering skips the map, which takes seconds to prepare there. Notes never reflect it, so a run looks as it does on the 2D roll. A sounding key sends a beam of its hand's colour up its lane, and the lanes of notes due in the next 1.2s glow. In free play each note you play rises up the roll as a trail; reduced motion keeps the stage still.
+- **Drums.** The kit built in code is wine lacquer with bronze cymbals. At full detail the stage plays the downloaded acoustic kit (`stageModelKit`, `DrumStage.jsx`): fitted to the built kit's footprint, turned to the drummer's side, its rig lighting each hit and softly lighting the next drum (`mark`, `drumModelRig.js`), whose name tag lights too. The built kit stands in until it loads, and for good if it cannot. The model's teal shells are re-toned and its platform and stool left out when it is prepared (`retone` and `omit` in `scripts/models/recipes.mjs`); its cymbals turn bronze in the rig.
+- **A grand piano** (`piano-grand`, "Grand Paino" by EastSeaSaltfishnet, CC BY 4.0) is the piano's Whole instrument choice: in free play at full detail a Keyboard | Whole instrument switch sits over the roll (`PianoWholeView.jsx`). Its 88 keys are separate pieces of the downloaded mesh; `keyParts` (`scripts/models/showcase.mjs`) finds them by shape (52 alike, 36 alike), tells the keyboard's front by the white keys reaching past the black, and names them `key-21` to `key-108` from the player's left. In the viewer every note from any input holds its key down and lights it (`pianoModelRig.js`, `data-keys-down` on the viewer), and a press on a key plays it. The keys are drawn plain ivory and ebony, since the texture's red felt bled into them at picture size.
+- **Violin and cello lessons** frame from just before the nut rather than the end of the scroll, and a tape number near the top edge is held inside the stage.
+- **Guitar rosette** is dark abalone rather than a rainbow.
+- **Warnings** carry an icon and a full hairline border instead of a coloured bar down one side, and symbols that stood in for icons (hearts, ticks, a lock, a flame, stars) are `Icon`s. Note names keep their sharps and flats.
+- **Welcome and home pictures** are cropped to the instrument's working area by `scripts/media/shoot-instruments.mjs`; take them again after any change to how a stage looks.
 
 ## Styling: tokens, the stage and the phone layout
 
 Added in the October 2026 design pass. The design system it follows is a Claude artifact; its **Recommended changes** section lists the twenty changes and the measurements behind them.
 
 - **Tokens.** `src/styles/tokens.css` is loaded first and is the only stylesheet that knows which theme is showing. It holds colours, the type scale (nine sizes from 11px, three weights, two trackings), spacing (4 to 32px), radii, three control heights (32, 40 and 48px), six z-index layers and the per-theme surfaces such as `--primary-bg` and `--seg-trough`. Every other stylesheet reads tokens. Do not add a `[data-theme]` selector outside this file; add a token.
-- **The stage is dark in both themes.** The piano roll, the guitar workspace and the violin and cello workspaces carry the class `stage-dark`, which gives them the dark token values, so labels and overlays on a stage need no theme rules. `src/lib/stageColors.js` reads the stage colours (`--note-right`, `--note-left`, `--hit`, `--miss`, `--late`, `--hit-line`, `--stage`) for the canvases, with the same values built in for tests. Hands are blue and amber. Violet is the interface colour and `--now` blue is the music position and the next note.
+- **The stage is dark in both themes.** The piano roll, the guitar workspace and the violin and cello workspaces carry the class `stage-dark`, which gives them the dark token values, so labels and overlays on a stage need no theme rules. `src/lib/stage/stageColors.js` reads the stage colours (`--note-right`, `--note-left`, `--hit`, `--miss`, `--late`, `--hit-line`, `--stage`) for the canvases, with the same values built in for tests. Hands are blue and amber. Violet is the interface colour and `--now` blue is the music position and the next note.
 - **Chrome.** `chrome.css` holds the top bar (three destinations, the sound and input group, the More menu), the shared control rules and the one-line footer. Instrument settings sits beside the instrument picker; the stage caption is the left half of the footer.
 - **Breakpoints** are 600, 900, 1200 and 1440px, and 1700px for the studio header's instrument picker, which shows icons below it. `phone.css` raises every control to 44px at 900px and below, and at 600px and below on an upright phone moves the destinations to a bottom tab bar and the header controls into a sheet (the button reads "Piano · Learn").
 - **Browser tests.** `e2e/helpers/workspace.js` chooses Learn or Free play at any width. `e2e/helpers/studio.js` saves a returning player's settings before the page loads (`seedSettings`) and gathers page and console errors (`collectErrors`). Help and the theme switch are inside More, so a test opens More first.
+
+### The ux-ui kit's rules
+
+October 2026, from the ux-ui-agent-skills kit's gates (run on saved copies of the screens):
+
+- **No native select.** Every choice from a list is `Listbox.jsx`, the ARIA select-only combobox: a button with `role="combobox"` that keeps the focus and the control's name, and a list drawn in a portal on the body, fixed under the button (or above it near the bottom of the window), so no drawer or pop-over clips it. Arrows, Home, End and Page keys move, a typed letter jumps, Enter or Space chooses, Escape or Tab closes. `onChange` gets the value as a string, as a select's did. Every CSS rule for `select` has a `.listbox-trigger` twin, so a list sits where its select sat; the list's own styles are at the end of `clarity.css`. The View pop-over leaves presses in an open list, and Escape on one, to the list. In browser tests, `e2e/helpers/listbox.js` has `choose(combobox, value)` and `openList(combobox)`, and a list's value is its trigger's `data-value`.
+- **One h1 per page:** the page's own title (the studio's piece, the learning home's heading, the welcome page's line). The brand in the top bar is a `span.brand-name`.
+- **No long dashes in interface copy.** A colon, full stop or comma instead. Piece and lesson titles keep theirs, and a lone dash still stands for a value not measured yet.
+- **Tokens.** Raw values that a token already holds (a font size, a radius, a gap, a duration, a stage colour) read the token, and the string instruments' materials (wood, metal, fingerboard marks) are named in `tokens.css`, one value in both themes. Values with no token of that size (6px gaps, 2px lines) stay as they are.
+- **The primary action** in dark mode is the solid `--primary-bg`; **display headings** on the lesson and the library are `--fs-3xl`; body copy stops at 65 characters; the first card of a collection and the first step on the welcome page lead; piece pictures keep to one band of blue to violet, told apart by lightness (`PieceArt.jsx`).
+
+### Stage and guide, after the best AI-built apps
+
+October 2026, from a comparison with apps built with Codex and Claude Code (OpenAI's Codex showcase and the open-source Music Practice); the user kept all eleven suggestions.
+
+- **Titles in a serif.** `--display` (Fraunces, vendored from `@fontsource-variable/fraunces`) sets page, piece, lesson and inspector titles; one italic word in violet can carry a title's point (`<em>` in the learning home's heading). Everything else stays `--sans`. Rules in `display.css`.
+- **Tonight's checklist.** `TonightPractice.jsx` replaces the learning home's numbered list: tonight's length in minutes (`sessionLength.js`: a piece twice plus a little, never under a minute), a ring of today's runs (`path.progress`), and each item with its minutes and a circle that ticks once today's practice has moved past it (`record.daily`).
+- **The lesson's step on the stage.** On wide screens (`!narrow`, over 900px) `LessonStepCard` sits at the top right of the stage: the step's number, title, one sentence and its buttons (`StepActions`, shared with the guide so a button is never on screen twice). It folds to its title while a run plays. The guide (`LessonGuide` with `stageCard`) then shows the lesson's point (`lessonPurpose().goal`), its description as cue lines (`cueLines`) and the first beginner tip in italics. The six steps above the stage are a numbered pager naming only the current step. Phones keep `LessonDock` and the full guide.
+- **Terms where they appear.** `TermText.jsx` underlines the first appearance of each glossary word (`glossary.js`, shared words plus each instrument's own) in lesson text; a tap shows its meaning under the line. It replaces "A little help with the terms".
+- **Finger numbers on the keys.** In a lesson the piano's keys show the finger of the next note on each (`keyFingers.js`, from the authored fingering), in a disc of that hand's colour, on the 2D roll (`drawKeyboard`) and the 3D roll (`RollGL` text layer). The strings already label positions with fingers.
+- **Views on the stage.** `StageViews.jsx` centres the piano's view switch over its stage: Falling notes, Notes + score, Sheet music, then 2D or 3D (`StageAppearance`, group name "Stage appearance", buttons named "2D Trainer" and "3D Stage"). In a lesson only 2D and 3D show, at the top left, clear of the step card. The string and drum workspaces put `StageAppearance` in their tool row. No backdrop blur on anything over a stage: re-blurring a canvas that redraws every frame stalled software-rendered 3D. The choices left Practice settings and Instrument settings. Browser tests switch with `setRenderer` in `e2e/helpers/workspace.js`.
+- **Transport under the keys.** On wide screens App renders the deck after the stage, and Practice settings is portaled into `#practice-settings-slot` in the studio header, beside Focus (an icon below 1441px). Phones keep the deck above the stage.
+- **The inspector.** Clicking the timeline (`onChooseBar`) or the roll (`seekAndChoose`) chooses that bar, never while a run plays and never past the last bar; keyboard seeks and "Restart passage" only seek; `BarInspector.jsx` shows its notes by hand, fingers, your stored slips there (`barInspect.js` over `getTroubleSpots`), the written tempo, and Hear bar (`hearPassage`) or Loop bars. Closing it, a new piece or starting a run lets go of it.
+- **Keys in the footer.** `ShortcutLegend.jsx` lists `FOOTER_KEYS` from `shortcuts.js` (a test checks each is bound). Space always shows; the rest from 1180px with a fine pointer. An instrument's tuning line (`.footer-meta`) gives way first.
+- **Not added:** levels, XP or level-up pop-ups.
+
+### The ui-ux-pro-max audit
+
+October 2026, from measuring the app against the ui-ux-pro-max skill's rules (axe-core was clean everywhere). Kept by the user, all seven built; the skill's own product profile (warm red, Righteous and Poppins, parallax) and a teacher mode were left out on purpose.
+
+- **Targets.** Every control is at least 24px, and 44px where the pointer is coarse; hit areas grow, the look does not (the targets block at the end of `clarity.css`: checkboxes, the library's folded sections, the home page's footer links, the timeline canvas's transparent padding, range inputs). Spec 29 measures it.
+- **Headings.** The learning home's sections are h2 under its h1 and discovery cards h3; the CSS moved with the tags.
+- **Errors.** The error toast (`ErrorToast` in `AppModals.jsx`) has a Close button and closes on Escape when no dialog is open; it stays until closed, and is announced as an alert.
+- **Sideways phones.** `landscape.css`, under `SHORT_LANDSCAPE_QUERY` (`(orientation: landscape) and (max-height: 520px) and (max-width: 960px)`, so a short desktop window keeps its layout): a one-line header, the one-row deck shared with upright phones (`clarity.css`), no timeline or footer, a one-chip lesson pager and a one-row lesson dock. The piano keys drop to 72px there (`SHORT_KEYBOARD_HEIGHT` in `App.jsx`) so the notes have room to fall.
+- **Addresses.** `route.js` names every screen (`#/home/<instrument>`, `#/lesson/<instrument>/<id>`, `#/studio/<instrument>/<id or free>`, `#/library/<instrument>`); `useRoute.js` writes it (a change of screen is a new history entry, a new piece or instrument replaces it) and steers to an address from the bar one step at a time (`applyRoute` in `App.jsx`: instrument, then screen, then piece), taking a step only when the screen has moved since the last, so a piece that is loading is not asked for again. `applyRoute` returns false for something the app does not have (a study or lesson of another instrument, a removed piece), which is let go at once; one that never arrives is let go after four seconds. Shared lesson links (`?instrument=&lesson=`) still go through `Entry.jsx`.
+- **Phone text.** On screens 600px wide or less `--fs-md` is 16px and `--fs-sm` 14px (`tokens.css`), and text fields are 16px so iOS does not zoom on focus.
+- **Undo, not a question.** Clearing a piece's history hides it and shows `UndoToast` for `UNDO_SECONDS` (10); only then is it deleted. A second Clear deletes the first at once, and so does starting to play that piece, so a new run is never swept away with the old ones; leaving the page in the meantime deletes nothing. The undo message's status region stays mounted so it is announced, and sits above an error toast when both show.
+
+### Reliability, speed, offline and tablets
+
+October 2026, the follow-up list after the audit.
+
+- **A stray brace.** `flow.css` had a `}` with nothing open, which made browsers drop the `.chord-legend` rule after it; the chord legend now wraps as designed (and spec 10's layout test, failing since before the clarity pass, passes).
+- **Tests and 3D.** Headless Chromium draws WebGL in software, so a 3D stage's first frame can take far longer than an assertion's 8 seconds. Waits for a 3D canvas use `STAGE_TIMEOUT` (30s, `e2e/helpers/studio.js`); tests about 3D call `test.slow()`; the `AppPage` fixture (smoke, data and flow specs, which are not about the stage) runs on the 2D roll.
+- **Idle frames.** `PianoRoll` and `Minimap` redrew every frame even when nothing moved; on a phone-speed CPU that kept the main thread busy all the time (about 5,000 ms of every 5 s, measured on the production build against the same build without the change). Both now skip frames when nothing has changed: the roll keeps drawing for `SETTLE_MS` (1.5 s) after its clock, size, zoom, hover or pressed keys last changed, and any new props wake it; the timeline draws when the playhead or its picture moves. Idle work fell to 600–1,700 ms in 5 s.
+- **What loads.** A first visit loads 65 kB of script (compressed). Three.js loads only for the 3D stage, notation only for sheet music, and the grand piano's viewer (`PianoWholeView`) only in free play.
+- **Offline.** `public/sw.js`, registered by `main.jsx` in production builds only: the page network-first (a new release arrives at once), built files cache-first, songs, media and models stale-while-revalidate, old entries trimmed. The app opens with no connection once it has been opened once; `useOnline` shows "Offline" in the top bar. Bump `VERSION` in `sw.js` to drop every cache.
+- **Tablets.** On a touch screen at any width, controls are 44px (`--control-h` and `--control-h-sm` under `pointer: coarse` in `tokens.css`, the touch blocks in `studio-layout.css`). Between 901 and 1180px wide the lesson's step card sits in the page above the stage instead of on it, where it covered the falling notes.
+- **Loose ends.** While a cleared history waits for its Undo, its stars and best streak are hidden too. Arriving in the studio from another screen focuses its title. A click on the 2D roll also names the note under it in the inspector (`laneAt`, `noteNear`); the 3D roll still chooses the bar only.
+- **Teacher page.** Progress has "Share with a teacher": `teacherReport.js` makes one self-contained HTML page (practice days, pieces with runs, best result and last date, the bars that go wrong) from what the device has saved, and `TeacherShare.jsx` saves it. No account, no server.
+- **Two spacing steps.** `--sp-hair` (2px) and `--sp-1-5` (6px) joined the scale; exact 2px and 6px gaps, padding and margins read them (hard-coded values 896 to 794).
+
+### A dark accent that is not purple, and the patterns plan
+
+October 2026. The stage spends blue (now, the right hand), green (a right note), red (a miss) and amber (late, the left hand) on meaning, so the dark room's accent has to stay clear of all four. Measured as distance in OKLab ×100 from the nearest: ivory 14.6, silver 18.3, copper 10.6, against 9.8 for the old violet. Teal (6.3 from green), champagne (7.4 from amber) and rose (8.2 from red) were measured and left out.
+
+- **Appearance** is a dialog under More (`AppearanceDialog.jsx`): Light, Dark or True black; the dark accent (Ivory, the default, Silver, Copper or Violet); Standard or Large text. `appearance.js` turns the settings (`darkAccent`, `trueBlack`, `textSize`) into `data-accent`, `data-black` and `data-text` on `<html>`, used by the app and the welcome page alike; `tokens.css` swaps tokens on them. The dark accent applies wherever the dark tokens do, so the stage carries it in both themes. Violet needs no attribute: it is the tokens' own default. Ivory and silver are neutrals, so text links under them are underlined (`patterns.css`).
+- **True black** is the dark theme with the page at `#000`, no glow, and the browser chrome black. **Large text** raises the nine `--fs-*` tokens by about a fifth; the stage and the keys keep their size, which browser zoom would not.
+- **Ctrl+K** (Cmd+K; also the Search button in the top bar) opens `CommandPalette.jsx`: pieces for every instrument, lessons for the one on stage, instruments, screens and the studio's actions with their keys. `useCommandPalette.js` builds the list from App's own functions, so a command and its control cannot disagree; `commands.js` ranks a search (title start, word start, contained, detail and keywords, then a title's initials) and is tested on its own. It is a combobox over a grouped listbox, and full screen on a phone.
+- **The studio tour** (`CoachTour.jsx`) shows once, on the first studio visit after the welcome: Play, the three modes, Input & sound. It blocks nothing, waits 600ms for the studio to settle, and Skip, Done or Escape set `studioTourDone`; Help replays it. Browser specs seed `studioTourDone: true` along with `onboarded`.
+- **While a run plays** the chrome around the stage fades to 20% (`.receded`, opacity only, so nothing moves); `useAwake.js` brings it back for 2.5s when the pointer moves, and a pause brings it back for good. Focus inside a faded part keeps it at full strength.
+- **A note for next time.** The report has one line; the guide shows it before the next run of that piece, and when it names a bar ("bar 5", "bars 3-4", with "at 70" or "70 bpm") a button loops that bar at that tempo (`pieceNotes.js`). Notes are settings (`pieceNotes`), so a backup carries them, and they clear with the piece's history.
+- **Screens that move into each other.** `useScreenTransition.js` wraps `setSettings`: a change of `learningView` runs inside `document.startViewTransition`, a 200ms cross-fade, with the piece's title (`view-transition-name: piece-title`) carried from the home card to the studio heading. No API or reduced motion: it changes at once. A second change before the first finishes makes the browser reject the first transition's promises ("Transition was skipped"); they are caught, since the update itself still lands.
+- **A stage-shaped placeholder** (`StagePlaceholder.jsx`) stands in while an instrument's code or 3D model loads: strings and frets, a fingerboard or drum heads in outline, a slow shimmer, the same words as before, at the stage's own size.
+- **The beat on the line.** `beatPulse.js` flashes the hit line on each beat (more on the first of a bar) during the count-in and while the metronome runs: the 2D and 3D piano rolls, the string tab and the drum lanes. Off for reduced motion. The count-in panel covers the roll, so on the piano it is seen mostly with the metronome.
+- **Polish after the plan.** The tour speaks of tapping on a touch screen (`touch` wording in `TOUR_STOPS`), not of the space bar and number keys. The palette matches a detail or keyword only from the start of a word, and the middle of a title only for four letters or more, so "ode" finds Ode to Joy and not "Listen mode". Tone.js and its audio-context layer (about 330 kB, a third of the studio's script) load when sound is first turned on (`loadTone` in `audio.js`): the App chunk went from 775 to 435 kB (227 to 146 kB compressed); `midiToName` no longer needs Tone. Because Tone now arrives after the click that asked for sound, the autoplay policy would leave a context made then suspended (spec 13's audible-note tests caught it): `_claimContext` makes the AudioContext and resumes it inside the click, and `_boot` hands it to Tone with `setContext`. `patterns.css` reads every size from tokens (`--dialog-w-sm`, `--palette-w`, `--palette-h`, `--swatch`, `--icon-box`, `--tip-arrow`, `--dur-shimmer`). The once known-bad `01-core-flows` "the bundled library loads…" read `.piece-title` with `innerText`, which is always empty inside the closed Piece details; `AppPage.currentPieceTitle()` now waits and reads its text content, and it passes.
+- **Tests.** `commands.test.js`, `pieceNotes.test.js`, `beatPulse.test.js`, `appearance.test.js`, `useAwake.test.jsx`, `useScreenTransition.test.js` and `.hook.test.jsx`, `CommandPalette.test.jsx` (with the Appearance dialog), `NextTimeNote.test.jsx`, and in the browser `e2e/tests/30-patterns.spec.js`.
 
 ## Whole instrument: choosing what to see
 
 Added October 2026. In free play at full detail, selecting **Whole instrument** opens a pop-up of pictures, one for each instrument there is to see. The one that is played is already on the stage, so choosing it closes the pop-up. Any other is shown over the stage in its place until the stage's playable view is chosen again (**Fretboard**, **Fingerboard** or **Practice kit**).
 
-- **The list** is `src/lib/stageModels.js`: for each instrument, the model that is played first, then the ones that are only shown. A model's id is its file name in `public/models/`, the name of its picture in `public/media/models/` and its key in `modelCredits.js`. Shown-only ids are `<instrument>-<kind>`, such as `guitar-bass`.
+- **The list** is `src/lib/stage/stageModels.js`: for each instrument, the model that is played first, then the ones that are only shown. A model's id is its file name in `public/models/`, the name of its picture in `public/media/models/` and its key in `modelCredits.js`. Shown-only ids are `<instrument>-<kind>`, such as `guitar-bass`.
 - **The list and the files agree.** `stageModels.files.test.js` reads `public/` and fails when a model on the list lacks its file, its measurements, its picture or its credit, so the app offers every model on the list without asking the server first.
 - **The pop-up** is `ModelChooser.jsx`, a dialog over the app, so it has room for its pictures on a small stage. **The viewer** is `ModelViewer.jsx`: its own studio laid over the stage, the model framed whole and turned by dragging, all the way round. `WholeModels.jsx` ties the two together and is rendered by `GuitarStage.jsx`, `BowedStage3D.jsx` and `DrumStage.jsx`. The drums gain the Practice kit | Whole instrument switch only when another kit is there.
 - **Rigged or only shown.** A model marked `rigged` in `stageModels.js` (the bass guitar, the electric violin, the antique cello) goes on the stage's own rig in the whole-instrument view, so it answers to playing: `buildBowedRig` gives the violin and cello their strings, finger places and bow, and `buildModelGuitarRig`, strung with `BASS_STRINGS`, gives the bass four strings that move with the guitar strings of the same name (E, A, D and G; the guitar's B and high E have none to move). `stage/otherRigs.js` builds each such rig the first time it is chosen and keeps it; `GuitarStage.jsx` hands it to `guitarViews` and `BowedStage3D.jsx` swaps it in itself. The sound and the lessons stay those of the instrument it stands in for, and Learn always goes back to that instrument. A model that is neither played nor rigged is only looked at, in the viewer. The two drum kits are looked at there too, but each drum answers to being hit (`struck` in `stageModels.js`): the recipe's `zones` (boxes in stage units, found by looking at the kit) make each drum a part of its own, named `drum-<id>-<n>` (`drumZonePart`), and `stage/drumModelRig.js` lights it in its verdict's colour and moves it, a cymbal rocking and a drum pressed down. `DrumStage.jsx` hands the viewer every hit it sees, whether from the keys, the pads, the model or a controller. A kit with two of a drum (the electronic kit's crashes and low toms) moves both on the one key. Re-prepare a kit with `node scripts/models/prepare.mjs drums-acoustic drums-electronic`.
+- **Bow or fingers.** The violin and cello have a **Bow / Fingers** switch beside the instrument (`technique.js`, kept per instrument in `settings.bowedTechnique`). Bowed, a note sounds while it is held. Plucked (pizzicato), a press plucks once and the note is let go after `PLUCK_MS` (0.7 s violin, 1.1 s cello), played on a plucked voice of its own (`violin-pizz`, `cello-pizz` in `audio.js`: rounder and shorter than the guitar's). The bow is put down on the 2D and 3D stages, the plucked string still rings, and the hints, labels and the scale explorer say "pluck". Lessons and scoring are the same either way.
+- **The tuner can be played into.** It used to be a dialog like any other, so the computer keys played nothing while it was open, and with the microphone listening there was nothing for it to hear. Its dialog now carries `data-play-through`, and `useComputerKeyboard.js` lets notes through any dialog marked so (and through a tip that does not hold the page, `aria-modal="false"`); shortcuts such as 1, 2 and 3 stay blocked. Each string card is a button that sounds that open string for two seconds, to tune by ear, and a note played on the keys, a controller or a card shows on the tuner as the reference when the microphone has nothing to read. Tested in `TunerDialog.test.jsx` and spec 30.
+- **Segmented controls, aligned.** Every "pick one" row is a trough sized by its segments (segment + 3px padding + 1px border each side: 40 in 48 on a desktop, 44 in 52 on touch, 30 in 38 on the stage). `.mode-switch` (Listen / Practice / Wait for me, and the hands in Practice settings) had a fixed 40px trough around the studio's 40px segments, so the chosen one stood 5px out of it; it now has no height of its own. On a phone's one-row deck it stays 48px, level with Play and More, by thinning its trough to 2px and no border so the 44px touch segments sit centred. The learning home's instrument row shares a phone's width instead of scrolling Drums off its end. Spec 30 measures every segmented row on desktop and phone.
+- **The artists are named where their work is.** `ModelCredit.jsx` puts "3D model by **artist**" (linked to their page) in the stage's bottom bar while a downloaded model is played: the violin and cello at full detail, the bass, the acoustic guitar in its whole view. The whole-instrument caption leads with the artist (kept on a phone, where the title and licence are dropped), every card in the chooser names its artist, and Help has a **3D artists** section with each name as a link. `CREDITS.md` opens with the list. All of it reads `modelCredits.js`.
 - **Adding one.** Download Sketchfab's glTF, unzip it to `models-src/<id>/`, add the model to `stageModels.js` and its credit to `modelCredits.js`. For one that is only shown, add a `shown(...)` recipe to `scripts/models/recipes.mjs` (which way is up, and the angle it is first seen from). For one the stage is to rig, write a full recipe as for the guitar, violin and cello: which pieces are its strings, which way it lies, and `rightHanded: true` where the strings' thickness cannot say which side the bass is on. Listing the model's separate pieces, longest first, makes the strings stand out. Then, with the dev server running:
 
   ```bash
   node scripts/models/prepare.mjs <id>
-  node scripts/shoot-models.mjs http://localhost:5173/ <id>
+  node scripts/media/shoot-models.mjs http://localhost:5173/ <id>
   ```
 
   The first writes `public/models/<id>.glb` and `.json` (`showcase.mjs` stands the model on the floor, its longest side 24 stage units); the second writes its picture. Add its row to `CREDITS.md`. `stageModels.files.test.js` fails until the list and the files agree.
@@ -108,12 +250,13 @@ Added October 2026. In free play at full detail, selecting **Whole instrument** 
 
 Choose **Drums** in the instrument picker (or open `/drums/`). Added October 2026.
 
-- **A hit is a note.** The kit is nine pieces, each a General MIDI percussion note: kick 36, snare 38, closed hi-hat 42, open hi-hat 46, high, mid and floor tom 50, 47 and 43, crash 49, ride 51 (`src/lib/drums.js`). Because a hit is a note, the transport, the matcher, grading, the learning path and the library are the ones every instrument uses. A controller's other notes for the same drum (35 for the kick, 40 for the snare, and so on) are turned into the lesson's note in `playedMidi` (`usePracticeEngine.js`), which also leaves out the piano's input transposition.
+- **A hit is a note.** The kit is nine pieces, each a General MIDI percussion note: kick 36, snare 38, closed hi-hat 42, open hi-hat 46, high, mid and floor tom 50, 47 and 43, crash 49, ride 51 (`src/lib/struck/drums.js`). Because a hit is a note, the transport, the matcher, grading, the learning path and the library are the ones every instrument uses. A controller's other notes for the same drum (35 for the kick, 40 for the snare, and so on) are turned into the lesson's note in `playedMidi` (`usePracticeEngine.js`), which also leaves out the piano's input transposition.
 - **Four ways to hit.** The 3D kit, the pads, the computer keys and MIDI. Each drum's key is the letter it starts with: K, S, H, O, T, M, F, C, R (`DRUM_KEYS`, used by `useComputerKeyboard.js` in place of the piano's key map). Screen hits go out as synthetic MIDI from `useDrumInput.js`, a note-on and a note-off 90 ms later, so sound and scoring are shared.
 - **Lanes, not a stave.** `DrumLanes.jsx` scrolls one lane a drum, top of the kit at the top, and only the lanes the study uses. A tile carries its key; the kick is amber and the hands are blue, as on the piano roll; a missed tile has a broken outline.
-- **The 3D kit is built in code** (`src/lib/drumKitModel.js`): shells, heads, hoops, lugs, lathe-turned cymbals, stands and pedals, seen from the drummer's stool. No model is downloaded, so there is nothing to credit and every piece can be picked, ringed and moved on its own. `DrumStage.jsx` puts it in the shared studio (`src/lib/stage/studio.js`), rings the next drum, and flashes each hit in the colour of its verdict wherever the hit came from. In free play the floor can be dragged to turn the view. `drumLabels.js` keeps the names over the kit from overlapping.
+- **The 3D kit is built in code** (`src/lib/struck/drumKitModel.js`): shells, heads, hoops, lugs, lathe-turned cymbals, stands and pedals, seen from the drummer's stool. No model is downloaded, so there is nothing to credit and every piece can be picked, ringed and moved on its own. `DrumStage.jsx` puts it in the shared studio (`src/lib/stage/studio.js`), rings the next drum, and flashes each hit in the colour of its verdict wherever the hit came from. In free play the floor can be dragged to turn the view. `drumLabels.js` keeps the names over the kit from overlapping.
+- **Drumsticks** (`src/lib/struck/drumSticks.js`). Two hickory sticks, built in code, strike each piece as it is hit, whoever hits it (the 3D kit, the pads, the keys, a controller, or the app playing the study): the tip drops onto the place a drummer strikes (`strikePoint`: a drum's head a little toward the player, a cymbal's bow), bounces off and drifts back to rest over the snare (`STROKE`: 45, 170 and 420 ms). The right hand plays the hi-hat, ride, mid and floor toms, the left the rest; a hand still mid-stroke lends the piece to the other. The kick's beater is an arm pivoting at its pedal and swings into the head. The sticks sit on the stage rather than in the kit, so they also play the downloaded acoustic kit at full detail, aimed at the top of each of its drums (`stickTargets` in `DrumStage.jsx`, from the rig's part boxes). With reduced motion they rest still.
 - **The pads are always there** (`DrumPads.jsx`). On the 2D trainer, or when WebGL cannot start or is lost, they are the whole kit. Under the 3D kit they fold into a disclosure on a wide screen and stay out at 900px and below. A pad answers on pointer-down; a click with no pointer behind it (keyboard, screen reader) plays too.
-- **Sound** is synthesized (`src/lib/drumVoice.js`): membrane synths for the kick, toms and snare body, filtered noise for the snare wires and the cymbals. The closed hi-hat cuts the open one short. There are no drum samples.
+- **Sound** is synthesized (`src/lib/struck/drumVoice.js`): membrane synths for the kick, toms and snare body, filtered noise for the snare wires and the cymbals. The closed hi-hat cuts the open one short. There are no drum samples.
 - **Lessons.** Six studies written as sixteen-step rows (`study()` in `drums.js`), from one hit on each drum to a beat with a fill. The matcher names a drum by `score.noteNames`, so a wrong hit reads "Wrong drum: Crash here, but the beat wants Snare" and never as a pitch. `lessonWords()` in `learning.js` gives the lesson guide a drummer's wording.
 - **Adding an instrument with lessons of its own.** `INSTRUMENTS` in `instruments.js` is the list; `discovery.test.js` and `instruments.test.js` fail for any instrument on it without a first lesson, collections and a kit.
 
@@ -134,7 +277,7 @@ The guitar's 3D stage now shows a 3+3 headstock with tuners and the neck running
 into an acoustic body (rosette, soundhole, pickguard); the 2D trainer is drawn as a
 rosewood fretboard with true fret spacing, pearl inlays and wound strings.
 
-Refresh the welcome-page previews with `node scripts/shoot-instruments.mjs` while
+Refresh the welcome-page previews with `node scripts/media/shoot-instruments.mjs` while
 the dev server runs.
 
 ## Instrument interaction update
@@ -693,7 +836,7 @@ A key press is matched to the nearest unplayed target of the same pitch within
 note, and check 2 runs. A target that goes 400 ms past its onset without being
 played is marked *missed*.
 
-**2. Why is the wrong note wrong?** (`src/lib/theory.js`)
+**2. Why is the wrong note wrong?** (`src/lib/music/theory.js`)
 This is the part that makes the feedback useful rather than just red. The played
 pitch is compared against the notes actually sounding in the score at that
 instant, the chord they form, and the estimated key of the piece:
@@ -842,7 +985,7 @@ weighs more than the rest of the app put together, so **it is loaded only when
 you ask for notation** — a session that stays on the roll never fetches it. The
 main bundle is 160 kB gzipped; notation adds 391 kB the first time you open it.
 
-The work that is ours is [notation.js](../src/lib/notation.js), and it is almost
+The work that is ours is [notation.js](../src/lib/music/notation.js), and it is almost
 entirely quantisation. A score holds onsets and lengths in seconds; notation
 needs bars, note values, rests for the silence, and ties where a note runs over
 a barline. Lengths are snapped to sixteenths — finer than that and human timing
@@ -953,44 +1096,44 @@ nastier as the severity rises.
 
 ## Code layout
 
+`src/lib` is grouped by job (20 October 2026); each file's unit test sits beside it. `instruments.js`, the registry
+that ties the instruments' kits together, stays at its root.
+
 ```
 src/
   lib/
-    theory.js       scales, key estimation, chord ID, wrong-note classification
-    score.js        MIDI + MusicXML → one normalised Score shape
-    matcher.js      PracticeSession: hit/miss/timing bookkeeping, both modes
-    transport.js    the song clock + audio scheduler
-    audio.js        instrument loading, playback, error cues, metronome
-    midiInput.js    Web MIDI: enumeration, hot-plug, message normalisation
-    keyboard.js     key geometry shared by roll and keyboard
-    devices.js      controller profiles + the playable-key window
-    arrange.js      bends a score onto that window (shift / fold / hand filter)
-    grading.js      a run → stars, skill bands, and what to say about them
-    passages.js     individual mistakes → "bars 5–6"
-    coaching.js     the single recommended next action
-    latency.js      median tap-offset maths for calibration
-    streaks.js      daily practice ledger and streak arithmetic
-    midiOutput.js   sending notes to a plugin or hardware instrument
-    vault.js        IndexedDB: imported files and sample packs
-    storage.js      localStorage sessions + trouble map
-    velocity.js     fitting a touch curve to a controller's real range
-    shortcuts.js    which key does what, and which keys are off limits
-    rollGeometry.js shared roll layout: time, hit line, keyboard strip
-    rollPaint.js    roll palette, note/key drawing constants, tuning dials
-    rollCamera.js   where the Stage camera stands, as pure arithmetic
-    rollScene.js    optional WebGL Stage renderer
-    stage/          the 3D string stage: studio.js (renderer, lights, floor, camera),
-                    environment.js (soft boxes to reflect), quality.js (full or light),
-                    framing.js (where the camera stands), views.js (lesson and free-play lenses),
-                    turntable.js (drag to turn, ease back), pacing.js (resolution for frame rate),
-                    stageRunner.js (the loop both string stages run on), models.js (loading
-                    the downloaded models), modelFinish.js (lacquer and shadows), stageBars.js
-    guitarNeck.js   where frets, strings and playable places sit on the 3D neck
-    guitarRig.js    the code-built guitar, its click targets and markers
-    guitarModelRig.js  the downloaded guitar, made playable
-    guitarStageView.js  marker styling and labels, decided without Three.js
-    bowedNeck.js / bowedRig.js / bowedBow.js / bowedStageView.js  the 3D violin and cello
-    modelCredits.js the CC BY credits for the downloaded models
+    instruments.js  which instruments exist, and each one's kit
+    app/            settings.js, storage.js (localStorage sessions + trouble map), vault.js (IndexedDB: imported
+                    files and sample packs), indexedDbBackup.js, route.js (an address per screen), pageTitle.js,
+                    theme.js, appearance.js, commands.js (the Ctrl+K palette's matching), shortcuts.js
+    audio/          audio.js (instrument loading, playback, error cues, metronome, the drone), audioOutput.js (the
+                    master gain, limiter and safety stage), drone.js + droneVoice.js, playback.js, speech.js,
+                    technique.js (bow or fingers, and the voice of a model shown in the whole view)
+    input/          midiInput.js (Web MIDI: enumeration, hot-plug, normalisation), midiOutput.js, micInput.js,
+                    pitch.js, tuner.js, noteTracker.js, playInput.js, devices.js (controller profiles and the
+                    playable-key window), latency.js (tap-offset maths), velocity.js (a touch curve per controller)
+    music/          theory.js (scales, key estimation, chord ID, wrong-note classification, note names),
+                    score.js (MIDI + MusicXML into one Score shape), notation.js, arrange.js (fit a score onto a
+                    keyboard: shift / fold / hand filter), passages.js (mistakes into "bars 5-6"), easySongs.js
+    practice/       matcher.js (PracticeSession: hit/miss/timing), transport.js (the song clock + audio scheduler),
+                    grading.js (a run into stars and skill bands), coaching.js (the one next action), drills.js,
+                    liveFeedback.js, loopSelection.js, barInspect.js, beatPulse.js, sessionLength.js, pieceNotes.js
+    learning/       learning.js (lesson steps and words), path.js, discovery.js, collections.js, glossary.js,
+                    streaks.js (daily ledger), teacherReport.js
+    piano/          keyboard.js (key geometry shared by roll and keyboard), keyFingers.js, pianoKeys.js,
+                    pianoStage.js + pianoStagePaint.js, rollGeometry.js, rollPaint.js, rollCamera.js, rollScene.js
+    strings/        guitar.js, fretted.js (the bass and the veena), bowed.js (violin, cello), guitarNeck.js,
+                    guitarRig.js, guitarModelRig.js, guitarStageView.js, guitarViews.js, guitarBody.js,
+                    guitarPresentation.js, frettedStage.js, bowedNeck.js / bowedRig.js / bowedBow.js /
+                    bowedGeometry.js / bowedStageView.js, instrumentView.js
+    struck/         struck.js + struckSets.js (the struck framework), drums.js, drumKitModel.js, drumLabels.js,
+                    drumSticks.js, drumVoice.js, tabla.js, tablaMap.js, tablaVoice.js, handpan.js,
+                    handpanModel.js, handpanVoice.js
+    stage/          the 3D studio: studio.js (renderer, lights, floor, camera), environment.js, quality.js,
+                    framing.js, views.js, turntable.js, pacing.js, stageRunner.js, models.js, modelFinish.js,
+                    stageBars.js, drumModelRig.js, pianoModelRig.js, otherRigs.js, tablaZones.js; and
+                    stageModels.js (which models each instrument has), modelCredits.js (their credits),
+                    shownModel.js, showcaseView.js, stageColors.js, webgl.js
   hooks/
     usePracticeEngine.js   the one place engine, MIDI and React meet
     usePassages.js         hearing, looping and drilling a stretch of music
@@ -1002,13 +1145,17 @@ src/
     PracticeReport.jsx the end-of-run verdict
     LatencyCalibrator.jsx  tap-along timing calibration
     TouchCalibrator.jsx    three-pass velocity calibration
-    VelocityCurve.jsx      the correction, drawn in ppp–fff
+    VelocityCurve.jsx      the correction, drawn in ppp-fff
     StreakStrip.jsx    daily practice at a glance
     TopBar / SongLibrary / Controls / FeedbackPanel / HistoryPanel
 scripts/
-  build-songs.mjs   generates the bundled library
+  build/            build-public-pages.mjs (run by `npm run build`), build-icons.mjs, sync-design-system.mjs
+  songs/            build-songs.mjs generates the bundled library (`npm run songs`), its generators, public-library.mjs
+  media/            shoot-instruments.mjs, shoot-models.mjs, render-tabla-picture.mjs: the pictures in public/media
   models/           prepares the downloaded 3D models: `node scripts/models/prepare.mjs`
                     reads models-src/<name>/scene.gltf and writes public/models/<name>.glb + .json
+  dev/              shoot.mjs, look.mjs, panels.mjs, sample.mjs, profile.mjs, check-browser.mjs: looking at and
+                    measuring the running app
 ```
 
 **No file over 800 lines.** `App.jsx` is the one that keeps drifting towards it,
@@ -1131,5 +1278,5 @@ The rating is not withheld, because slowing a piece down until it is clean is
 the method this whole app teaches and scoring that zero would punish taking its
 advice. It is qualified instead: the stars stand, with the tempo attached as a
 small tag. Ties on stars break towards the faster run, so the badge always
-reports the most impressive true version of what happened. `src/lib/stars.test.js`
+reports the most impressive true version of what happened. `src/lib/app/stars.test.js`
 pins the rules down.

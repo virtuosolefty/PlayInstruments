@@ -12,7 +12,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { DEFAULT_SETTINGS, migrateSettings } from '../lib/settings.js';
+import { DEFAULT_SETTINGS, migrateSettings } from '../lib/app/settings.js';
 import {
   getSongHistory,
   getAllBestStars,
@@ -34,7 +34,7 @@ import {
   parseBackup,
   describeBackup,
   onStorageFailure,
-} from '../lib/storage.js';
+} from '../lib/app/storage.js';
 
 export function useAppData(initialSettings = {}) {
   const [refreshVersion, setRefreshVersion] = useState(0);

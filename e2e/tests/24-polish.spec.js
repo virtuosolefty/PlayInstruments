@@ -65,16 +65,11 @@ test.describe('on a mid-width desktop', () => {
     await seedSettings(page, { practiceInstrument: 'violin', renderer: 'canvas', learningView: 'studio' });
     await page.goto('/');
     await expect(page.locator('.studio-header')).toBeVisible({ timeout: 30_000 });
-    // A select is cut down when the text it shows is wider than the select: measured, not guessed at.
-    const clipped = await page.evaluate(() => {
-      const ruler = document.createElement('canvas').getContext('2d');
-      return [...document.querySelectorAll('.guitar-view-controls select')].filter(el => el.offsetParent).filter(el => {
-        const style = getComputedStyle(el);
-        ruler.font = style.font;
-        const room = el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
-        return ruler.measureText(el.selectedOptions[0].text).width > room + 2;
-      }).map(el => el.getAttribute('aria-label'));
-    });
+    // A list's trigger is cut down when the value it shows is wider than the room for it: measured, not guessed at.
+    const clipped = await page.evaluate(() => [...document.querySelectorAll('.guitar-view-controls .listbox-trigger')]
+      .filter(el => el.offsetParent)
+      .filter(el => { const value = el.querySelector('.listbox-value'); return value.scrollWidth > value.clientWidth + 2; })
+      .map(el => el.getAttribute('aria-label')));
     expect(clipped).toEqual([]);
     // Everything in the row is inside the pane.
     const outside = await page.evaluate(() => {

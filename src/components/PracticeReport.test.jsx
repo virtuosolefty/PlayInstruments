@@ -49,6 +49,26 @@ describe('the practice report', () => {
     render(<PracticeReport result={result({ rate: 0.4 })} onClose={() => {}} />);
     expect(button('Slower')).toBeUndefined();
     expect(button('Next')).toBeUndefined();
-    expect(button('↻ Run again')).toBeDefined();
+    expect(button('Run again')).toBeDefined();
+  });
+
+  it('shows the score as a ring a screen reader can read, and a played share when the run stopped early', () => {
+    render(<PracticeReport result={result()} onClose={() => {}} />);
+    expect(container.querySelector('.rx-ring').getAttribute('aria-label')).toBe('80 out of 100');
+    render(<PracticeReport result={result({ grade: { ...result().grade, complete: false, coverage: 0.4 } })} onClose={() => {}} />);
+    expect(container.querySelector('.rx-ring').getAttribute('aria-label')).toBe('40% of the piece played');
+  });
+
+  it('closes from the corner button', () => {
+    const onClose = vi.fn();
+    render(<PracticeReport result={result()} onClose={onClose} />);
+    act(() => container.querySelector('[aria-label="Close report"]').click());
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the recommended step as the one primary button', () => {
+    render(<PracticeReport result={result()} onClose={() => {}} step={{ label: 'Try it slower', why: 'Two bars slipped.', rate: 0.7 }} />);
+    expect(container.querySelectorAll('button.primary')).toHaveLength(1);
+    expect(container.querySelector('button.primary').textContent).toBe('Play at 70%');
   });
 });

@@ -19,7 +19,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const listScoreFiles = vi.fn();
 const vaultSupported = vi.fn(() => true);
 
-vi.mock('../lib/vault.js', () => ({
+vi.mock('../lib/app/vault.js', () => ({
   listScoreFiles: (...args) => listScoreFiles(...args),
   packFromFiles: vi.fn(),
   putSamplePack: vi.fn(),
@@ -27,12 +27,12 @@ vi.mock('../lib/vault.js', () => ({
   supported: (...args) => vaultSupported(...args),
 }));
 
-vi.mock('../lib/audio.js', () => ({
+vi.mock('../lib/audio/audio.js', () => ({
   audio: { start: vi.fn(), reloadInstrument: vi.fn() },
 }));
 
 /** Anything named "broken…" is a file the parser can no longer read. */
-vi.mock('../lib/score.js', () => ({
+vi.mock('../lib/music/score.js', () => ({
   loadScoreFromFile: vi.fn(async (file) => {
     if (file.name.startsWith('broken')) throw new Error('not a MIDI file');
     return { id: file.name, title: file.name, notes: [{ midi: 60 }] };

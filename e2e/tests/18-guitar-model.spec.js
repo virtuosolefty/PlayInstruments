@@ -28,7 +28,9 @@ const inside = (inner, outer) => inner.x >= outer.x - 0.5 && inner.x + inner.wid
 
 /** Opens the guitar studio at the given 3D detail. The full stage's first frame takes seconds in software. */
 async function open(page, stageQuality) {
-  await seedSettings(page, { renderer: 'gl', practiceInstrument: 'guitar', stageQuality }, { everyLoad: true });
+  // The whole neck, chosen: a phone would otherwise start at first position, where the neck fills the stage and
+  // leaves no background to turn it by.
+  await seedSettings(page, { renderer: 'gl', practiceInstrument: 'guitar', stageQuality, guitarFrets: 12 }, { everyLoad: true });
   await page.goto('/');
   await expect(stage(page).locator('canvas')).toBeVisible({ timeout: 60_000 });
 }
@@ -52,7 +54,7 @@ test('lessons and Learn play the drawn guitar; Whole instrument shows the downlo
   await expect(stage(page)).toHaveAttribute('data-stage-model', 'drawn');
   await expect(labels(page, 'finger')).toHaveCount(6, { timeout: 30_000 });
   // A fret plays its note: fret 4 on the G string is B3.
-  await page.evaluate(async () => { window.__notes = []; (await import('/src/lib/midiInput.js')).midiInput.onMessage(m => window.__notes.push(m)); });
+  await page.evaluate(async () => { window.__notes = []; (await import('/src/lib/input/midiInput.js')).midiInput.onMessage(m => window.__notes.push(m)); });
   const fret = await labels(page, 'fret').getByText('4', { exact: true }).boundingBox();
   const string = await labels(page, 'string').getByText('G3', { exact: true }).boundingBox();
   await page.mouse.click(fret.x + fret.width / 2, string.y + string.height / 2);

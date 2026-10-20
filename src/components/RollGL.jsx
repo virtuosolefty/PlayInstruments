@@ -1,14 +1,17 @@
 import PianoAccess from './PianoAccess.jsx';
 import { usePianoInteraction } from '../hooks/usePianoInteraction.js';
 import { referencePlaybackFor } from '../hooks/usePracticeEngine.js';
-import { pianoLabel } from '../lib/instrumentView.js';
+import { pianoLabel } from '../lib/strings/instrumentView.js';
+import { keyFingers } from '../lib/piano/keyFingers.js';
+import { paintFinger } from '../lib/piano/pianoKeys.js';
 import { useEffect, useMemo, useRef } from 'react';
-import { buildKeyboardGeometry, displayRangeFor, isC, keyAt } from '../lib/keyboard.js';
-import { COMBO_THRESHOLD, lanesFrom, rollLayout } from '../lib/rollGeometry.js';
-import { ROLL_FONT } from '../lib/rollPaint.js';
-import { PIANO_COLORS as COLORS, PIANO_HEIGHT, keyLight, soundingNotes, stageChords } from '../lib/pianoStage.js';
-import { paintStageNotes, paintChordLabels, paintStrike } from '../lib/pianoStagePaint.js';
-import { acquireScene, BLACK_RISE, NOTE_DEPTH, WHITE_DEPTH } from '../lib/rollScene.js';
+import { buildKeyboardGeometry, displayRangeFor, isC, keyAt } from '../lib/piano/keyboard.js';
+import { COMBO_THRESHOLD, lanesFrom, rollLayout } from '../lib/piano/rollGeometry.js';
+import { ROLL_FONT } from '../lib/piano/rollPaint.js';
+import { beatPulse, paintBeatPulse } from '../lib/practice/beatPulse.js';
+import { PIANO_COLORS as COLORS, PIANO_HEIGHT, keyLight, soundingNotes, stageChords } from '../lib/piano/pianoStage.js';
+import { paintStageNotes, paintChordLabels, paintStrike } from '../lib/piano/pianoStagePaint.js';
+import { acquireScene, BLACK_RISE, NOTE_DEPTH, WHITE_DEPTH } from '../lib/piano/rollScene.js';
 
 /**
  * RollGL — the practice view drawn with a GPU.
@@ -49,6 +52,8 @@ export default function RollGL({
   settings = {},
   keyboardHeight = PIANO_HEIGHT,
   onContextLost,
+  // In a lesson, the finger each key is played with, on the key (keyFingers.js).
+  fingers = false,
 }) {
   const chordsRef = useRef([]);
   chordsRef.current = useMemo(() => stageChords(score), [score]);
@@ -67,6 +72,8 @@ export default function RollGL({
   const ghostRef = useRef(ghost);
   const bestComboRef = useRef(bestCombo);
   const calmRef = useRef(false);
+  const fingersRef = useRef(fingers);
+  fingersRef.current = fingers;
 
   engineRef.current = engine;
   scoreRef.current = score;
@@ -230,6 +237,8 @@ export default function RollGL({
         bestCombo: bestComboRef.current,
         sounding, playback, chords:chordsRef.current, calm:calmRef.current,
         settings:playingSettings.current, hover:input.hoverRef.current, activeInput:e?.activeInputRef?.current,
+        fingers: fingersRef.current ? keyFingers(scoreRef.current?.notes, now) : null,
+        pulse: beatPulse(now, currentScore, { countIn: !!e?.countIn, metronome: !!playingSettings.current?.metronome, playing: !!e?.playing, calm: calmRef.current }),
       });
     };
     raf = requestAnimationFrame(frame);
@@ -250,13 +259,14 @@ export default function RollGL({
 }
 
 /** Crisp projected rims and labels over the physical Three.js key faces. */
-function drawText(ctx, { scene, dpr, view, layout, geometry, score, now, pps, labels, combo, bestCombo, settings = {}, hover, activeInput, sounding, playback, chords, calm }) {
+function drawText(ctx, { fingers = null, scene, dpr, view, layout, geometry, score, now, pps, labels, combo, bestCombo, settings = {}, hover, activeInput, sounding, playback, chords, calm, pulse = 0 }) {
   if (!ctx || !geometry) return;
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,view.w,view.h);
   const project=(x,y,z=0)=>scene.project(x,y,z);
   paintStageNotes(ctx,{notes:score?.notes,geometry,now,pps,hitLine:layout.hitLine,project,depth:NOTE_DEPTH,labels,faces:false,calm});
   paintChordLabels(ctx,chords,{now,pps,hitLine:layout.hitLine,geometry,project});
   paintStrike(ctx,{geometry,layout,activeInput,sounding,playback,project,depth:WHITE_DEPTH,calm});
+  paintBeatPulse(ctx,{pulse,from:project(0,layout.hitLine,0),to:project(layout.w,layout.hitLine,0),colour:COLORS.hitLine});
   const keyHeight=layout.h-layout.keyboardTop;
   ctx.font='10px Inter, sans-serif';ctx.textAlign='center';
   for(const key of geometry.keys.values()) {
@@ -269,6 +279,8 @@ function drawText(ctx, { scene, dpr, view, layout, geometry, score, now, pps, la
       ctx.fillStyle=tint?'#30243e':key.black?'#b9b2c5':'#615b6e';
       ctx.fillText(label,p.x,p.y,Math.max(12,key.w-2));
     }
+    const finger=fingers?.get(key.midi);
+    if(finger){paintFinger(ctx,p.x,p.y-(key.black?6:22),finger);ctx.font='10px Inter, sans-serif';ctx.textAlign='center';}
     if(key.midi===hover){
       const inset=Math.min(.2,2/key.w);
       const a=scene.projectKey(key.midi,inset,.05),b=scene.projectKey(key.midi,1-inset,.05);

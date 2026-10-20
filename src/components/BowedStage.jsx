@@ -1,9 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
 import BowedArt from './BowedArt.jsx';
-import { bowedLayout, VIEW } from '../lib/bowedGeometry.js';
-import { BOWED_TAPES } from '../lib/bowed.js';
-import { guitarFeedback } from '../lib/instrumentView.js';
-import { noteName } from '../lib/theory.js';
+import { bowedLayout, VIEW } from '../lib/strings/bowedGeometry.js';
+import { BOWED_TAPES } from '../lib/strings/bowed.js';
+import { guitarFeedback } from '../lib/strings/instrumentView.js';
+import { noteName } from '../lib/music/theory.js';
 
 const STRING_TONE = {
   violin: { colors: ['#b9b6b0', '#cfccc6', '#dedbd5', '#eeece8'], gauge: [3.4, 2.8, 2.3, 1.5] },
@@ -35,7 +35,7 @@ function Bow({ x }) {
  * arrows move, Enter or Space bows while held. Feedback states are the
  * guitar's, so the practice engine needs nothing new.
  */
-export default function BowedStage({ kit, engine, maxFret, labelMode = 'fingers', labelSize = 14, target = null, selection = null, activePositions, onBow, onLift }) {
+export default function BowedStage({ kit, engine, maxFret, labelMode = 'fingers', labelSize = 14, target = null, selection = null, activePositions, onBow, onLift, technique = 'bow' }) {
   const layout = useMemo(() => bowedLayout({ strings: kit.tuning.length, maxFret, spacing: kit.id === 'cello' ? 34 : 30, spread: kit.id === 'cello' ? 50 : 44 }), [kit, maxFret]);
   const [hover, setHover] = useState(null);
   const [focus, setFocus] = useState({ string: kit.tuning.length - 2, fret: 0 });
@@ -114,7 +114,7 @@ export default function BowedStage({ kit, engine, maxFret, labelMode = 'fingers'
   }
   const sounding = [...positions.values()].filter(p => active.has(p.midi));
   const tapes = BOWED_TAPES[kit.id] ?? [];
-  const hint = hover ? describe(hover.string, hover.fret) : 'Press and hold to bow · drag along a string to slide · bow near the bridge for open strings';
+  const hint = hover ? describe(hover.string, hover.fret) : technique === 'fingers' ? 'Press to pluck · it rings away by itself · press near the bridge for open strings' : 'Press and hold to bow · drag along a string to slide · bow near the bridge for open strings';
 
   return (
     <div className="bowed-stage" data-held-positions={states.filter(s => s.state === 'held').length} data-target-positions={states.filter(s => s.state === 'target').length} style={{ '--bowed-label-size': labelSize + 'px' }}>
@@ -142,14 +142,15 @@ export default function BowedStage({ kit, engine, maxFret, labelMode = 'fingers'
             <polyline className="bowed-string-silk" fill="none" stroke={SILK[s]} strokeWidth={g + 0.8} points={`${wrap(0.5)} ${wrap(0.68)}`} />
           </g>;
         })}
-        {sounding.length > 0 && <Bow x={(layout.bow.x0 + layout.bow.x1) / 2} />}
+        {/* Plucked with the fingers there is no bow: the sounding string still rings. */}
+        {sounding.length > 0 && technique !== 'fingers' && <Bow x={(layout.bow.x0 + layout.bow.x1) / 2} />}
         {layout.zones.map(zone => {
           const key = `${zone.string}-${zone.fret}`;
           const xm = (zone.x0 + zone.x1) / 2, h = layout.gap(xm), y = layout.stringY(zone.string, xm) - h / 2;
           const focusable = !zone.bow && roving.string === zone.string && roving.fret === zone.fret;
           return <rect key={key + (zone.bow ? '-bow' : '')} className={`bowed-zone ${zone.bow ? 'bow' : ''}`} x={zone.x0} y={y} width={zone.x1 - zone.x0} height={h}
             data-string={zone.string} data-fret={zone.fret} data-key={zone.bow ? undefined : key}
-            role="button" tabIndex={zone.bow ? undefined : focusable ? 0 : -1} aria-label={zone.bow ? `Bow the open ${kit.stringName(zone.string).note} string` : describe(zone.string, zone.fret)}
+            role="button" tabIndex={zone.bow ? undefined : focusable ? 0 : -1} aria-label={zone.bow ? `${technique === 'fingers' ? 'Pluck' : 'Bow'} the open ${kit.stringName(zone.string).note} string` : describe(zone.string, zone.fret)}
             onFocus={() => { if (!zone.bow) { setFocus({ string: zone.string, fret: zone.fret }); setHover({ string: zone.string, fret: zone.fret }); } }}
             onBlur={() => { setHover(null); stop(); }}
             onKeyDown={zone.bow ? undefined : e => onKeyDown(e, zone)} onKeyUp={zone.bow ? undefined : onKeyUp} />;

@@ -1,20 +1,24 @@
 import { test, expect } from '@playwright/test';
 import { watchSound } from '../helpers/sound.js';
+import { openView, setRenderer } from '../helpers/workspace.js';
+import { choose } from '../helpers/listbox.js';
+import { STAGE_TIMEOUT } from '../helpers/studio.js';
 
 const freePlay = p => p.getByRole('group',{name:'Workspace',exact:true}).getByRole('button',{name:'Free play',exact:true}).click();
 
 test.beforeEach(async ({page}) => {
+  test.slow(); // every test starts on the 3D stage: see STAGE_TIMEOUT
   await page.addInitScript(() => {
-    if (!localStorage.getItem('piano-practice-coach:v1')) localStorage.setItem('piano-practice-coach:v1',JSON.stringify({version:1,songs:{},settings:{settingsVersion:5,onboarded:true,renderer:'gl',practiceInstrument:'guitar',countInBars:0}}));
+    if (!localStorage.getItem('piano-practice-coach:v1')) localStorage.setItem('piano-practice-coach:v1',JSON.stringify({version:1,songs:{},settings:{settingsVersion:5,onboarded:true,studioTourDone:true,renderer:'gl',practiceInstrument:'guitar',countInBars:0}}));
   });
   await page.goto('/');
-  await expect(page.locator('.guitar-stage canvas')).toBeVisible();
+  await expect(page.locator('.guitar-stage canvas')).toBeVisible({ timeout: STAGE_TIMEOUT });
 });
 
 test('chord labels agree with the neck; individual previews sound and respect muted strings', async ({page}) => {
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await freePlay(page);
-  await page.evaluate(async () => { window.__guitarNotes=[]; (await import('/src/lib/midiInput.js')).midiInput.onMessage(m=>window.__guitarNotes.push(m)); });
+  await page.evaluate(async () => { window.__guitarNotes=[]; (await import('/src/lib/input/midiInput.js')).midiInput.onMessage(m=>window.__guitarNotes.push(m)); });
   await page.getByRole('button',{name:'D',exact:true}).click();
   await page.getByRole('group',{name:'Chord labels'}).getByRole('button',{name:'Notes',exact:true}).click();
   await expect(page.locator('.guitar-position-label.finger')).toHaveText(['D','A','D','F#']);
@@ -28,10 +32,12 @@ test('chord labels agree with the neck; individual previews sound and respect mu
   await expect(page.locator('.guitar-stage')).toHaveAttribute('data-held-positions','1');
   await page.getByRole('group',{name:'Chord labels'}).getByRole('button',{name:'Intervals',exact:true}).click();
   await expect(page.locator('.guitar-position-label.finger')).toHaveText(['R','5','R','3']);
+  await openView(page);
   await page.getByRole('checkbox',{name:'Left-handed'}).check();
   await expect(page.getByRole('group',{name:'Preview chord strings'}).getByRole('button').first()).toHaveAccessibleName('Pick string 1: F#4');
   await page.reload(); await freePlay(page);
   await expect(page.getByRole('group',{name:'Chord labels'}).getByRole('button',{name:'Intervals',exact:true})).toHaveAttribute('aria-pressed','true');
+  await openView(page);
   await expect(page.getByRole('checkbox',{name:'Left-handed'})).toBeChecked();
   expect(errors).toEqual([]);
 });
@@ -61,7 +67,8 @@ test('desktop light, dark, first-position and focus layouts stay usable', async 
   }
   await page.getByRole('button',{name:'More',exact:true}).click();
   await page.getByRole('button',{name:'Switch to dark theme',exact:true}).click();
-  await page.getByRole('combobox',{name:'Visible guitar frets'}).selectOption('5');
+  await openView(page);
+  await choose(page.getByRole('combobox',{name:'Visible guitar frets'}), '5');
   await expect(page.locator('.guitar-position-label.fret')).toHaveCount(5);
   await page.getByRole('button',{name:'C',exact:true}).click();
   await page.getByRole('group',{name:'Chord labels'}).getByRole('button',{name:'Notes',exact:true}).click();
@@ -72,8 +79,3 @@ test('desktop light, dark, first-position and focus layouts stay usable', async 
   await expect(page.getByRole('button',{name:'↓ Strum C',exact:true})).toBeInViewport();
 });
 
-async function setRenderer(page, name) {
- await page.getByRole('button',{name:'Instrument settings',exact:true}).click();
- await page.getByRole('button',{name,exact:true}).click();
- await page.keyboard.press('Escape');
-}

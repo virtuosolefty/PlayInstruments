@@ -1,6 +1,7 @@
 import { watchSound } from '../helpers/sound.js';
 import { test, expect } from '@playwright/test';
-import { seedSettings } from '../helpers/studio.js';
+import { seedSettings, STAGE_TIMEOUT } from '../helpers/studio.js';
+import { openView, setRenderer } from '../helpers/workspace.js';
 const workspace = (page, name) => page.getByRole('group', { name: 'Workspace', exact: true }).getByRole('button', { name, exact: true });
 const instrument = (page, name) => page.getByRole('group', { name: 'Practice instrument' }).getByRole('button', { name, exact: true });
 test.beforeEach(async ({ page }) => {
@@ -9,9 +10,10 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('themes persist and do not interrupt a live 3D practice session', async ({ page }) => {
+  test.slow(); // 3D in software rendering: see STAGE_TIMEOUT
   const errors = []; page.on('pageerror', e => errors.push(e.message));
   await setRenderer(page, '3D Stage');
-  await expect(page.locator('.roll-gl canvas')).toHaveCount(2);
+  await expect(page.locator('.roll-gl canvas')).toHaveCount(2, { timeout: STAGE_TIMEOUT });
   await page.locator('.zone-mode button').filter({ hasText: 'Wait for me' }).click();
   await page.locator('.pad-play').click();
   await expect(page.locator('.wait-hint')).toBeVisible();
@@ -20,11 +22,11 @@ test('themes persist and do not interrupt a live 3D practice session', async ({ 
   await page.keyboard.press('Space');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('.pad-play')).toContainText('Pause');
-  await expect(page.locator('.roll-gl canvas')).toHaveCount(2);
+  await expect(page.locator('.roll-gl canvas')).toHaveCount(2, { timeout: STAGE_TIMEOUT });
   await page.locator('.pad-play').click();
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-  await expect(page.locator('.roll-gl canvas')).toHaveCount(2);
+  await expect(page.locator('.roll-gl canvas')).toHaveCount(2, { timeout: STAGE_TIMEOUT });
   expect(errors).toEqual([]);
 });
 
@@ -48,12 +50,14 @@ test('free play is audible, never records a score, and remembers handedness', as
   await watchSound(page);
   await page.getByRole('button', { name: '↓ Strum Am', exact: true }).click();
   await expect.poll(() => page.evaluate(() => window.__studioHeardSound)).toBe(true);
+  await openView(page);
   await page.getByRole('checkbox', { name: 'Left-handed' }).check();
   await page.locator('#practice-stage').focus();
   await page.keyboard.press('Space');
   await expect(page.getByRole('region', { name: 'Chord workspace' })).toBeVisible();
   expect(await page.evaluate(() => Object.keys(JSON.parse(localStorage.getItem('piano-practice-coach:v1')).songs))).toEqual([]);
   await page.reload();
+  await openView(page);
   await expect(page.getByRole('checkbox', { name: 'Left-handed' })).toBeChecked();
 });
 
@@ -65,9 +69,9 @@ test('unified library favorites and last selected piece survive reload', async (
   await expect(page.locator('.song-row:visible')).toHaveCount(1);
   await page.locator('.song-row:visible .song').click();
   await page.getByRole('button', { name: 'Library', exact: true }).click();
-  await expect(page.getByRole('combobox', { name: 'Guitar exercise' })).toHaveValue('guitar-d-major');
+  await expect(page.getByRole('combobox', { name: 'Guitar exercise' })).toHaveAttribute('data-value', 'guitar-d-major');
   await page.reload();
-  await expect(page.getByRole('combobox', { name: 'Guitar exercise' })).toHaveValue('guitar-d-major');
+  await expect(page.getByRole('combobox', { name: 'Guitar exercise' })).toHaveAttribute('data-value', 'guitar-d-major');
   await page.getByRole('button', { name: 'Library', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Unfavorite D major · melody builder', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await page.getByRole('group', { name: 'Library instrument' }).getByRole('button', { name: 'Piano', exact: true }).click();
@@ -117,8 +121,3 @@ test('desktop focus view expands the stage and restores the side panel', async (
   await expect(page.locator('.pane.right')).toBeVisible();
 });
 
-async function setRenderer(page, name) {
- await page.getByRole('button',{name:'Instrument settings',exact:true}).click();
- await page.getByRole('button',{name,exact:true}).click();
- await page.keyboard.press('Escape');
-}

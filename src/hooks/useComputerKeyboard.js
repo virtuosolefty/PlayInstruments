@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { MODES } from './usePracticeEngine.js';
-import { playInput } from '../lib/playInput.js';
-import { emitSyntheticMidi, KEYBOARD_MAP } from '../lib/midiInput.js';
-import { secondsPerBar } from '../lib/passages.js';
-import { ACTIONS, nextRate, shortcutFor } from '../lib/shortcuts.js';
-import { DRUM_KEYS } from '../lib/drums.js';
+import { playInput } from '../lib/input/playInput.js';
+import { emitSyntheticMidi, KEYBOARD_MAP } from '../lib/input/midiInput.js';
+import { secondsPerBar } from '../lib/music/passages.js';
+import { ACTIONS, nextRate, shortcutFor } from '../lib/app/shortcuts.js';
+import { struckSetFor } from '../lib/struck/struckSets.js';
 
 /**
  * useComputerKeyboard — the QWERTY keyboard doing two jobs at once.
@@ -125,12 +125,15 @@ export function useComputerKeyboard({
       // Space and Enter activate the focused UI control before global transport.
       if ((e.code === 'Space' || e.key === 'Enter') && e.target.closest?.('button, summary, a')) return;
       const typing =
-        e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement || e.target instanceof HTMLTextAreaElement || e.target.isContentEditable;
+        e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement || e.target instanceof HTMLTextAreaElement || e.target.isContentEditable
+        // A Listbox (the app's select) takes arrows and letters itself, as a select did.
+        || !!e.target.closest?.('[role="combobox"]');
       if (typing) return;
 
       // The handler is on `window`, so without asking this a "2" pressed while
       // reading the practice report would switch the mode underneath it.
-      const dialogOpen = !!document.querySelector('[role="dialog"]');
+      const dialogs = [...document.querySelectorAll('[role="dialog"]')];
+      const dialogOpen = dialogs.length > 0;
       const action = shortcutFor(e, { dialogOpen, typing });
       if (action) {
         e.preventDefault();
@@ -138,12 +141,16 @@ export function useComputerKeyboard({
         return;
       }
 
-      if (dialogOpen || e.target.closest?.('[data-instrument-navigation]')) return;
-      // On the drums a letter is the drum it starts (K for kick); elsewhere the keys are a piano.
-      const drums=inputSettings.current.practiceInstrument==='drums';
-      const key=e.key.toLowerCase(), base=(drums?DRUM_KEYS:KEYBOARD_MAP)[key];
+      // Notes are stopped only by a dialog in the way of playing. The tuner is there to be played into
+      // (`data-play-through`), and a tip that does not hold the page (aria-modal="false") holds nothing.
+      const blocking = dialogs.some(d => !d.hasAttribute('data-play-through') && d.getAttribute('aria-modal') !== 'false');
+      if (blocking || e.target.closest?.('[data-instrument-navigation]')) return;
+      // A struck instrument has a key for each piece (K for the kick, N for the tabla's Na, the handpan's notes along
+      // the rows); elsewhere the keys are a piano.
+      const struck=struckSetFor(inputSettings.current.practiceInstrument);
+      const key=e.key.toLowerCase(), base=(struck?struck.keys:KEYBOARD_MAP)[key];
       if(base===undefined||down.has(key))return;
-      const midi=drums?base:base+(inputSettings.current.typingOctave??0)*12;
+      const midi=struck?base:base+(inputSettings.current.typingOctave??0)*12;
       down.set(key,midi); playInput.press('typing-'+key,midi,inputSettings.current.playVelocity??0.72,{source:'typing'});
     };
     const onKeyUp = e => { const key=e.key.toLowerCase(); if(!down.has(key))return; down.delete(key);playInput.release('typing-'+key); };

@@ -7,7 +7,7 @@
     "source": "https://sketchfab.com/3d-models/cello-a1e5e2a37d6a42299dcd5cec06cd1ddc",
     "license": "CC BY 4.0",
     "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
-    "line": "\"Cello\" (https://sketchfab.com/3d-models/cello-a1e5e2a37d6a42299dcd5cec06cd1ddc) by slidon (https://sketchfab.com/slidon), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Modified: the strings between nut and bridge replaced, scaled and re-encoded for Practice Deck."
+    "line": "\"Cello\" (https://sketchfab.com/3d-models/cello-a1e5e2a37d6a42299dcd5cec06cd1ddc) by slidon (https://sketchfab.com/slidon), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Modified: the strings between nut and bridge replaced, scaled and re-encoded, surface geometry simplified for Practice Deck."
   },
   "nutX": -6.05,
   "scaleLength": 24.1,
@@ -72,7 +72,7 @@
       -7.824
     ],
     "max": [
-      31.0786,
+      31.0092,
       5.4612,
       7.8239
     ]
@@ -86,7 +86,7 @@
       ],
       "max": [
         31.0092,
-        2.2354,
+        2.235,
         7.8239
       ]
     },
@@ -110,7 +110,7 @@
       ],
       "max": [
         13.9186,
-        4.3613,
+        4.3588,
         1.1014
       ]
     },
@@ -133,7 +133,7 @@
         -2.8366
       ],
       "max": [
-        31.0786,
+        30.4285,
         4.5001,
         2.7505
       ]

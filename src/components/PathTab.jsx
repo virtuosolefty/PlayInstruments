@@ -1,7 +1,8 @@
+import Icon from './Icon.jsx';
 import DailySet from './DailySet.jsx';
 import PathProgress from './PathProgress.jsx';
 import StreakStrip from './StreakStrip.jsx';
-import { blockerHelp, RUNGS } from '../lib/path.js';
+import { blockerHelp, RUNGS } from '../lib/learning/path.js';
 
 /**
  * The Path: fifteen exercises, five stages, and the evidence that they worked.
@@ -30,14 +31,14 @@ export function Stars({ count, shown = count > 0 }) {
   if (!shown) return null;
   return (
     <span className="path-stars" role="img" aria-label={`${count} of 5 stars`} title={`Best: ${count} of 5 stars`}>
-      {'★'.repeat(count)}<i>{'★'.repeat(5 - count)}</i>
+      {Array.from({ length: count }, (_, i) => <Icon key={i} name="starFill" size={12} />)}<i>{Array.from({ length: 5 - count }, (_, i) => <Icon key={i} name="starFill" size={12} />)}</i>
     </span>
   );
 }
 
 function ExerciseRow({ entry, title, isCurrent, onPick }) {
   // Finished is its own state: the next lesson is open, and the stars are still to be earned.
-  const mark = entry.mastered || entry.passed || entry.finished ? '✓' : entry.unlocked ? '▸' : '🔒';
+  const mark = <Icon name={entry.mastered || entry.passed || entry.finished ? 'check' : entry.unlocked ? 'arrowRight' : 'lock'} size={13} />;
   const state = entry.mastered ? 'mastered' : entry.passed ? 'passed' : entry.finished ? 'finished' : entry.unlocked ? 'open' : 'locked';
 
   return (
@@ -129,11 +130,11 @@ export default function PathTab({
               disabled={!stage.finished}
               title={
                 stage.finished
-                  ? 'Yours — go and play it'
+                  ? 'Yours. Go and play it'
                   : 'Finish every lesson in this stage to open it'
               }
             >
-              <span className="path-mark">{stage.finished ? '♪' : '🔒'}</span>
+              <span className="path-mark"><Icon name={stage.finished ? 'music' : 'lock'} size={13} /></span>
               <span className="path-name">{titleOf(stage.recital)}</span>
               <span className="path-recital-tag">recital</span>
             </button>}

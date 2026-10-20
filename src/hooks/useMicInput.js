@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { micInput, micRange } from '../lib/micInput.js';
-import { emitSyntheticMidi } from '../lib/midiInput.js';
-import { createNoteTracker } from '../lib/noteTracker.js';
+import { micInput, micRange } from '../lib/input/micInput.js';
+import { emitSyntheticMidi } from '../lib/input/midiInput.js';
+import { createNoteTracker } from '../lib/input/noteTracker.js';
 
 /** The microphone's state, kept current: `{ status, error }` (micInput.js). */
 export function useMicStatus() {

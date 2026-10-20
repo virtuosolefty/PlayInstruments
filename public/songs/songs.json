@@ -77,6 +77,7 @@
       5,
       1
     ],
+    "handChanges": [],
     "url": "/songs/c-major-scale.mid",
     "noteCount": 60,
     "range": [
@@ -102,6 +103,7 @@
     ],
     "key": null,
     "fingering": null,
+    "handChanges": [],
     "url": "/songs/c-major-arpeggios.mid",
     "noteCount": 102,
     "range": [
@@ -127,6 +129,7 @@
     ],
     "key": null,
     "fingering": null,
+    "handChanges": [],
     "url": "/songs/twinkle.mid",
     "noteCount": 114,
     "range": [
@@ -152,6 +155,7 @@
     ],
     "key": null,
     "fingering": null,
+    "handChanges": [],
     "url": "/songs/ode-to-joy.mid",
     "noteCount": 169,
     "range": [
@@ -177,6 +181,7 @@
     ],
     "key": null,
     "fingering": null,
+    "handChanges": [],
     "url": "/songs/fur-elise.mid",
     "noteCount": 49,
     "range": [
@@ -202,6 +207,7 @@
     ],
     "key": null,
     "fingering": null,
+    "handChanges": [],
     "url": "/songs/bach-prelude-c.mid",
     "noteCount": 128,
     "range": [
@@ -227,6 +233,7 @@
     ],
     "key": null,
     "fingering": null,
+    "handChanges": [],
     "url": "/songs/canon-in-d.mid",
     "noteCount": 112,
     "range": [
@@ -252,6 +259,7 @@
     ],
     "key": null,
     "fingering": null,
+    "handChanges": [],
     "url": "/songs/moonlight-i.mid",
     "noteCount": 91,
     "range": [
@@ -332,6 +340,7 @@
       5,
       1
     ],
+    "handChanges": [],
     "url": "/songs/five-finger-c.mid",
     "noteCount": 54,
     "range": [
@@ -358,6 +367,7 @@
     ],
     "key": null,
     "fingering": null,
+    "handChanges": [],
     "url": "/songs/twinkle-mini.mid",
     "noteCount": 66,
     "range": [
@@ -384,6 +394,7 @@
     ],
     "key": null,
     "fingering": null,
+    "handChanges": [],
     "url": "/songs/ode-to-joy-mini.mid",
     "noteCount": 46,
     "range": [
@@ -475,6 +486,7 @@
       3,
       5
     ],
+    "handChanges": [],
     "url": "/songs/chord-shapes-c.mid",
     "noteCount": 64,
     "range": [
@@ -501,6 +513,7 @@
     ],
     "key": null,
     "fingering": null,
+    "handChanges": [],
     "url": "/songs/fur-elise-mini.mid",
     "noteCount": 48,
     "range": [
@@ -527,6 +540,7 @@
     ],
     "key": null,
     "fingering": null,
+    "handChanges": [],
     "url": "/songs/greensleeves.mid",
     "noteCount": 38,
     "range": [
@@ -553,6 +567,7 @@
     ],
     "key": null,
     "fingering": null,
+    "handChanges": [],
     "url": "/songs/scarborough-fair.mid",
     "noteCount": 35,
     "range": [
@@ -580,6 +595,7 @@
     ],
     "key": null,
     "fingering": null,
+    "handChanges": [],
     "url": "/songs/amazing-grace.mid",
     "noteCount": 31,
     "range": [
@@ -606,6 +622,7 @@
     ],
     "key": null,
     "fingering": null,
+    "handChanges": [],
     "url": "/songs/entertainer.mid",
     "noteCount": 32,
     "range": [
@@ -635,6 +652,7 @@
       "minor"
     ],
     "fingering": null,
+    "handChanges": [],
     "url": "/songs/beethoven-fifth.mid",
     "noteCount": 32,
     "range": [
@@ -690,6 +708,7 @@
       2,
       1
     ],
+    "handChanges": [],
     "url": "/songs/path-01-home-five-right.mid",
     "noteCount": 25,
     "range": [
@@ -745,6 +764,7 @@
       4,
       5
     ],
+    "handChanges": [],
     "url": "/songs/path-02-home-five-left.mid",
     "noteCount": 25,
     "range": [
@@ -752,6 +772,84 @@
       55
     ],
     "approxDuration": 27.9
+  },
+  {
+    "id": "path-03-steady-note",
+    "title": "One note, one steady beat",
+    "composer": "Exercise",
+    "difficulty": 1,
+    "tags": [
+      "exercise",
+      "path",
+      "25-key"
+    ],
+    "description": "Keep a steady pulse on middle C. Count one, two, three, four before joining both hands.",
+    "bpm": 60,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": [
+      "C",
+      "major"
+    ],
+    "fingering": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "handChanges": [],
+    "url": "/songs/path-03-steady-note.mid",
+    "noteCount": 8,
+    "range": [
+      60,
+      60
+    ],
+    "approxDuration": 7.9
+  },
+  {
+    "id": "path-03-alternate-hands",
+    "title": "One hand answers the other",
+    "composer": "Exercise",
+    "difficulty": 1,
+    "tags": [
+      "exercise",
+      "path",
+      "25-key"
+    ],
+    "description": "Right thumb on middle C, then left little finger on the C below. Alternate on each beat before playing both together.",
+    "bpm": 56,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": [
+      "C",
+      "major"
+    ],
+    "fingering": [
+      1,
+      5,
+      1,
+      5,
+      1,
+      5,
+      1,
+      5
+    ],
+    "handChanges": [],
+    "url": "/songs/path-03-alternate-hands.mid",
+    "noteCount": 8,
+    "range": [
+      48,
+      60
+    ],
+    "approxDuration": 8.5
   },
   {
     "id": "path-03-mirror-hands",
@@ -825,6 +923,7 @@
       5,
       1
     ],
+    "handChanges": [],
     "url": "/songs/path-03-mirror-hands.mid",
     "noteCount": 50,
     "range": [
@@ -887,6 +986,7 @@
       1,
       3
     ],
+    "handChanges": [],
     "url": "/songs/path-04-finger-ladders.mid",
     "noteCount": 32,
     "range": [
@@ -957,6 +1057,7 @@
       3,
       3
     ],
+    "handChanges": [],
     "url": "/songs/path-05-long-and-short.mid",
     "noteCount": 40,
     "range": [
@@ -1019,6 +1120,7 @@
       4,
       5
     ],
+    "handChanges": [],
     "url": "/songs/path-06-the-anchor.mid",
     "noteCount": 32,
     "range": [
@@ -1077,6 +1179,7 @@
       2,
       1
     ],
+    "handChanges": [],
     "url": "/songs/path-07-thumb-crossing.mid",
     "noteCount": 28,
     "range": [
@@ -1137,6 +1240,7 @@
       2,
       1
     ],
+    "handChanges": [],
     "url": "/songs/path-08-scale-right.mid",
     "noteCount": 30,
     "range": [
@@ -1227,6 +1331,7 @@
       5,
       1
     ],
+    "handChanges": [],
     "url": "/songs/path-09-scale-together.mid",
     "noteCount": 60,
     "range": [
@@ -1289,6 +1394,7 @@
       5,
       3
     ],
+    "handChanges": [],
     "url": "/songs/path-10-broken-triads.mid",
     "noteCount": 32,
     "range": [
@@ -1343,6 +1449,7 @@
       3,
       1
     ],
+    "handChanges": [],
     "url": "/songs/path-11-block-chords.mid",
     "noteCount": 24,
     "range": [
@@ -1405,6 +1512,7 @@
       3,
       2
     ],
+    "handChanges": [],
     "url": "/songs/path-12-loud-and-soft.mid",
     "noteCount": 32,
     "range": [
@@ -1434,6 +1542,7 @@
       "major"
     ],
     "fingering": null,
+    "handChanges": [],
     "url": "/songs/path-13-steps-and-skips.mid",
     "noteCount": 34,
     "range": [
@@ -1463,6 +1572,7 @@
       "major"
     ],
     "fingering": null,
+    "handChanges": [],
     "url": "/songs/path-14-landmarks.mid",
     "noteCount": 14,
     "range": [
@@ -1531,6 +1641,7 @@
       2,
       2
     ],
+    "handChanges": [],
     "url": "/songs/path-15-melody-and-hold.mid",
     "noteCount": 38,
     "range": [
@@ -1540,8 +1651,8 @@
     "approxDuration": 21.7
   },
   {
-    "id": "hot-cross-buns",
-    "title": "Hot Cross Buns",
+    "id": "au-clair-de-la-lune",
+    "title": "Au Clair de la Lune",
     "composer": "Traditional",
     "difficulty": 1,
     "tags": [
@@ -1549,8 +1660,8 @@
       "melody",
       "easy-song"
     ],
-    "description": "Three notes, stepping down. The best first tune there is.",
-    "bpm": 84,
+    "description": "A French lullaby on three notes, with long notes to rest on.",
+    "bpm": 92,
     "timeSignature": [
       4,
       4
@@ -1560,31 +1671,37 @@
       "major"
     ],
     "fingering": [
+      1,
+      1,
+      1,
+      2,
       3,
       2,
       1,
       3,
       2,
-      1,
-      1,
-      1,
-      1,
-      1,
       2,
-      2,
-      2,
+      1,
+      1,
+      1,
+      1,
       2,
       3,
+      2,
+      1,
+      3,
+      2,
       2,
       1
     ],
-    "url": "/songs/hot-cross-buns.mid",
-    "noteCount": 17,
+    "handChanges": [],
+    "url": "/songs/au-clair-de-la-lune.mid",
+    "noteCount": 22,
     "range": [
       60,
       64
     ],
-    "approxDuration": 11.3
+    "approxDuration": 20.6
   },
   {
     "id": "mary-had-a-little-lamb",
@@ -1634,6 +1751,7 @@
       2,
       1
     ],
+    "handChanges": [],
     "url": "/songs/mary-had-a-little-lamb.mid",
     "noteCount": 26,
     "range": [
@@ -1641,58 +1759,6 @@
       67
     ],
     "approxDuration": 19.8
-  },
-  {
-    "id": "au-clair-de-la-lune",
-    "title": "Au Clair de la Lune",
-    "composer": "Traditional",
-    "difficulty": 1,
-    "tags": [
-      "beginner",
-      "melody",
-      "easy-song"
-    ],
-    "description": "A French lullaby on three notes, with long notes to rest on.",
-    "bpm": 92,
-    "timeSignature": [
-      4,
-      4
-    ],
-    "key": [
-      "C",
-      "major"
-    ],
-    "fingering": [
-      1,
-      1,
-      1,
-      2,
-      3,
-      2,
-      1,
-      3,
-      2,
-      2,
-      1,
-      1,
-      1,
-      1,
-      2,
-      3,
-      2,
-      1,
-      3,
-      2,
-      2,
-      1
-    ],
-    "url": "/songs/au-clair-de-la-lune.mid",
-    "noteCount": 22,
-    "range": [
-      60,
-      64
-    ],
-    "approxDuration": 20.6
   },
   {
     "id": "lightly-row",
@@ -1742,6 +1808,7 @@
       5,
       1
     ],
+    "handChanges": [],
     "url": "/songs/lightly-row.mid",
     "noteCount": 26,
     "range": [
@@ -1793,6 +1860,7 @@
       3,
       1
     ],
+    "handChanges": [],
     "url": "/songs/go-tell-aunt-rhody.mid",
     "noteCount": 21,
     "range": [
@@ -1800,6 +1868,203 @@
       67
     ],
     "approxDuration": 21.5
+  },
+  {
+    "id": "hot-cross-buns",
+    "title": "Hot Cross Buns",
+    "composer": "Traditional",
+    "difficulty": 1,
+    "tags": [
+      "beginner",
+      "melody",
+      "easy-song"
+    ],
+    "description": "Three notes, stepping down. Add your first half beats after the steady-note tunes.",
+    "bpm": 84,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": [
+      "C",
+      "major"
+    ],
+    "fingering": [
+      3,
+      2,
+      1,
+      3,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      2,
+      2,
+      2,
+      3,
+      2,
+      1
+    ],
+    "handChanges": [],
+    "url": "/songs/hot-cross-buns.mid",
+    "noteCount": 17,
+    "range": [
+      60,
+      64
+    ],
+    "approxDuration": 11.3
+  },
+  {
+    "id": "old-macdonald",
+    "title": "Old MacDonald Had a Farm",
+    "composer": "Traditional",
+    "difficulty": 1,
+    "tags": [
+      "beginner",
+      "melody",
+      "easy-song"
+    ],
+    "description": "Dips below the home note and comes back up. Listen for where home is. Start with finger 4 on C4 and thumb on G3. Move to C position: E4 with finger 3. Move back to G3 with your thumb, then C4 with finger 4. Return to C position for E4.",
+    "bpm": 100,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": [
+      "C",
+      "major"
+    ],
+    "fingering": [
+      4,
+      4,
+      4,
+      1,
+      2,
+      2,
+      1,
+      3,
+      3,
+      2,
+      2,
+      1,
+      1,
+      4,
+      4,
+      4,
+      1,
+      2,
+      2,
+      1,
+      3,
+      3,
+      2,
+      2,
+      1
+    ],
+    "handChanges": [
+      {
+        "index": 0,
+        "text": "Start with finger 4 on C4 and thumb on G3."
+      },
+      {
+        "index": 7,
+        "text": "Move to C position: E4 with finger 3."
+      },
+      {
+        "index": 12,
+        "text": "Move back to G3 with your thumb, then C4 with finger 4."
+      },
+      {
+        "index": 20,
+        "text": "Return to C position for E4."
+      }
+    ],
+    "url": "/songs/old-macdonald.mid",
+    "noteCount": 25,
+    "range": [
+      55,
+      64
+    ],
+    "approxDuration": 19
+  },
+  {
+    "id": "yankee-doodle",
+    "title": "Yankee Doodle",
+    "composer": "Traditional",
+    "difficulty": 1,
+    "tags": [
+      "beginner",
+      "melody",
+      "easy-song"
+    ],
+    "description": "Quick and even, with notes on both sides of home. Keep every beat the same length. Start in C position, thumb on C4. Move your thumb to G3, then back to C4. Move your thumb to B3, then back to C4. Place finger 3 on B3, thumb on G3, then climb back to C4.",
+    "bpm": 108,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": [
+      "C",
+      "major"
+    ],
+    "fingering": [
+      1,
+      1,
+      2,
+      3,
+      1,
+      3,
+      2,
+      1,
+      1,
+      1,
+      2,
+      3,
+      1,
+      1,
+      1,
+      1,
+      2,
+      3,
+      4,
+      3,
+      2,
+      1,
+      3,
+      1,
+      2,
+      3,
+      4,
+      4
+    ],
+    "handChanges": [
+      {
+        "index": 0,
+        "text": "Start in C position, thumb on C4."
+      },
+      {
+        "index": 7,
+        "text": "Move your thumb to G3, then back to C4."
+      },
+      {
+        "index": 13,
+        "text": "Move your thumb to B3, then back to C4."
+      },
+      {
+        "index": 22,
+        "text": "Place finger 3 on B3, thumb on G3, then climb back to C4."
+      }
+    ],
+    "url": "/songs/yankee-doodle.mid",
+    "noteCount": 28,
+    "range": [
+      55,
+      65
+    ],
+    "approxDuration": 17.7
   },
   {
     "id": "jingle-bells",
@@ -1874,6 +2139,7 @@
       2,
       1
     ],
+    "handChanges": [],
     "url": "/songs/jingle-bells.mid",
     "noteCount": 51,
     "range": [
@@ -1892,7 +2158,7 @@
       "melody",
       "easy-song"
     ],
-    "description": "One note higher than the others reach, and a long-short lilt at the start of each line.",
+    "description": "One note higher than the others reach, and a long-short lilt at the start of each line. Start with your thumb on D4 and little finger on A4. Move back to C position: E4 with finger 3, then C4 with your thumb.",
     "bpm": 100,
     "timeSignature": [
       4,
@@ -1902,7 +2168,42 @@
       "C",
       "major"
     ],
-    "fingering": null,
+    "fingering": [
+      4,
+      5,
+      4,
+      3,
+      2,
+      3,
+      4,
+      1,
+      2,
+      3,
+      2,
+      3,
+      4,
+      4,
+      5,
+      4,
+      3,
+      2,
+      3,
+      4,
+      1,
+      4,
+      3,
+      1
+    ],
+    "handChanges": [
+      {
+        "index": 0,
+        "text": "Start with your thumb on D4 and little finger on A4."
+      },
+      {
+        "index": 22,
+        "text": "Move back to C position: E4 with finger 3, then C4 with your thumb."
+      }
+    ],
     "url": "/songs/london-bridge.mid",
     "noteCount": 24,
     "range": [
@@ -1910,64 +2211,6 @@
       69
     ],
     "approxDuration": 19
-  },
-  {
-    "id": "old-macdonald",
-    "title": "Old MacDonald Had a Farm",
-    "composer": "Traditional",
-    "difficulty": 1,
-    "tags": [
-      "beginner",
-      "melody",
-      "easy-song"
-    ],
-    "description": "Dips below the home note and comes back up. Listen for where home is.",
-    "bpm": 100,
-    "timeSignature": [
-      4,
-      4
-    ],
-    "key": [
-      "C",
-      "major"
-    ],
-    "fingering": null,
-    "url": "/songs/old-macdonald.mid",
-    "noteCount": 25,
-    "range": [
-      55,
-      64
-    ],
-    "approxDuration": 19
-  },
-  {
-    "id": "yankee-doodle",
-    "title": "Yankee Doodle",
-    "composer": "Traditional",
-    "difficulty": 1,
-    "tags": [
-      "beginner",
-      "melody",
-      "easy-song"
-    ],
-    "description": "Quick and even, with notes on both sides of home. Keep every beat the same length.",
-    "bpm": 108,
-    "timeSignature": [
-      4,
-      4
-    ],
-    "key": [
-      "C",
-      "major"
-    ],
-    "fingering": null,
-    "url": "/songs/yankee-doodle.mid",
-    "noteCount": 28,
-    "range": [
-      55,
-      65
-    ],
-    "approxDuration": 17.7
   },
   {
     "id": "happy-birthday",
@@ -1979,7 +2222,7 @@
       "melody",
       "easy-song"
     ],
-    "description": "Three beats to the bar, and it starts before the first full one. The tune you will be asked for most.",
+    "description": "Three beats to the bar, and it starts before the first full one. The tune you will be asked for most. Start with thumb on G3, finger 4 on C4, little finger on D4. Play G3 with your thumb, then move to C position for G4 with finger 5. Move finger 3 to B3, finger 2 to A3, then return to C position.",
     "bpm": 92,
     "timeSignature": [
       3,
@@ -1989,7 +2232,47 @@
       "C",
       "major"
     ],
-    "fingering": null,
+    "fingering": [
+      1,
+      1,
+      2,
+      1,
+      4,
+      3,
+      1,
+      1,
+      2,
+      1,
+      5,
+      4,
+      1,
+      1,
+      5,
+      3,
+      1,
+      3,
+      2,
+      4,
+      4,
+      3,
+      1,
+      2,
+      1
+    ],
+    "handChanges": [
+      {
+        "index": 0,
+        "text": "Start with thumb on G3, finger 4 on C4, little finger on D4."
+      },
+      {
+        "index": 12,
+        "text": "Play G3 with your thumb, then move to C position for G4 with finger 5."
+      },
+      {
+        "index": 17,
+        "text": "Move finger 3 to B3, finger 2 to A3, then return to C position."
+      }
+    ],
     "url": "/songs/happy-birthday.mid",
     "noteCount": 25,
     "range": [

@@ -1,0 +1,60 @@
+/* ------------------------------------------------------------ lesson on the stage
+   One instruction at a time, by the instrument: on a wide screen the step is a
+   card on the stage (LessonStepCard), the six steps above it shrink to a row
+   of numbers, and the guide beside it says what the lesson is for in short
+   cues. Phones keep their own bar under the keys (LessonDock). */
+
+@media (min-width: 901px) {
+  /* The steps as a pager: numbers, with only the current step named. The
+     other names are still each button's name, at no size. */
+  .lesson-bar ol { justify-content: flex-start; gap: var(--sp-1-5); margin-bottom: var(--sp-2); }
+  .lesson-bar li { flex: none; }
+  .lesson-bar li + li::before { display: none; }
+  .lesson-bar li button { flex-direction: row; gap: var(--sp-2); min-height: 32px; padding: 3px; border-radius: var(--radius-pill); font-size: 0; }
+  .lesson-bar li button > span { font-size: var(--fs-2xs); }
+  .lesson-bar li button[aria-current] { font-size: var(--fs-sm); padding-inline-end: var(--sp-3); background: var(--accent-soft); border: 1px solid var(--accent-dim); }
+}
+
+/* The card hangs from a zero-height anchor above the stage, at its top right:
+   the string tab's play line is at the left, and on the roll the notes being
+   played are at the bottom. */
+.step-card-anchor { position: relative; height: 0; z-index: 7; }
+.step-card {
+  position: absolute; top: var(--sp-3); right: var(--sp-4);
+  width: min(380px, calc(100% - 2 * var(--sp-4)));
+  display: grid; gap: var(--sp-2);
+  padding: var(--sp-4);
+  /* Solid, not blurred: a backdrop blur over a canvas that redraws every frame costs a frame's work again. */
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--elev-3);
+}
+.step-card .step-count { font: var(--fw-bold) var(--fs-2xs) var(--mono); letter-spacing: var(--tracking-caps); color: var(--accent); }
+.step-card h2 { margin: 0; font-size: var(--fs-xl); line-height: 1.15; color: var(--text); }
+.step-card h2:focus { outline: none; }
+.step-card .step-line { margin: 0; color: var(--text-dim); font-size: var(--fs-sm); line-height: 1.5; }
+.step-card .lesson-actions { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: var(--sp-2); margin: 0; }
+.step-card .lesson-actions p { flex-basis: 100%; margin: 0; font-size: var(--fs-sm); color: var(--text-dim); }
+.step-card .lesson-actions button { min-height: 36px; font-size: var(--fs-sm); }
+.step-card .lesson-easier { justify-self: start; min-height: 32px; font-size: var(--fs-xs); }
+.step-card .lesson-load-state { display: grid; gap: var(--sp-2); }
+/* While a run plays the card folds to its title, so nothing covers the notes being played. */
+.step-card.playing { width: auto; padding: var(--sp-2) var(--sp-3); gap: var(--sp-hair); box-shadow: var(--elev-2); }
+.step-card.playing h2 { font-size: var(--fs-md); }
+
+/* The guide beside it: the lesson's point, its cues, how it should feel. */
+.lesson-guide .lesson-point { margin: var(--sp-2) 0 0; font-size: var(--fs-2xl); line-height: 1.15; }
+.lesson-cues { list-style: none; margin: var(--sp-3) 0 0; padding: 0; display: grid; gap: var(--sp-2); }
+.lesson-cues li { position: relative; padding-inline-start: var(--sp-5); color: var(--text); font-size: var(--fs-sm); line-height: 1.55; }
+.lesson-cues li::before { content: "\2192"; position: absolute; inset-inline-start: 0; color: var(--accent); }
+.lesson-feel { margin: var(--sp-3) 0 var(--sp-2); font-family: var(--display); font-style: italic; color: var(--text-dim); line-height: 1.5; }
+
+/* A glossary word, tappable where it appears (TermText.jsx). */
+.term { display: inline; min-height: 0; padding: 0; border: 0; border-bottom: 1px dotted var(--accent); border-radius: 0; background: none; box-shadow: none; color: inherit; font: inherit; cursor: pointer; transform: none; }
+.term:hover:not(:disabled) { background: none; border-color: var(--accent); color: var(--accent); box-shadow: none; }
+.term[aria-expanded="true"] { color: var(--accent); border-bottom-style: solid; }
+.term-meaning { display: block; margin-top: var(--sp-2); padding: var(--sp-2) var(--sp-3); background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius-sm); color: var(--text-dim); font-size: var(--fs-xs); line-height: 1.5; }
+.term-meaning b { color: var(--text); font-weight: var(--fw-bold); }
+/* The meaning's box stays in the page (it is a live region, so opening a word is announced); empty, it is not drawn. */
+.term-meaning:empty { display: none; }

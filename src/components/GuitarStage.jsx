@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
-import { GUITAR_TUNING } from '../lib/guitar.js';
-import { noteName } from '../lib/theory.js';
-import { frettedHooks, watchPointer } from '../lib/frettedStage.js';
-import { chordFullName } from '../lib/guitarPresentation.js';
+import ModelCredit from './ModelCredit.jsx';
+import { GUITAR_TUNING } from '../lib/strings/guitar.js';
+import { noteName } from '../lib/music/theory.js';
+import { frettedHooks, watchPointer } from '../lib/strings/frettedStage.js';
+import { chordFullName } from '../lib/strings/guitarPresentation.js';
 import { useStageView } from '../hooks/useStageView.js';
-import { buildModelGuitarRig, MODEL_STRINGS } from '../lib/guitarModelRig.js';
-import { buildGuitarRig } from '../lib/guitarRig.js';
-import { guitarViews } from '../lib/guitarViews.js';
+import { buildModelGuitarRig, MODEL_STRINGS } from '../lib/strings/guitarModelRig.js';
+import { buildGuitarRig } from '../lib/strings/guitarRig.js';
+import { guitarViews } from '../lib/strings/guitarViews.js';
 import { loadRig, newOwned, otherRigs } from '../lib/stage/otherRigs.js';
 import { STAGE_TIERS } from '../lib/stage/quality.js';
 import { runStage } from '../lib/stage/stageRunner.js';
 import { createStudio } from '../lib/stage/studio.js';
-import { findModel } from '../lib/stageModels.js';
+import { findModel } from '../lib/stage/stageModels.js';
 import ResetViewButton from './ResetViewButton.jsx';
 import StageLabels from './StageLabels.jsx';
 import StageViewSwitch from './StageViewSwitch.jsx';
@@ -153,10 +154,10 @@ export default function GuitarStage({ engine, score, onPluck, onContextLost, lef
   // Leaving the whole-instrument view ends any wait for another instrument.
   useEffect(() => { if (stageView !== 'whole' || view !== 'freePlay') setPreparing(''); }, [view, stageView]);
   return <div className="guitar-stage" ref={host} role="group" aria-label="Three-dimensional guitar fretboard" data-view={view}>
-    <div className="guitar-stage-top"><div><strong>{chord ? chordFullName(chord) : 'Fretboard'}</strong><span>{chord ? 'Open-position voicing' : 'Standard tuning · E A D G B E'}</span></div>{chord && <div className="guitar-open-picks" role="group" aria-label="Play open strings"><span>OPEN STRINGS</span>{[0,1,2,3,4,5].map(s=><button key={s} aria-label={'Play open string '+(6-s)+': '+noteName(GUITAR_TUNING[s])} onClick={()=>onPluck({string:s,fret:0})}>{noteName(GUITAR_TUNING[s])}</button>)}</div>}</div>
+    <div className="guitar-stage-top"><div><strong>{chord ? chordFullName(chord) : 'Fretboard'}</strong><span>{chord ? 'Open-position voicing' : 'Standard tuning · E A D G B E'}</span></div>{chord && !wholeGuitar && <div className="guitar-open-picks" role="group" aria-label="Play open strings"><span>OPEN STRINGS</span>{[0,1,2,3,4,5].map(s=><button key={s} aria-label={'Play open string '+(6-s)+': '+noteName(GUITAR_TUNING[s])} onClick={()=>onPluck({string:s,fret:0})}>{noteName(GUITAR_TUNING[s])}</button>)}</div>}</div>
     <StageLabels labels={labels} labelSize={labelSize} />
     <div className="stage-status" role="status">{status}</div>
     <WholeModels instrument="guitar" active={wholeGuitar} quality={quality} staged={wholeModel} onStage={stage} stageNotice={stageNotice} />
-    <div className="guitar-stage-bottom"><span className="guitar-stage-legend">{chord && <><i className="root"/>Root </>}<i className="played"/>Played <i className="next"/>{chord?'Hover':'Next note'}</span><span className="guitar-stage-end">{offersWhole && <StageViewSwitch label="Fretboard" short="Frets" value={wholeGuitar ? 'whole' : 'learn'} onChange={chooseView} />}{turnable && (turned || resetFocused) && <ResetViewButton turned={turned} onReset={resetView} onFocusChange={setResetFocused} />}<span className="guitar-stage-hint">{hover||(wholeGuitar?'Drag to turn · Fretboard to play the frets':turnable?'Click between frets to play · drag to turn':'Click between frets to play · ○ open string')}</span></span></div>
+    <div className="guitar-stage-bottom"><span className="guitar-stage-legend">{chord && <><i className="root"/>Root </>}<i className="played"/>Played <i className="next"/>{chord?'Hover':'Next note'}</span><span className="guitar-stage-end">{offersWhole && <StageViewSwitch label="Fretboard" short="Frets" value={wholeGuitar ? 'whole' : 'learn'} onChange={chooseView} />}{turnable && (turned || resetFocused) && <ResetViewButton turned={turned} onReset={resetView} onFocusChange={setResetFocused} />}{wholeGuitar && wholeModel === PLAYED && modelState === 'ready' && <ModelCredit id={PLAYED} />}<span className="guitar-stage-hint">{hover||(wholeGuitar?'Drag to turn · Fretboard to play the frets':turnable?'Click between frets to play · drag to turn':'Click between frets to play · ○ open string')}</span></span></div>
   </div>;
 }

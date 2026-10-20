@@ -1,16 +1,21 @@
+import Icon from './Icon.jsx';
 import { useEffect, useRef, useState } from 'react';
 import { useDialog } from '../hooks/useDialog.js';
 import { useMicStatus } from '../hooks/useMicInput.js';
 import { instrumentInfo, normalizeInstrument, stringKit } from '../lib/instruments.js';
-import { MIC_STATUS, micInput } from '../lib/micInput.js';
-import { noteName } from '../lib/theory.js';
-import { steadyPitch, tunerReading } from '../lib/tuner.js';
+import { MIC_STATUS, micInput } from '../lib/input/micInput.js';
+import { midiInput } from '../lib/input/midiInput.js';
+import { playInput } from '../lib/input/playInput.js';
+import { noteName } from '../lib/music/theory.js';
+import { steadyPitch, tunerReading } from '../lib/input/tuner.js';
 import { InstrumentIcon } from './StudioHeader.jsx';
 
 /** How many readings the tuner keeps to steady itself by, and how often the display follows them. */
 const KEPT = 8, REFRESH_MS = 80;
 /** The display holds its last note this long after the sound stops, so a plucked string can be read as it fades. */
 const LINGER_MS = 1500;
+/** How long a string's reference note sounds when its card is pressed, and how long a played note stays on show. */
+const REFERENCE_MS = 2000, PLAYED_MS = 2500;
 
 const NO_STRINGS = Object.freeze([]);
 
@@ -41,7 +46,27 @@ export default function TunerDialog({ instrument, onClose }) {
   const mic = useMicStatus();
   const [reading, setReading] = useState(null);
   const [level, setLevel] = useState(0);
+  // The last note played on the keys, a controller or a string card: shown as a reference when the microphone has
+  // nothing to read (with headphones on, it hears none of it).
+  const [played, setPlayed] = useState(null);
   const frames = useRef([]);
+  const referenceTimer = useRef(null);
+
+  useEffect(() => midiInput.onMessage(msg => {
+    if (msg.type === 'noteon' && msg.source !== 'mic') setPlayed({ midi: msg.midi, at: performance.now() });
+  }), []);
+  useEffect(() => {
+    if (!played) return undefined;
+    const timer = setTimeout(() => setPlayed(null), PLAYED_MS);
+    return () => clearTimeout(timer);
+  }, [played]);
+  useEffect(() => () => { clearTimeout(referenceTimer.current); playInput.release('tuner-reference'); }, []);
+  /** A string's own note, to tune by ear: it sounds through the instrument, as a pluck of that open string would. */
+  const playReference = s => {
+    playInput.press('tuner-reference', tuning[s], 0.7, kit ? { source: `${id}-screen`, string: s, fret: 0 } : {});
+    clearTimeout(referenceTimer.current);
+    referenceTimer.current = setTimeout(() => playInput.release('tuner-reference'), REFERENCE_MS);
+  };
 
   useEffect(() => {
     const release = micInput.hold('tuner');
@@ -64,19 +89,22 @@ export default function TunerDialog({ instrument, onClose }) {
   const retriable = [MIC_STATUS.DENIED, MIC_STATUS.ERROR].includes(mic.status);
   const problem = mic.status === MIC_STATUS.ERROR ? mic.error : STATUS_TEXT[mic.status];
   // What is read out: the note and which way it is off. It changes when either does, not with every cent.
-  const spoken = !reading ? '' : `${reading.name}, ${reading.state === 'in-tune' ? 'in tune' : reading.state}${reading.string && reading.string.advice !== 'in tune' ? `: ${reading.string.advice}` : ''}`;
+  const spoken = !reading ? (played ? `${noteName(played.midi)}, the note played here` : '') : `${reading.name}, ${reading.state === 'in-tune' ? 'in tune' : reading.state}${reading.string && reading.string.advice !== 'in tune' ? `: ${reading.string.advice}` : ''}`;
   const cents = reading ? Math.abs(reading.cents) : 0;
-  const verdict = !reading ? 'Play one note and let it ring.'
+  const reference = !reading && played ? noteName(played.midi) : null;
+  const verdict = reference ? `${reference} played here, in tune. Play your string and tune it to this.`
+    : !reading ? 'Play one note and let it ring.'
     : reading.state === 'in-tune' ? 'In tune'
     : `${cents} ${cents === 1 ? 'cent' : 'cents'} ${reading.state}`;
   const order = Array.from({ length: tuning.length }, (_, s) => s);
   return <div className="report-overlay setup-overlay">
-    <section className="report setup-dialog tuner-dialog" ref={ref} role="dialog" aria-modal="true" aria-labelledby="tuner-title" tabIndex={-1}>
+    {/* data-play-through: the computer keys keep playing notes while the tuner is open (useComputerKeyboard.js). */}
+    <section className="report setup-dialog tuner-dialog" ref={ref} role="dialog" aria-modal="true" aria-labelledby="tuner-title" tabIndex={-1} data-play-through="">
       <header className="setup-heading"><div><h2 id="tuner-title">Tuner</h2></div><button onClick={onClose} aria-label="Close tuner">×</button></header>
       <div className="setup-instrument"><InstrumentIcon instrument={id} /><div><strong>{instrumentInfo(id).label}</strong><span>{kit ? `Open strings · ${order.map(s => noteName(tuning[s])).join(' ')}` : 'Any note · A = 440 Hz'}</span></div></div>
 
-      <div className={`tuner-face ${reading?.state ?? 'waiting'}`} data-note={reading?.name ?? ''} data-cents={reading ? reading.cents : ''}>
-        <strong className="tuner-note" aria-hidden="true">{reading?.name ?? '—'}</strong>
+      <div className={`tuner-face ${reading?.state ?? (reference ? 'reference' : 'waiting')}`} data-note={reading?.name ?? ''} data-reference={reference ?? ''} data-cents={reading ? reading.cents : ''}>
+        <strong className="tuner-note" aria-hidden="true">{reading?.name ?? reference ?? '—'}</strong>
         <div className="tuner-scale" aria-hidden="true">
           <span>♭</span>
           <div className="tuner-track"><i className="tuner-centre" />{reading && <i className="tuner-needle" style={{ left: `${50 + reading.needle * 50}%` }} />}</div>
@@ -90,8 +118,10 @@ export default function TunerDialog({ instrument, onClose }) {
       {kit && <ul className="tuner-strings" aria-label={`${kit.label} strings`}>{order.map(s => {
         const mine = reading?.string?.index === s;
         return <li key={s} className={mine ? `tuning ${reading.string.advice.replace(' ', '-')}` : ''} data-string={kit.stringName(s).number}>
-          <small>String {kit.stringName(s).number}</small><b>{noteName(tuning[s])}</b>
-          <span>{mine ? (reading.string.advice === 'in tune' ? '✓ in tune' : reading.string.advice === 'tune up' ? '↑ tune up' : '↓ tune down') : ''}</span>
+          <button type="button" onClick={() => playReference(s)} aria-label={`Play string ${kit.stringName(s).number}, ${noteName(tuning[s])}`} title="Hear this string's note">
+            <small>String {kit.stringName(s).number}</small><b>{noteName(tuning[s])}</b>
+            <span>{mine ? (reading.string.advice === 'in tune' ? <><Icon name="check" size={12} /> in tune</> : reading.string.advice === 'tune up' ? '↑ tune up' : '↓ tune down') : <><Icon name="volume" size={12} /> hear it</>}</span>
+          </button>
         </li>;
       })}</ul>}
 
@@ -100,7 +130,7 @@ export default function TunerDialog({ instrument, onClose }) {
         : <div className="tuner-problem"><p role={failed ? 'alert' : 'status'}>{problem}</p>
           {/* Kept in place while it retries, so the keyboard's place in the dialog is not lost. */}
           {mic.status !== MIC_STATUS.UNSUPPORTED && <button className="primary" aria-disabled={!retriable} onClick={() => { if (retriable) micInput.retry(); }}>Try again</button>}</div>}
-      <p className="hint">Your sound stays on this device. It is not recorded or sent anywhere.</p>
+      <p className="hint">{kit ? 'Press a string to hear its note. ' : ''}The keys and a controller keep playing while the tuner is open. Your sound stays on this device. It is not recorded or sent anywhere.</p>
       <footer className="setup-actions"><span /><button className="primary" onClick={onClose}>Done</button></footer>
     </section>
   </div>;

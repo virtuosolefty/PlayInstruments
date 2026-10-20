@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { exportHistory, importHistory, parseBackup } from '../lib/storage.js';
+import { exportHistory, importHistory, parseBackup } from '../lib/app/storage.js';
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
@@ -84,7 +84,7 @@ export default function BackupPanel({ onRestored }) {
             {plural(pending.summary.songs, 'piece')} and {plural(pending.summary.days, 'practice day')}.
           </p>
           <p className="hint">
-            Restoring replaces your current history rather than merging it — merging two records would
+            Restoring replaces your current history rather than merging it, because merging two records would
             invent practice that never happened.
           </p>
           <div className="backup-actions">

@@ -12,8 +12,8 @@
 .tuner-note { font: var(--fw-bold) 64px/1 var(--sans); letter-spacing: var(--tracking-tight); color: var(--text-dim); min-height: 64px; }
 /* The state is carried by the words below as well as by colour. */
 .tuner-face.in-tune .tuner-note { color: var(--good); }
-.tuner-face.flat .tuner-note, .tuner-face.sharp .tuner-note { color: var(--text); }
-.tuner-scale { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--sp-3); width: 100%; color: var(--text-dim); font-size: var(--fs-md); }
+.tuner-face.flat .tuner-note, .tuner-face.sharp .tuner-note, .tuner-face.reference .tuner-note { color: var(--text); }
+.tuner-scale { user-select: none; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--sp-3); width: 100%; color: var(--text-dim); font-size: var(--fs-md); }
 .tuner-track { position: relative; height: 28px; border-radius: var(--radius-pill); background: linear-gradient(90deg, transparent calc(50% - 5%), color-mix(in srgb, var(--good) 22%, transparent) calc(50% - 5%), color-mix(in srgb, var(--good) 22%, transparent) calc(50% + 5%), transparent calc(50% + 5%)), var(--bg-2); border: 1px solid var(--line-soft); }
 .tuner-centre { position: absolute; left: 50%; top: 3px; bottom: 3px; width: 2px; margin-left: -1px; background: var(--line-strong); }
 .tuner-needle { position: absolute; top: -4px; bottom: -4px; width: 4px; margin-left: -2px; border-radius: 2px; background: var(--warn); transition: left 80ms linear; }
@@ -22,7 +22,12 @@
 .tuner-face.in-tune .tuner-verdict { color: var(--good); font-weight: var(--fw-bold); }
 
 .tuner-strings { list-style: none; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--sp-2); padding: 0; margin: var(--sp-4) 0 0; }
-.tuner-strings li { display: grid; justify-items: center; gap: 2px; padding: var(--sp-2) var(--sp-1); border: 1px solid var(--line-soft); border-radius: var(--radius); min-height: 76px; align-content: start; }
+.tuner-strings li { border: 1px solid var(--line-soft); border-radius: var(--radius); }
+/* Each string is a button: pressed, it sounds that open string's note to tune by ear. */
+.tuner-strings button { display: grid; justify-items: center; align-content: start; gap: var(--sp-hair); width: 100%; min-height: 76px; padding: var(--sp-2) var(--sp-1); border: 0; border-radius: inherit; background: none; box-shadow: none; color: inherit; font: inherit; cursor: pointer; }
+.tuner-strings button:hover:not(:disabled) { background: var(--bg-2); }
+.tuner-strings button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tuner-strings span svg { vertical-align: -2px; }
 .tuner-strings small { font-size: var(--fs-2xs); color: var(--text-faint); }
 .tuner-strings b { font-size: var(--fs-md); }
 .tuner-strings span { font-size: var(--fs-2xs); color: var(--text-dim); white-space: nowrap; }

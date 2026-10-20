@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { audio } from '../lib/audio.js';
+import { audio } from '../lib/audio/audio.js';
 
 /**
  * The signal actually leaving the app.

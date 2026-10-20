@@ -1,10 +1,10 @@
 .learning-home { flex: 1; min-height: 0; overflow-y: auto; background: var(--bg); color: var(--text); }
 .learning-home-inner { max-width: 1180px; margin: auto; padding: 44px 40px var(--sp-6); }
 .learning-home-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-6); margin-bottom: var(--sp-6); }
-.learning-home h2 { margin: var(--sp-3) 0; font-size: clamp(26px, 2.7vw, 36px); letter-spacing: var(--tracking-tight); font-weight: var(--fw-bold); line-height: 1.2; }
-.learning-home h3 { margin: var(--sp-2) 0; font-size: var(--fs-xl); line-height: 1.3; letter-spacing: var(--tracking-tight); }
+.learning-home-heading h1 { margin: var(--sp-3) 0; font-size: clamp(26px, 2.7vw, var(--fs-3xl)); letter-spacing: var(--tracking-tight); font-weight: var(--fw-bold); line-height: 1.2; }
+.learning-home h2 { margin: var(--sp-2) 0; font-size: var(--fs-xl); line-height: 1.3; letter-spacing: var(--tracking-tight); }
 .learning-home p { color: var(--text-dim); line-height: 1.75; font-size: var(--fs-md); margin: var(--sp-2) 0; }
-.learning-home h2:focus, .lesson-guide h2:focus { outline: none; }
+.learning-home h2:focus, .learning-home-heading h1:focus, .lesson-guide h2:focus, .studio-heading h1:focus { outline: none; }
 .next-lesson-card > .comfortable-best { min-height: 0; font-size: var(--fs-xs); color: var(--accent); }
 .learning-instruments { display: flex; flex-shrink: 0; border: 1px solid var(--line); padding: var(--sp-1); border-radius: var(--radius); background: var(--bg-2); }
 .learning-instruments button { display: flex; align-items: center; gap: var(--sp-2); min-height: var(--control-h); padding: var(--sp-2) var(--sp-4); background: transparent; border-color: transparent; border-radius: var(--control-r); }
@@ -14,7 +14,7 @@
 .next-lesson-card { background: linear-gradient(135deg, var(--accent-soft), var(--bg-1) 72%); border-color: var(--accent-dim); display: flex; flex-direction: column; align-items: flex-start; }
 .learning-card-meta { display: flex; gap: var(--sp-4); justify-content: space-between; width: 100%; align-items: center; margin-bottom: var(--sp-4); }
 .learning-card-meta > span:last-child { font-size: var(--fs-xs); color: var(--text-dim); }
-.next-lesson-card h3 { font-size: var(--fs-2xl); max-width: 470px; }
+.next-lesson-card h2 { font-size: var(--fs-2xl); max-width: 470px; }
 .next-lesson-card > p { min-height: 48px; max-width: 500px; }
 .lesson-method { display: flex; gap: var(--sp-5); margin: var(--sp-5) 0 var(--sp-5); font: var(--fs-2xs) var(--mono); color: var(--text-faint); }
 .lesson-method b { display: block; font-family: var(--sans); font-size: var(--fs-sm); color: var(--text-dim); font-weight: var(--fw-medium); margin-top: var(--sp-2); }
@@ -58,7 +58,7 @@
 .lesson-bar { flex-shrink: 0; padding: var(--sp-2) var(--sp-4) var(--sp-3); border-bottom: 1px solid var(--line-soft); background: var(--bg-1); }
 .lesson-bar ol { display: flex; padding: 0; margin: 0 0 var(--sp-3); list-style: none; justify-content: space-between; gap: var(--sp-1); }
 .lesson-bar li { flex: 1; }
-.lesson-bar li button { width: 100%; min-height: var(--control-h); padding: 6px var(--sp-2); text-align: left; border-radius: var(--radius-sm); border-color: transparent; background: transparent; color: var(--text-dim); font-size: var(--fs-xs); white-space: nowrap; }
+.lesson-bar li button { width: 100%; min-height: var(--control-h); padding: var(--sp-1-5) var(--sp-2); text-align: left; border-radius: var(--radius-sm); border-color: transparent; background: transparent; color: var(--text-dim); font-size: var(--fs-xs); white-space: nowrap; }
 .lesson-bar li button > span { display: inline-block; margin-right: var(--sp-2); font: var(--fs-2xs) var(--mono); }
 .lesson-bar li button[aria-current] { background: var(--accent-soft); color: var(--accent); }
 .lesson-bar li button:disabled { opacity: .5; }
@@ -68,6 +68,11 @@
 .lesson-transport > span { font-size: var(--fs-xs); color: var(--text-dim); font-variant-numeric: tabular-nums; }
 .lesson-transport .lesson-save { margin-left: auto; background: transparent; border-color: transparent; color: var(--text-dim); }
 .lesson-guide { padding: var(--sp-5); }
+.lesson-purpose { margin-top: var(--sp-3); font-size: var(--fs-sm); color: var(--text-dim); }
+.lesson-purpose summary { min-height: var(--control-h); display: flex; align-items: center; color: var(--text); font-weight: var(--fw-bold); cursor: pointer; }
+.lesson-purpose p, .lesson-purpose li { line-height: 1.7; }
+.lesson-purpose ul { padding-inline-start: var(--sp-5); }
+.next-lesson-card > .lesson-connection, .daily-learning-card .daily-return { min-height: 0; margin-top: var(--sp-3); font-size: var(--fs-xs); }
 .lesson-guide h2 { font-size: var(--fs-xl); line-height: 1.25; letter-spacing: var(--tracking-tight); margin: var(--sp-4) 0; }
 .lesson-instruction { font-size: var(--fs-md); line-height: 1.8; color: var(--text-dim); }
 .lesson-actions { display: flex; flex-direction: column; align-items: stretch; gap: var(--sp-2); margin: var(--sp-5) 0; }
@@ -86,7 +91,7 @@
 .lesson-guide .first-note-target .lesson-key kbd, .lesson-guide .lesson-target .lesson-key kbd { min-width: 30px; padding: var(--sp-1) var(--sp-2) var(--sp-1); text-align: center; font: var(--fw-bold) var(--fs-md)/1 var(--mono); color: var(--text); background: var(--bg-1); border: 1px solid var(--line); border-bottom-width: 3px; border-radius: var(--radius-sm); }
 @media (hover: none) { .first-note-target > .lesson-key, .lesson-target > .lesson-key { display: none; } }
 /* How much of the phrase is found; the count under it says the same in words. */
-.lesson-progress { height: 6px; margin: 2px 0 var(--sp-2); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--accent) 18%, transparent); overflow: hidden; }
+.lesson-progress { height: 6px; margin: var(--sp-hair) 0 var(--sp-2); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--accent) 18%, transparent); overflow: hidden; }
 .lesson-progress i { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width .3s ease; }
 @media (prefers-reduced-motion: reduce) { .lesson-progress i { transition: none; } }
 .lesson-tempo { margin: var(--sp-5) 0; }
@@ -115,6 +120,24 @@
 .guided-lesson .guitar-exercise, .guided-lesson .guitar-chords { display: none; }
 .guided-lesson .studio-header .focus-toggle { display: none; }
 .learning-home button, .lesson-bar button, .lesson-guide button { transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease; }
-@media (min-width: 901px) and (max-width: 1440px) { .learning-home-inner { padding: var(--sp-5) var(--sp-6); } .guided-lesson .studio-header { padding: var(--sp-3) var(--sp-4); min-height: 82px; } .guided-lesson .studio-header h2 { max-width: 280px; } .guided-lesson .lesson-guide { padding: var(--sp-4); } .guided-lesson .lesson-transport > span { display: none; } .lesson-bar li button { padding-inline: var(--sp-1); font-size: var(--fs-2xs); } .lesson-bar li button > span { margin-right: var(--sp-1); } }
+@media (min-width: 901px) and (max-width: 1440px) { .learning-home-inner { padding: var(--sp-5) var(--sp-6); } .guided-lesson .studio-header { padding: var(--sp-3) var(--sp-4); min-height: 82px; } .guided-lesson .studio-header h1 { max-width: 280px; } .guided-lesson .lesson-guide { padding: var(--sp-4); } .guided-lesson .lesson-transport > span { display: none; } .lesson-bar li button { padding-inline: var(--sp-1); font-size: var(--fs-2xs); } .lesson-bar li button > span { margin-right: var(--sp-1); } }
 @media (max-width: 900px) { .lesson-bar ol { overflow-x: auto; justify-content: start; } .lesson-bar li { flex: none; } .lesson-transport { flex-wrap: wrap; } .lesson-transport > span { display: none; } .learning-home-inner { padding: var(--sp-5); } .learning-home-heading { flex-wrap: wrap; gap: var(--sp-3); } }
 @media (prefers-reduced-motion: reduce) { .learning-home *, .lesson-bar *, .lesson-guide * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
+
+/* Tonight's checklist (TonightPractice.jsx): how long tonight is beside a
+   ring of today's runs, then each item with a circle that ticks and its
+   minutes. Replaces the numbered list and the run goal in small print. */
+.tonight { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-4); align-items: center; margin: var(--sp-3) 0 var(--sp-4); }
+.tonight strong { display: block; font-family: var(--display); font-weight: 600; font-size: var(--fs-lg); line-height: 1.25; color: var(--text); }
+.tonight p { text-wrap: pretty; margin: var(--sp-1) 0 0; font-size: var(--fs-sm); color: var(--text-dim); }
+.tonight-ring { position: relative; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: conic-gradient(var(--accent) 0 var(--filled, 0%), var(--bg-3) 0); }
+.tonight-ring::after { content: ""; position: absolute; inset: var(--sp-1-5); border-radius: 50%; background: var(--bg-1); }
+.tonight-ring b { position: relative; z-index: 1; font: var(--fw-bold) var(--fs-sm) var(--mono); color: var(--text); font-variant-numeric: tabular-nums; }
+.daily-learning-card .tonight-list li { counter-increment: none; display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; column-gap: var(--sp-3); align-items: center; padding: var(--sp-2) 0; border-bottom: 1px solid var(--line-soft); }
+.daily-learning-card .tonight-list li::before { content: none; }
+.tonight-list .tick { grid-row: span 2; display: grid; place-items: center; width: 20px; height: 20px; margin: 0; border-radius: 50%; border: 1.5px solid var(--line-strong); color: var(--on-accent); }
+.tonight-list li.done .tick { border-color: var(--accent); background: var(--accent); }
+.tonight-list li.done strong { color: var(--text-dim); }
+.daily-learning-card .tonight-list .kind { grid-column: 2; margin: 0; }
+.tonight-list strong { grid-column: 2; min-width: 0; }
+.daily-learning-card .tonight-list .mins { grid-column: 3; grid-row: 1 / span 2; margin: 0; padding: var(--sp-hair) 10px; border-radius: var(--radius-pill); background: var(--bg-2); color: var(--text-dim); font: var(--fw-medium) var(--fs-xs) var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }

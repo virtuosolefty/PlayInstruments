@@ -1,0 +1,392 @@
+/* clarity.css — the 18 October pass: things you can read at a glance.
+   Loaded last, after phone.css, because several rules here re-lay a phone
+   control the phone sheet already placed. Every colour is a token; where a
+   surface needs a see-through tint it is mixed from one with color-mix. */
+
+/* The tick a finished step or a practised day wears: the same path as the check icon (Icon.jsx), drawn as a mask so it
+   takes the colour of the surface it sits on. A text glyph rendered at a different weight in every font. */
+.week-days .done b::after,
+.lesson-bar li:has(~ li > button[aria-current]) button > span::after {
+  content: ""; position: absolute; width: 14px; height: 14px;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.week-days b { position: relative; }
+
+/* ------------------------------------------------------------- the top bar
+   Input & sound and Enable sound were one box that read as a text field. Two
+   pills with two jobs, and while sound is off its pill is the bar's one call
+   to action. */
+.studio-app .topbar .sound-input { gap: var(--sp-2); align-items: center; }
+.studio-app .topbar .sound-input .setup-trigger,
+.studio-app .topbar .sound-input .io-strip { border-radius: var(--radius-pill); border: 1px solid var(--line-strong); min-height: var(--control-h); }
+.studio-app .topbar .sound-input .setup-trigger { padding: 0 var(--sp-4) 0 var(--sp-3); color: var(--text); }
+.studio-app .topbar .sound-input .io-strip { display: flex; align-items: center; padding: 0 var(--sp-1); }
+.studio-app .topbar .sound-input .io-strip:has(button.audio-slot) { border-color: var(--accent); background: var(--accent-soft); }
+.studio-app .topbar .io-strip button.audio-slot { color: var(--accent); font-weight: var(--fw-bold); padding: 0 var(--sp-3); background: transparent; border: 0; }
+.studio-app .topbar .more-toggle { border-radius: var(--radius-pill); }
+
+/* ------------------------------------------------------- instrument pickers
+   The icon sat a few pixels above its label. One centre line. */
+:is(.instrument-picker, .learning-instruments) > button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; line-height: 1; }
+:is(.instrument-picker, .learning-instruments) > button svg { flex: none; margin: 0; vertical-align: middle; }
+.instrument-picker > button svg { width: 16px; height: 16px; }
+
+/* ------------------------------------------------------------ lesson steps
+   Six labels in 11px monospace read as a table header. A stepper: numbered
+   dots on a rail, a tick for each step behind you, the current one ringed.
+   The phone keeps its one-chip summary (phone.css), so this is everywhere else. */
+@media not all and (max-width: 600px) and (min-height: 521px) {
+  .lesson-bar { padding-top: var(--sp-3); }
+  .lesson-bar ol { gap: 0; margin-bottom: var(--sp-2); }
+  .lesson-bar li { position: relative; }
+  .lesson-bar li + li::before { content: ""; position: absolute; top: 15px; left: calc(-50% + 18px); right: calc(50% + 18px); height: 2px; border-radius: 2px; background: var(--line); }
+  .lesson-bar li:has(> button[aria-current])::before,
+  .lesson-bar li:has(~ li > button[aria-current])::before { background: var(--accent); }
+  .lesson-bar li button { display: flex; flex-direction: column; align-items: center; gap: var(--sp-1-5); min-height: 0; padding: 3px var(--sp-hair) var(--sp-1); text-align: center; background: transparent; border: 0; color: var(--text-dim); font-size: var(--fs-xs); font-weight: var(--fw-medium); white-space: nowrap; }
+  .lesson-bar li button[aria-current] { background: transparent; color: var(--text); font-weight: var(--fw-bold); }
+  .lesson-bar li button > span { position: relative; z-index: 1; display: grid; place-items: center; width: 26px; height: 26px; margin: 0; border-radius: 50%; border: 2px solid var(--line-strong); background: var(--bg-1); color: var(--text-dim); font: var(--fw-bold) var(--fs-2xs)/1 var(--sans); }
+  .lesson-bar li button:disabled { opacity: 1; color: var(--text-faint); }
+  .lesson-bar li button:disabled > span { border-color: var(--line); color: var(--text-faint); }
+  .lesson-bar li button[aria-current] > span { border-color: var(--accent); background: var(--accent); color: var(--on-accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .lesson-bar li:has(~ li > button[aria-current]) button > span { border-color: var(--accent); background: var(--accent-soft); color: transparent; }
+  .lesson-bar li:has(~ li > button[aria-current]) button > span::after { background: var(--accent); }
+}
+/* "Follow the guide →" while the guide holds the next action: a pointer, not a dead button.
+   Restart step waits out of sight until there is a step to restart. */
+.lesson-transport button:first-child:disabled { border-color: transparent; background: none; min-width: 0; padding-inline: 0; color: var(--text-dim); }
+.lesson-transport button:disabled + button:disabled { display: none; }
+.lesson-transport { min-height: 36px; }
+
+/* -------------------------------------------------------- the desktop deck
+   One centre line: Play, then the four tools as quiet icons that light while
+   on, then the mode, then the clock with its length and the tempo. */
+@media (min-width: 901px) {
+  .studio-app .controls.deck { align-items: center; }
+  .studio-app .controls .zone { display: flex; align-items: center; }
+  .studio-app .controls .zone-transport .pad:not(.pad-play) { border-color: transparent; background: transparent; }
+  .studio-app .controls .zone-transport .pad:not(.pad-play):hover:not(:disabled) { background: var(--bg-2); }
+  .studio-app .controls .zone-transport .pad[aria-pressed="true"] { background: var(--accent-soft); }
+  .studio-app .controls .zone-transport .pad[aria-pressed="true"] .glyph { color: var(--accent); }
+  .studio-app .controls .lcd { display: inline-flex; align-items: center; gap: var(--sp-1-5); height: var(--control-h); padding: 0 var(--sp-3); border-radius: var(--control-r); font-variant-numeric: tabular-nums; }
+  .studio-app .controls .lcd-time { font-size: var(--fs-sm); font-weight: var(--fw-bold); }
+  .studio-app .controls .lcd-total { font-size: var(--fs-sm); }
+  .studio-app .controls .zone-perf .zone-row { display: flex; align-items: center; gap: var(--sp-3); }
+  .studio-app .controls .field { display: inline-flex; align-items: center; gap: var(--sp-2); }
+}
+
+/* The piece's length beside the clock, and a wider Play, where the row has room for them: at a 1280px laptop the
+   deck must still fit on one line, or the stage loses a row. */
+@media (min-width: 1440px) {
+  .studio-app .controls .lcd-total { display: inline; }
+  .studio-app .controls .zone-transport .pad-play { min-width: 104px; margin-right: var(--sp-2); }
+  .studio-app .controls .zone-transport .pad:not(.pad-play) { min-width: 40px; }
+}
+
+/* ------------------------------------------------------------ the phone deck
+   Three rows of controls came to 300px before the music started. One row of
+   Play, the mode and More; the tools, tempo and settings open beneath it.
+   The zones dissolve into one twelve-column grid so the same buttons can be
+   placed without being duplicated. */
+.deck-more-toggle { display: none; }
+/* The one-row deck: an upright phone, and any short landscape screen (a phone held sideways). */
+@media (max-width: 600px) and (min-height: 521px), (orientation: landscape) and (max-height: 520px) and (max-width: 960px) {
+  .studio-app .controls.deck { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--sp-1-5); align-items: center; }
+  .studio-app .controls.deck :is(.zone, .pads, .zone-row) { display: contents; }
+  .studio-app .controls.deck > .spacer { display: none; }
+  .studio-app .controls .pad-play { grid-column: span 3; order: 1; }
+  /* 48px, level with Play and More. The trough is thinned (2px, no border) so the 44px segments a finger needs sit
+     centred inside it instead of standing 1px out of it. */
+  .studio-app .controls .mode-switch { grid-column: span 7; order: 2; width: auto; height: var(--control-h-lg); padding: var(--sp-hair); border-width: 0; }
+  .studio-app .controls .mode-switch button { min-height: 0; padding-inline: var(--sp-1); }
+  .studio-app .controls .mode-rest { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .studio-app .controls .deck-more-toggle { order: 3; grid-column: span 2; display: inline-flex; align-items: center; justify-content: center; min-height: var(--control-h-lg); padding: 0; border-radius: var(--control-r); }
+  .studio-app .controls .deck-more-toggle[aria-expanded="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .studio-app .controls .your-turn { order: 4; grid-column: span 12; }
+  .studio-app .controls .pad:not(.pad-play):not(.your-turn) { order: 5; grid-column: span 3; }
+  .studio-app .controls .zone-perf .field { order: 6; grid-column: span 8; }
+  .studio-app .controls .show-feedback { order: 7; grid-column: span 2; width: auto; }
+  .studio-app .controls .zone-sound .popover-host { order: 8; grid-column: span 2; }
+  .studio-app .controls .zone-sound .options-toggle { width: 100%; }
+  .studio-app .controls.deck:not(.more-open) :is(.pad:not(.pad-play):not(.your-turn), .zone-perf .field, .show-feedback, .zone-sound .popover-host) { display: none; }
+}
+
+/* ------------------------------------------------------------ the report
+   One verdict you can read across the room (a ring), three tiles, one next
+   step, and the actions split by job: listening back on the left, playing on
+   the right. */
+.report.rx { width: min(620px, 100%); padding: var(--sp-5); border-radius: var(--radius-lg); }
+.rx-head { display: flex; align-items: center; justify-content: space-between; text-align: left; margin-bottom: var(--sp-4); }
+.rx-head .eyebrow { margin: 0; }
+.rx-tools { display: flex; gap: var(--sp-1); }
+.rx-icon { display: grid; place-items: center; width: var(--control-h); height: var(--control-h); min-height: 0; padding: 0; border-radius: var(--radius-pill); background: transparent; border: 1px solid transparent; color: var(--text-dim); }
+.rx-icon:hover { background: var(--bg-2); color: var(--text); }
+.rx-icon.on { background: var(--accent-soft); color: var(--accent); }
+.rx-hero { display: grid; grid-template-columns: 132px 1fr; gap: var(--sp-5); align-items: center; margin-bottom: var(--sp-4); }
+.rx-ring { position: relative; width: 132px; height: 132px; display: grid; place-content: center; text-align: center; }
+.rx-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.rx-ring circle { fill: none; stroke-width: 10; }
+.rx-ring .track { stroke: var(--bg-3); }
+.rx-ring .value { stroke: var(--ring-tone); stroke-linecap: round; stroke-dasharray: var(--ring) 100; animation: ring-fill var(--dur-slow) var(--ease-out) both var(--dur-fast); }
+@keyframes ring-fill { from { stroke-dasharray: 0 100; } }
+.rx-ring strong { font: var(--fw-bold) 40px/1 var(--sans); letter-spacing: var(--tracking-tight); color: var(--text); font-variant-numeric: tabular-nums; }
+.rx-ring span { margin-top: var(--sp-1); font-size: var(--fs-xs); color: var(--text-dim); }
+.rx-hero-copy { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-2); min-width: 0; }
+.rx-hero-copy .report-finished { margin: 0; }
+.rx-hero-copy h2 { margin: 0; font-size: var(--fs-2xl); text-align: left; letter-spacing: var(--tracking-tight); }
+.rx-hero-copy .blurb { margin: 0; text-align: left; color: var(--text-dim); font-size: var(--fs-sm); max-width: 40ch; }
+.rx-hero-copy .stars-row { justify-content: flex-start; margin: 0; }
+.rx-best { font-style: normal; font-size: var(--fs-xs); color: var(--text-dim); }
+.rx-best.record { color: var(--good); font-weight: var(--fw-bold); }
+.rx .report-next { border-radius: var(--radius); padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-4); border: 1px solid var(--accent-dim); }
+.rx-bands { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-2); margin-bottom: var(--sp-4); }
+.rx-band { display: flex; flex-direction: column; gap: var(--sp-1-5); padding: var(--sp-3); border-radius: var(--radius); background: var(--bg-2); border: 1px solid var(--line-soft); }
+.rx-band-label { font-size: var(--fs-xs); color: var(--text-dim); font-weight: var(--fw-medium); }
+.rx-band strong { font: var(--fw-bold) var(--fs-xl)/1 var(--sans); color: var(--tone); font-variant-numeric: tabular-nums; }
+.rx-band .meter { height: 4px; border-radius: 4px; background: var(--bg-3); overflow: hidden; }
+.rx-band .meter i { display: block; height: 100%; border-radius: 4px; background: var(--tone); animation: band-fill var(--dur-slow) var(--ease-out) both; animation-delay: var(--band-delay, 0ms); }
+.rx-band .band-sub { font-family: var(--sans); font-size: var(--fs-2xs); color: var(--text-dim); line-height: 1.35; }
+.rx .report-section h3 { font-size: var(--fs-xs); letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--text-dim); margin-bottom: var(--sp-2); }
+.rx .passage { border-radius: var(--radius-sm); }
+.rx .passage .go { display: inline-flex; align-items: center; gap: var(--sp-1); color: var(--accent); font-weight: var(--fw-bold); }
+.rx-actions { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); flex-wrap: wrap; margin-top: var(--sp-4); padding-top: var(--sp-4); border-top: 1px solid var(--line-soft); }
+.rx-listen { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1); }
+.rx-listen > span { font-size: var(--fs-xs); color: var(--text-dim); margin-right: var(--sp-1); }
+.rx-listen button { display: inline-flex; align-items: center; gap: var(--sp-1-5); min-height: var(--control-h); padding: 0 var(--sp-3); border-radius: var(--radius-pill); background: var(--bg-2); border: 1px solid var(--line-soft); font-size: var(--fs-xs); }
+.rx-listen button.on { background: var(--now-soft); border-color: var(--now); color: var(--now); }
+.rx-listen .hear-len { color: var(--text-faint); font-size: var(--fs-2xs); }
+.rx-go { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-left: auto; }
+.rx-go button { display: inline-flex; align-items: center; gap: var(--sp-1-5); min-height: var(--control-h); }
+/* With no recommended step above, Run again is the one primary action. */
+.rx:not(:has(.report-next)) .rx-go button:last-child { background: var(--primary-bg); border-color: var(--primary-border); color: var(--on-accent); box-shadow: var(--primary-shadow); font-weight: var(--fw-bold); }
+@media (max-width: 560px) {
+  .rx-hero { grid-template-columns: 1fr; justify-items: center; }
+  .rx-hero-copy { align-items: center; }
+  .rx-hero-copy h2, .rx-hero-copy .blurb { text-align: center; }
+  .rx-hero-copy .stars-row { justify-content: center; }
+  .rx-bands { grid-template-columns: 1fr; }
+}
+
+/* ---------------------------------------------------------- learning home
+   The first card was all text. It opens on the instrument you are about to
+   play, and says where you are on the path before the fold. */
+.next-lesson-card { overflow: hidden; }
+/* The two cards keep their own heights: stretched to the taller one, Today's practice was a box of empty space. */
+.learning-home-grid { align-items: start; }
+.lesson-hero-art { position: relative; align-self: stretch; height: 168px; margin: calc(-1 * var(--sp-5)) calc(-1 * var(--sp-5)) var(--sp-4); background-color: var(--stage); background-repeat: no-repeat; background-size: cover; background-position: center 72%; border-bottom: 1px solid var(--line-soft); }
+.lesson-hero-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--stage) 55%, transparent)); }
+.lesson-hero-art[data-family="drums"] { background-position: 100% 60%; }
+.path-strip { display: flex; align-items: center; gap: var(--sp-3); width: 100%; margin-bottom: var(--sp-3); font-size: var(--fs-xs); color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.path-strip ol { display: flex; flex: 1; gap: var(--sp-1); margin: 0; padding: 0; list-style: none; }
+.path-strip li { flex: 1; height: 6px; border-radius: var(--radius-xs); background: var(--bg-3); }
+.path-strip li.done { background: var(--accent); }
+.path-strip li.current { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+.path-strip > strong { color: var(--text); font-weight: var(--fw-bold); white-space: nowrap; }
+.path-strip > span { white-space: nowrap; }
+
+/* Practice days fill with a tick; days still to come are dashed, today is ringed. */
+.week-days b { font-size: 0; width: 28px; height: 28px; border: 1.5px dashed var(--line-strong); background: transparent; }
+.week-days .done b { border: 0; background: var(--accent); }
+.week-days .done b::after { background: var(--on-accent); }
+.week-days .today b { border: 2px solid var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.week-days small { font-weight: var(--fw-medium); }
+
+/* On a phone the instruments sit in a grid, icon over name. */
+@media (max-width: 600px) {
+  /* Eight instruments: two rows of four, every name whole, nothing to scroll sideways to (the player's choice). */
+  .learning-instruments { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-hair); padding: 3px; }
+  .learning-instruments > button { min-width: 0; flex-direction: column; gap: var(--sp-1); padding: var(--sp-2) 0; font-size: var(--fs-xs); min-height: 60px; }
+  .learning-instruments > button svg { width: 20px; height: 20px; }
+  /* The two rows of instruments take room; the lesson's picture gives it back, so Start stays above the fold. */
+  .lesson-hero-art { height: 120px; }
+  /* The library's instrument row the same way: all eight in two rows of four, with the filters under it. */
+  .library-filter-row { flex-wrap: wrap; }
+  .library-filter-row .library-instruments { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); flex: 1 1 100%; width: 100%; overflow: visible; padding: 3px; }
+  .library-filter-row .library-instruments > button { min-width: 0; width: auto; padding-inline: var(--sp-1); }
+}
+
+/* ---------------------------------------------------------------- library
+   Difficulty as a meter: bars for how hard, colour for the band. The word
+   stays in the page for screen readers. */
+.library-instruments { gap: var(--sp-hair); }
+.library-instruments > button { padding-inline: var(--sp-2); font-size: var(--fs-xs); }
+.song .meta .level { --one: var(--line-strong); --two: var(--line-strong); --three: var(--line-strong); display: inline-flex; align-items: flex-end; padding: 0; font-size: 0; background: none; }
+.song .meta .level::before { content: ""; width: 14px; height: 10px; background:
+  linear-gradient(var(--one), var(--one)) 0 100% / 3px 4px no-repeat,
+  linear-gradient(var(--two), var(--two)) 5px 100% / 3px 7px no-repeat,
+  linear-gradient(var(--three), var(--three)) 10px 100% / 3px 10px no-repeat; }
+.song .meta .level.l1 { --one: var(--good); }
+.song .meta .level.l2 { --one: var(--good); --two: var(--good); }
+.song .meta .level.l3 { --one: var(--warn); --two: var(--warn); }
+.song .meta .level.l4 { --one: var(--warn); --two: var(--warn); --three: var(--warn); }
+.song .meta .level.l5 { --one: var(--bad); --two: var(--bad); --three: var(--bad); }
+
+/* ------------------------------------------- guitar, violin and cello tools
+   Frets, label size, neck height and handedness are set once and left. They
+   live in a View pop-over; Tuner and View sit at the end of the Up next row,
+   and the toolbar keeps only the type and the exercise, or goes. */
+.guitar-view-controls:empty { display: none; }
+.string-tools { display: inline-flex; align-items: center; gap: var(--sp-2); }
+.guitar-next .string-tools { margin-left: var(--sp-3); }
+.guitar-view-controls .string-tools { margin-left: auto; }
+.string-tools :is(.view-tool, .view-options > summary) { min-height: var(--control-h-sm); padding: 0 var(--sp-3); }
+.view-options { position: relative; }
+.view-options > summary { display: inline-flex; align-items: center; gap: var(--sp-1-5); border: 1px solid var(--line-strong); border-radius: var(--control-r); color: var(--text-dim); font-size: var(--fs-xs); font-weight: var(--fw-medium); text-transform: none; letter-spacing: 0; cursor: pointer; list-style: none; }
+.view-options > summary::-webkit-details-marker { display: none; }
+.view-options > summary:hover { color: var(--text); }
+.view-options[open] > summary { color: var(--text); border-color: var(--accent); }
+.view-options > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.view-options-panel { position: absolute; right: 0; top: calc(100% + 6px); z-index: var(--z-popover); display: grid; gap: var(--sp-3); min-width: 248px; padding: var(--sp-4); background: var(--overlay-bg); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--elev-2); text-transform: none; letter-spacing: 0; font-weight: var(--fw-regular); }
+.view-options-panel label { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); color: var(--text-dim); font-size: var(--fs-xs); }
+.view-options-panel select, .view-options-panel .listbox-trigger { min-height: var(--control-h-sm); border: 1px solid var(--line-strong); background: var(--bg-1); border-radius: var(--radius-sm); padding: var(--sp-hair) var(--sp-1-5); font: inherit; color: var(--text); }
+
+/* On a phone the instrument comes before its options, and has room to be tapped. */
+@media (max-width: 600px) and (min-height: 521px) {
+  .studio-app .guitar-workspace { display: flex; flex-direction: column; }
+  .studio-app .guitar-workspace > .guitar-view-controls { order: 20; border-top: 1px solid var(--line-soft); border-bottom: 0; flex-wrap: wrap; row-gap: var(--sp-2); }
+  .studio-app .guitar-workspace > :is(.guitar-fret-controls, .guitar-chords) { order: 21; }
+  /* Free play opens on the instrument; its card folds to one line under it (`.folded-card` in GuitarWorkspace.jsx and DrumWorkspace.jsx). */
+  .studio-app .guitar-workspace > .folded-card { order: 30; margin: var(--sp-2) var(--sp-3) var(--sp-3); border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg-1); }
+  .folded-card > summary { display: flex; align-items: center; gap: var(--sp-2); min-height: var(--control-h); padding: var(--sp-2) var(--sp-3); cursor: pointer; font-size: var(--fs-sm); font-weight: var(--fw-bold); color: var(--text); list-style: none; }
+  .folded-card > summary::-webkit-details-marker { display: none; }
+  .folded-card > summary::before { content: ""; flex: none; width: 7px; height: 7px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); transition: transform var(--dur-fast) ease; }
+  .folded-card[open] > summary::before { transform: rotate(45deg); }
+  .folded-card > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius); }
+  .folded-card > :is(.chord-card, .drum-card) { border: 0; margin: 0; background: none; }
+  .studio-app .guitar-workspace .guitar-stage { min-height: 240px; }
+  .guitar-view-controls .guitar-exercise { flex-basis: 100%; max-width: none; }
+  .guitar-next .guitar-tab-key { display: none; }
+  .guitar-next .string-tools { margin-left: auto; }
+  /* Icons alone beside Up next, so the row stays one line; the names stay for screen readers. */
+  .guitar-next .string-tools .tool-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .guitar-next .string-tools :is(.view-tool, .view-options > summary) { min-width: var(--control-h); min-height: var(--control-h); padding: 0; justify-content: center; }
+  .view-options-panel { position: fixed; inset: auto var(--sp-2) calc(var(--sp-2) + env(safe-area-inset-bottom)); top: auto; min-width: 0; }
+}
+
+/* -------------------------------------------------------------- drum names
+   Name tags floated over the kit like stickers. Glassier and quieter, and the
+   next drum's tag lights with its ring. */
+.drum-label { padding: 1px var(--sp-1-5); background: color-mix(in srgb, var(--bg) 58%, transparent); backdrop-filter: blur(6px); border: 1px solid var(--line); color: var(--text-dim); font-weight: var(--fw-medium); transition: color var(--dur-fast) ease, border-color var(--dur-fast) ease; }
+.drum-label.next { color: var(--text); border-color: var(--now); background: color-mix(in srgb, var(--now) 22%, var(--bg)); }
+
+/* ------------------------------------------------- warnings carry an icon
+   A coloured bar down one side was the only thing that said "warning" or
+   "error". A full hairline in the tone, and an icon beside the words, so the
+   status is not carried by colour alone. */
+.warn-hint { display: flex; gap: var(--sp-2); align-items: flex-start; border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent); border-left-width: 1px; background: color-mix(in srgb, var(--warn) 8%, transparent); }
+.warn-hint > svg { flex: none; margin-top: var(--sp-hair); color: var(--warn); }
+.toast { display: flex; gap: var(--sp-2); align-items: center; border: 1px solid color-mix(in srgb, var(--bad) 55%, var(--line)); border-left-width: 1px; }
+.toast > svg { flex: none; color: var(--bad); }
+.view-options-panel input[type="checkbox"] { width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
+
+/* --------------------------------------------------------- the piano's whole view
+   The switch sits in the roll's empty top corner in free play; over the grand, the model's caption drops below it. */
+.piano-stage-views { position: absolute; z-index: 3; inset: var(--sp-3) auto auto var(--sp-4); }
+.roll-area .model-caption { inset: 56px auto auto 18px; }
+/* "Whole instrument": in a flex button the space before the span's second word collapsed. */
+.stage-view-toggle button { gap: 0.3em; }
+
+/* ========================================================== the kit pass
+   From the ux-ui-agent-skills review (plan of 18 October): each block names the gate that found it. */
+
+/* taste_audit: display type at least 2.5x body where it was timid (24px over 13 and 15px). */
+.lesson-guide h2 { font-size: var(--fs-3xl); line-height: 1.1; }
+.library-intro h2, .studio-app .library-intro h2 { font-size: var(--fs-3xl); line-height: 1.1; }
+
+/* taste_audit: body copy at a readable measure. */
+.learning-home p, .welcome-page p, .library-intro p, .drawer-body p, .discover-pieces p { max-width: 65ch; }
+
+/* taste_audit (three equal cards): the first piece of a collection is featured, full width, above the next two. */
+@media (min-width: 901px) {
+  .discovery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .discovery-grid > :first-child { grid-column: 1 / -1; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "art title actions" "art meta actions" "art text actions"; column-gap: var(--sp-5); row-gap: var(--sp-1); align-items: center; padding: var(--sp-5); background: linear-gradient(160deg, var(--accent-soft), var(--bg-1) 70%); border-color: var(--accent-dim); }
+  .discovery-grid > :first-child .discovery-art { grid-area: art; flex-direction: column; align-items: flex-start; gap: var(--sp-2); }
+  .discovery-grid > :first-child .discovery-art > .piece-art { width: 88px; height: 88px; }
+  .discovery-grid > :first-child .discovery-art > .piece-art b { font-size: var(--fs-xl); }
+  .discovery-grid > :first-child h3 { grid-area: title; margin: 0; font-size: var(--fs-2xl); letter-spacing: var(--tracking-tight); }
+  .discovery-grid > :first-child .piece-length { grid-area: meta; }
+  .discovery-grid > :first-child p { grid-area: text; margin: 0; }
+  .discovery-grid > :first-child .discovery-actions { grid-area: actions; flex-direction: column; align-items: stretch; }
+  .discovery-grid > :first-child .discovery-actions button:first-child { background: var(--primary-bg); border-color: var(--primary-border); color: var(--on-accent); box-shadow: var(--primary-shadow); font-weight: var(--fw-bold); }
+}
+
+/* taste_audit (three equal blocks): on the welcome page the first step leads. */
+@media (min-width: 901px) {
+  .welcome-method ol { grid-template-columns: 1.5fr 1fr 1fr; align-items: end; }
+  .welcome-method li:first-child h3 { font-size: var(--fs-2xl); letter-spacing: var(--tracking-tight); }
+  .welcome-method li:first-child b { font-size: var(--fs-3xl); color: var(--accent); }
+}
+
+/* Screen economy (no large hollow box): the side panel is as tall as its content, and scrolls past the window. */
+@media (min-width: 901px) {
+  .studio-app .pane.right { align-self: start; max-height: 100%; }
+}
+
+/* ------------------------------------------------------------ listbox
+   The kit's rule: no native select. The trigger takes every rule a select had
+   (each `select` selector has a `.listbox-trigger` twin), then drops the drawn
+   chevron for a real one, set in from the edge. The list is portaled to the
+   body, fixed under its trigger, so no drawer or pop-over can clip it. */
+.listbox-trigger { display: inline-flex; align-items: center; justify-content: space-between; gap: var(--sp-2); text-align: start; background-image: none; padding-inline: var(--sp-3) var(--sp-2); font-weight: var(--fw-regular); }
+.listbox-trigger:active:not(:disabled) { transform: none; }
+.listbox-trigger .listbox-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.listbox-trigger > svg { flex: none; color: var(--text-dim); transition: transform var(--dur-fast) var(--ease-out); }
+.listbox-trigger[aria-expanded="true"] { border-color: var(--accent); }
+.listbox-trigger[aria-expanded="true"] > svg { transform: rotate(180deg); color: var(--text); }
+.listbox-trigger:disabled { opacity: .55; cursor: not-allowed; }
+.listbox-list { position: fixed; z-index: var(--z-top); margin: 0; padding: var(--sp-1); list-style: none; overflow-y: auto; overscroll-behavior: contain; background: var(--bg-1); color: var(--text); border: 1px solid var(--line-strong); border-radius: var(--radius-sm); box-shadow: var(--elev-3); font-size: var(--fs-sm); }
+.listbox-list ul { margin: 0; padding: 0; list-style: none; }
+.listbox-group { display: block; padding: var(--sp-2) var(--sp-2) var(--sp-1); font-size: var(--fs-2xs); font-weight: var(--fw-bold); letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--text-dim); }
+.listbox-list [role="option"] { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); min-height: var(--control-h-sm); padding: var(--sp-1) var(--sp-2); border-radius: var(--radius-sm); cursor: pointer; white-space: nowrap; }
+.listbox-list [role="option"].active { background: var(--bg-3); }
+.listbox-list [role="option"][aria-selected="true"] { color: var(--accent); font-weight: var(--fw-bold); }
+.listbox-list [role="option"] > svg { flex: none; }
+@media (pointer: coarse) { .listbox-list [role="option"] { min-height: 44px; } }
+@media (prefers-reduced-motion: reduce) { .listbox-trigger > svg { transition: none; } }
+
+/* The error toast's Close button (AppModals.jsx): a real target, quiet until hovered. */
+.toast .toast-close { flex: none; display: grid; place-items: center; width: 32px; min-height: 32px; margin-inline-start: auto; padding: 0; border: 0; background: transparent; box-shadow: none; color: var(--text-dim); }
+.toast .toast-close:hover:not(:disabled) { background: var(--bg-3); color: var(--text); box-shadow: none; }
+@media (pointer: coarse) { .toast .toast-close { width: 44px; min-height: 44px; } }
+
+/* ------------------------------------------------------------ targets
+   ui-ux-pro-max (web-target-size, WCAG 2.2 AA; touch-target-size): every
+   control at least 24px, and 44px where the pointer is a finger. Hit areas
+   grow; what you see stays the same size. */
+.toggle.tiny input[type="checkbox"], .guitar-left-toggle input[type="checkbox"], .view-options-panel input[type="checkbox"] { width: 24px; height: 24px; flex: none; }
+details.section.fold > summary { min-height: 24px; padding-block: var(--sp-1); box-sizing: border-box; }
+.learning-public-links a { display: inline-flex; align-items: center; min-height: 24px; }
+/* The timeline strip: transparent padding around the drawn 16px band (the canvas sizes its drawing from a constant). */
+.minimap canvas { box-sizing: content-box; padding-block: var(--sp-1); }
+input[type="range"] { height: 24px; }
+@media (pointer: coarse) {
+  details.section.fold > summary, .learning-public-links a { min-height: 44px; }
+  .toggle.tiny, .guitar-left-toggle { min-height: 44px; display: inline-flex; align-items: center; gap: var(--sp-2); }
+  .minimap canvas { padding-block: 14px; }
+  input[type="range"] { height: 44px; }
+}
+
+/* Text fields at 16px on a phone. Under 16px iOS zooms the whole page in when
+   a field is tapped; !important because component rules size fields smaller. */
+@media (max-width: 600px), (orientation: landscape) and (max-height: 520px) and (max-width: 960px) {
+  input[type="search"], input[type="text"], input[type="number"], input[type="email"], textarea { font-size: 16px !important; }
+}
+
+/* The undo toast (UndoToast.jsx): neutral, since nothing went wrong, with its Undo in the accent. */
+.toast.undo-toast { color: var(--text); border-color: var(--line-strong); }
+.toast.undo-toast .undo-button { flex: none; margin-inline-start: auto; min-height: 32px; padding: 0 var(--sp-3); border-color: var(--accent-dim); color: var(--accent); font-weight: var(--fw-bold); }
+@media (pointer: coarse) { .toast.undo-toast .undo-button { min-height: 44px; } }
+/* With an error showing as well, the undo message sits above it rather than on it. */
+body:has(.toast[role="alert"]) .undo-toast { bottom: calc(18px + 64px); }
+/* The rest of the touch targets the audit measured on a phone: the mode segments, the stage's view
+   switches, the favourite hearts and the library's folded headings. */
+@media (pointer: coarse) {
+  .studio-app .controls .mode-switch button { min-height: 44px; }
+  .stage-music-view button, .stage-appearance button { min-height: 44px; min-width: 44px; }
+  .favorite-toggle { min-width: 44px; min-height: 44px; }
+  .composer-browser > summary { min-height: 44px; display: flex; align-items: center; }
+}
+/* Offline (TopBar.jsx): the saved-locally note with a caution dot. */
+.saved-locally.offline-note i { background: var(--warn); }
+/* Share with a teacher (TeacherShare.jsx). */
+.teacher-share button { display: inline-flex; align-items: center; gap: var(--sp-2); }
+.teacher-note.bad { color: var(--bad); }

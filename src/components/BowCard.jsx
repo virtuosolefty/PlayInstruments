@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { noteName } from '../lib/theory.js';
+import { noteName } from '../lib/music/theory.js';
 
 /** A button that bows while it is held, by pointer or by Enter / Space. */
 function HoldButton({ position, onBow, onLift, className = '', children, label }) {
@@ -17,9 +17,12 @@ function HoldButton({ position, onBow, onLift, className = '', children, label }
 
 /**
  * Free play for the violin and cello: pick a first-position scale, see it on
- * the fingerboard, hold any note to bow it, or let the scale play up and back.
+ * the fingerboard, hold any note to bow it (or press it to pluck, played with the fingers), or let the scale play
+ * up and back.
  */
-export default function BowCard({ kit, scale, onScale, onBow, onLift, silence, settings, setSettings, activePositions }) {
+export default function BowCard({ kit, scale, onScale, onBow, onLift, silence, settings, setSettings, activePositions, technique = 'bow' }) {
+  const plucked = technique === 'fingers';
+  const how = plucked ? 'press to pluck' : 'hold to bow';
   const [playing, setPlaying] = useState(false);
   const timers = useRef([]);
   const labelMode = settings.bowedLabels ?? 'fingers';
@@ -54,7 +57,7 @@ export default function BowCard({ kit, scale, onScale, onBow, onLift, silence, s
     </div>
     <div className="chord-visual bow-notes">
       <div className="chord-label-modes" role="group" aria-label="Fingerboard labels">{['fingers', 'notes'].map(m => <button key={m} aria-pressed={labelMode === m} onClick={() => setSettings(s => ({ ...s, bowedLabels: m }))}>{m === 'fingers' ? 'Fingers' : 'Notes'}</button>)}</div>
-      <ol className="bow-note-list" aria-label={`${scale.name} notes: hold to bow`}>
+      <ol className="bow-note-list" aria-label={`${scale.name} notes: ${how}`}>
         {scale.positions.map((p, i) => {
           const { note, finger } = noteLabel(p);
           const on = sounding.get(p.string)?.fret === p.fret;
@@ -66,15 +69,15 @@ export default function BowCard({ kit, scale, onScale, onBow, onLift, silence, s
     </div>
     <div className="strum-actions bow-actions"><button className="primary" onClick={playScale}>{playing ? '■ Stop' : '▶ Play the scale'}</button></div>
     <div className="chord-audition">
-      <span>Open strings <small>hold to bow</small></span>
+      <span>Open strings <small>{how}</small></span>
       <div className="chord-string-picks bow-open-strings" style={{ gridTemplateColumns: `repeat(${kit.tuning.length},minmax(0,1fr))` }}>
-        {kit.tuning.map((_, s) => { const name = kit.stringName(s); return <HoldButton key={s} position={{ string: s, fret: 0 }} onBow={onBow} onLift={onLift} className={sounding.get(s)?.fret === 0 ? 'sounding' : ''} label={`Bow the open ${name.note} string`}><small>{name.number}</small><b>{name.note}</b></HoldButton>; })}
+        {kit.tuning.map((_, s) => { const name = kit.stringName(s); return <HoldButton key={s} position={{ string: s, fret: 0 }} onBow={onBow} onLift={onLift} className={sounding.get(s)?.fret === 0 ? 'sounding' : ''} label={`${plucked ? 'Pluck' : 'Bow'} the open ${name.note} string`}><small>{name.number}</small><b>{name.note}</b></HoldButton>; })}
       </div>
     </div>
     <details className="chord-feel"><summary>Feel <small>{Math.round((settings.bowPressure ?? 0.7) * 100)}% · {tempo} bpm</small></summary><div className="chord-dynamics">
-      <label>Bow pressure <output>{Math.round((settings.bowPressure ?? 0.7) * 100)}%</output><input aria-label="Bow pressure" type="range" min=".2" max="1" step=".01" value={settings.bowPressure ?? 0.7} onChange={e => setSettings(s => ({ ...s, bowPressure: +e.target.value }))} /></label>
+      <label>{plucked ? 'Pluck strength' : 'Bow pressure'} <output>{Math.round((settings.bowPressure ?? 0.7) * 100)}%</output><input aria-label={plucked ? 'Pluck strength' : 'Bow pressure'} type="range" min=".2" max="1" step=".01" value={settings.bowPressure ?? 0.7} onChange={e => setSettings(s => ({ ...s, bowPressure: +e.target.value }))} /></label>
       <label>Scale tempo <output>{tempo} bpm</output><input aria-label="Scale tempo" type="range" min="48" max="144" step="4" value={tempo} onChange={e => setSettings(s => ({ ...s, scaleTempo: +e.target.value }))} /></label>
     </div></details>
-    <p className="hint">Tapes mark first-position fingers. Hold a note to keep the bow moving; drag along a string to slide between notes.</p>
+    <p className="hint">{plucked ? 'Tapes mark first-position fingers. Press a note to pluck it; it rings away by itself.' : 'Tapes mark first-position fingers. Hold a note to keep the bow moving; drag along a string to slide between notes.'}</p>
   </section>;
 }

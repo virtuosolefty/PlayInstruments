@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { MODES } from './usePracticeEngine.js';
-import { secondsPerBar } from '../lib/passages.js';
+import { secondsPerBar } from '../lib/music/passages.js';
 
 /**
  * usePassages — choosing a stretch of music and doing something to it.

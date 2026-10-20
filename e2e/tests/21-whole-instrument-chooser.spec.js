@@ -9,7 +9,7 @@ import { chooseWorkspace as workspace } from '../helpers/workspace.js';
  *
  * Three of the others go on the stage's own rig and answer to playing: the
  * bass guitar's strings move, and the bow plays on the electric violin and the
- * antique cello. The two drum kits are only looked at, in the viewer.
+ * antique cello. The two drum kits also answer to hits and can be tapped in the viewer.
  *
  * The tests use the site's own files; one serves a broken file in place of the
  * bass guitar's.
@@ -28,6 +28,8 @@ const caption = page => page.locator('.model-caption');
 const change = page => page.getByRole('button', { name: 'Choose instrument', exact: true });
 const hint = page => stage(page).locator('.guitar-stage-bottom .guitar-stage-hint');
 const onStage = (page, id) => expect(stage(page)).toHaveAttribute('data-stage-model', id, { timeout: 90_000 });
+/** The voice the app plays notes on, and how far it moves them: what is heard. */
+const heard = page => page.evaluate(async () => { const { audio } = await import('/src/lib/audio/audio.js'); return `${audio.instrumentType} ${audio.transpose}`; });
 const pictured = (page, name) => expect.poll(() => card(page, name).locator('img').evaluate(image => image.naturalWidth), { message: `${name} has a picture` }).toBeGreaterThan(0);
 
 async function open(page, instrument) {
@@ -116,6 +118,8 @@ test('the electric violin is bowed like the violin it stands in for', async ({ p
   await card(page, 'Electric violin').click();
   await onStage(page, 'violin-electric');
   await expect(caption(page)).toContainText('Belzar Sirus');
+  // It has no wooden body, and is heard without one.
+  await expect.poll(() => heard(page)).toBe('violin-electric 0');
   // The A string is the violin's third.
   await bowOpenA(page, async () => {
     await expect(stage(page)).toHaveAttribute('data-bowing', '2', { timeout: 30_000 });
@@ -137,6 +141,8 @@ test('the bass guitar\'s four strings answer to the guitar\'s six', async ({ pag
   await expect(viewer(page)).toHaveCount(0);
   await expect(caption(page)).toContainText('Kanade_Tatibana');
   await expect(hint(page)).toHaveText('Drag to turn · Fretboard to play the frets');
+  // It sounds like a bass: its own voice, an octave below the guitar string it answers to.
+  await expect.poll(() => heard(page)).toBe('bass -12');
 
   // A strum is over quickly, so the most strings seen sounding at once is remembered as it happens.
   const mostSounding = async () => {
@@ -163,6 +169,7 @@ test('the bass guitar\'s four strings answer to the guitar\'s six', async ({ pag
   await card(page, 'Acoustic guitar').click();
   await onStage(page, 'guitar');
   await expect(caption(page)).toHaveCount(0);
+  await expect.poll(() => heard(page)).toBe('guitar 0');
   expect(await mostSounding()).toBeGreaterThan(0);
   expect(errors).toEqual([]);
 });
@@ -172,14 +179,17 @@ test('both other drum kits load from the site\'s own files, and are not marked a
   const errors = collectErrors(page);
   await openWhole(page, 'drums');
   await expect(cards(page).locator('strong')).toHaveText(['Practice kit', 'Acoustic kit', 'Electronic kit']);
-  for (const [name, id, author] of [['Acoustic kit', 'drums-acoustic', 'art.katja'], ['Electronic kit', 'drums-electronic', 'SINNIK']]) {
+  for (const [name, id, author, voice] of [['Acoustic kit', 'drums-acoustic', 'art.katja', 'drums'], ['Electronic kit', 'drums-electronic', 'SINNIK', 'drums-electronic']]) {
     if (!await chooser(page).isVisible()) await change(page).click();
     await pictured(page, name);
     await expect(card(page, name)).not.toContainText('To look at');
+    await expect(card(page, name).locator('.model-by')).toHaveText(`3D model by ${author}`);
     await card(page, name).click();
     await expect(viewer(page)).toHaveAttribute('data-model', id);
     await expect(viewer(page)).toHaveAttribute('data-ready', 'true', { timeout: 150_000 });
-    await expect(caption(page)).toContainText(author);
+    await expect(caption(page).locator('.model-artist')).toHaveText(author);
+    // Each kit sounds like itself.
+    await expect.poll(() => heard(page)).toBe(`${voice} 0`);
   }
   expect(errors).toEqual([]);
 });
@@ -195,7 +205,7 @@ test('an instrument that cannot be shown gives the stage back and says so', asyn
   await expect(viewButton(page, 'Whole instrument')).toHaveAttribute('aria-pressed', 'true');
 });
 
-test('a kit that is only looked at takes the stage in the viewer, and Learn gives the practice kit back', async ({ page }) => {
+test('a downloaded kit takes the stage in the viewer, and Learn gives the practice kit back', async ({ page }) => {
   test.slow();
   const errors = collectErrors(page);
   await open(page, 'drums');
@@ -206,15 +216,15 @@ test('a kit that is only looked at takes the stage in the viewer, and Learn give
   await card(page, 'Acoustic kit').click();
   await expect(viewer(page)).toHaveAttribute('data-ready', 'true', { timeout: 60_000 });
   await expect(caption(page)).toContainText('art.katja');
-  await expect(hint(page)).toHaveText('Drag to turn · keys and pads play it · Practice kit to tap the drums');
+  await expect(hint(page)).toHaveText('Tap a drum to play · drag the background to turn');
   // The names over the practice kit are not left floating over another kit.
   await expect(page.locator('.drum-labels')).toBeHidden();
 
   // Dragging turns it; Reset view puts it back.
   const box = await viewer(page).boundingBox();
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.move(box.x + 12, box.y + box.height / 2);
   await page.mouse.down();
-  await page.mouse.move(box.x + box.width / 2 + 120, box.y + box.height / 2 + 20, { steps: 4 });
+  await page.mouse.move(box.x + 120, box.y + box.height / 2 + 20, { steps: 4 });
   await page.mouse.up();
   await expect(viewer(page).getByRole('button', { name: 'Reset view' })).toBeVisible();
   await viewer(page).getByRole('button', { name: 'Reset view' }).click();

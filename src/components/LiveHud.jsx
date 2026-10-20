@@ -1,4 +1,4 @@
-import { liveFeedback } from '../lib/liveFeedback.js';
+import { liveFeedback } from '../lib/practice/liveFeedback.js';
 import Icon from './Icon.jsx';
 
 /**

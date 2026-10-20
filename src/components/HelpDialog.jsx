@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useDialog } from '../hooks/useDialog.js';
-import { MODEL_CREDITS } from '../lib/modelCredits.js';
+import { MODEL_CREDITS } from '../lib/stage/modelCredits.js';
+import { instrumentInfo } from '../lib/instruments.js';
 
 const SHORTCUTS = [
   ['Space', 'Play or pause'], ['0', 'Stop and save the run'], ['1', 'Listen mode'], ['2', 'Practice mode'], ['3', 'Wait for me'],
-  ['[', 'Toggle passage loop'], [']', 'Toggle metronome'], ['\\', 'Hear the phrase / your turn'], ['← / →', 'Move through the piece'], ['↑ / ↓', 'Change tempo'],
+  ['Ctrl+K', 'Find a piece, lesson or action'], ['[', 'Toggle passage loop'], [']', 'Toggle metronome'], ['\\', 'Hear the phrase / your turn'], ['← / →', 'Move through the piece'], ['↑ / ↓', 'Change tempo'],
   ['A–J', 'Play the middle-C octave'], ['Z–M', 'Play the lower octave'], ['K S H T M F C R O', 'On the drums: each letter is the drum it starts (O is the open hi-hat)'], ['Esc', 'Close a panel or exit Focus'],
 ];
-export default function HelpDialog({ onClose }) {
+export default function HelpDialog({ onClose, onTour = null }) {
   const [query, setQuery] = useState('');
   const ref = useDialog({ onClose });
   const shown = SHORTCUTS.filter(row => row.join(' ').toLowerCase().includes(query.trim().toLowerCase()));
@@ -17,11 +18,15 @@ export default function HelpDialog({ onClose }) {
     <label className="library-search"><span className="sr-only">Search shortcuts</span><input type="search" placeholder="Find a shortcut…" value={query} onChange={e => setQuery(e.target.value)} /></label>
     <dl className="shortcut-list">{shown.map(([key, label]) => <div key={key}><dt><kbd>{key}</kbd></dt><dd>{label}</dd></div>)}</dl>
     {!shown.length && <p role="status">No shortcuts match that search.</p>}
+    {onTour && <p><button className="text-button" onClick={onTour}>Show the studio tour again</button></p>}
     <p className="hint">In a passage loop, focus either boundary and use the arrow keys to move it by one bar. Home and End move it to its limit.</p>
     <section className="model-credits" aria-labelledby="model-credits-title">
-      <h3 id="model-credits-title">3D instruments</h3>
-      <ul>{MODEL_CREDITS.map(credit => <li key={credit.model}>
-        <a href={credit.source} target="_blank" rel="noopener noreferrer">“{credit.title}”</a> by <a href={credit.authorUrl} target="_blank" rel="noopener noreferrer">{credit.author}</a>, licensed under <a href={credit.licenseUrl} target="_blank" rel="noopener noreferrer">{credit.license}</a>. Changed: {credit.changes}.
+      <h3 id="model-credits-title">3D artists</h3>
+      <p className="hint">The 3D instruments were made by these artists and shared on Sketchfab under {MODEL_CREDITS[0].license}. Thank you.</p>
+      <ul className="artist-list">{MODEL_CREDITS.map(credit => <li key={credit.model}>
+        <a className="artist-name" href={credit.authorUrl} target="_blank" rel="noopener noreferrer">{credit.author}</a>
+        <span className="artist-work"><a href={credit.source} target="_blank" rel="noopener noreferrer">“{credit.title}”</a> · {instrumentInfo(credit.model === 'guitar-bass' ? 'bass' : credit.instrument).label} · <a href={credit.licenseUrl} target="_blank" rel="noopener noreferrer">{credit.license}</a></span>
+        <span className="artist-changes">Changed: {credit.changes}.</span>
       </li>)}</ul>
     </section>
     <button onClick={onClose}>Done</button>

@@ -1,4 +1,5 @@
 import { expect } from '@playwright/test';
+import { choose } from '../helpers/listbox.js';
 import {
   readLocalStorageDb,
   readIndexedDbSchema,
@@ -51,12 +52,13 @@ export class AppPage {
   }
 
   async goto() {
-    // Core studio tests start after onboarding; public entry is covered separately.
+    // Core studio tests start after onboarding; public entry is covered separately. They are about data
+    // and flows, not the stage, so they run on the 2D roll: 3D in software rendering made them time out.
     await this.page.addInitScript(() => {
-      if(!localStorage.getItem('piano-practice-coach:v1'))localStorage.setItem('piano-practice-coach:v1',JSON.stringify({version:1,songs:{},settings:{onboarded:true}}));
+      if(!localStorage.getItem('piano-practice-coach:v1'))localStorage.setItem('piano-practice-coach:v1',JSON.stringify({version:1,songs:{},settings:{onboarded:true,studioTourDone:true,renderer:'canvas'}}));
     });
     await this.page.goto('/');
-    await expect(this.page.getByRole('heading', { name: 'Practice Deck' })).toBeVisible({ timeout: 15_000 });
+    await expect(this.page.locator('.topbar .brand-name')).toBeVisible({ timeout: 15_000 });
   }
 
   /** Fails loudly if the app rendered its top-level ErrorBoundary instead of the UI. */
@@ -135,6 +137,8 @@ export class AppPage {
 
   /** Opens Input & sound with its More options out: timing, touch, the keyboard's size and fit, external sound. */
   async openMoreOptions() {
+    // A finished run's report covers the studio until it is closed, as a player would close it first.
+    if (await this.practiceReport.isVisible().catch(() => false)) await this.closeReport();
     await this.closeLibrary();
     await this.page.locator('.setup-trigger').click();
     const dialog = this.page.getByRole('dialog', { name: 'Your instrument, ready to play.' });
@@ -155,14 +159,25 @@ export class AppPage {
   }
 
   async currentPieceTitle() {
-    return this.pieceTitleHeading.first().innerText();
+    // `.piece-title` lives in the folded "Piece details", where innerText is always empty: wait for the piece to
+    // arrive, then read its text content, which a closed <details> does not hide.
+    await this.waitForLibraryManifest();
+    return (await this.pieceTitleHeading.first().textContent())?.trim() ?? '';
   }
 
   /** `id` is one of the values in KEYBOARD_PROFILES (devices.js), e.g. 'mpk-mini', 'generic-88'. */
   async setKeyboardProfile(id) {
     const dialog = await this.openMoreOptions();
-    await dialog.getByLabel('Keyboard', { exact: true }).selectOption(id);
+    await choose(dialog.getByLabel('Keyboard', { exact: true }), id);
     await this.closeMoreOptions();
+  }
+
+  /** Which hands the piano asks for, from Practice settings: 'Both hands' | 'Right hand' | 'Left hand'. */
+  async setHands(label) {
+    await this.page.getByRole('button', { name: 'Practice settings', exact: true }).click();
+    await this.page.getByRole('dialog', { name: 'Practice settings' }).getByRole('button', { name: label, exact: true }).click();
+    await this.page.keyboard.press('Escape');
+    await expect(this.page.getByRole('dialog', { name: 'Practice settings' })).toBeHidden();
   }
 
   /** `label` is one of 'As written' | 'Octave shift' | 'Fit my keys'. */

@@ -1,4 +1,5 @@
-import { streakFrom, todayProgress } from '../lib/streaks.js';
+import Icon from './Icon.jsx';
+import { streakFrom, todayProgress } from '../lib/learning/streaks.js';
 
 const CIRC = 2 * Math.PI * 15;
 
@@ -17,7 +18,7 @@ export default function StreakStrip({ days, goalMinutes, onGoalChange }) {
       <div className="streak-body">
         <div className={`flame ${streak.practisedToday ? 'lit' : ''}`}>
           <span className="glyph" aria-hidden="true">
-            {streak.current > 0 ? '🔥' : '·'}
+            {streak.current > 0 ? <Icon name="flame" size={18} /> : '·'}
           </span>
           <strong>{streak.current}</strong>
           <span className="unit">day{streak.current === 1 ? '' : 's'}</span>

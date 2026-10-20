@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+import ModelCredit from './ModelCredit.jsx';
 import { useStageView } from '../hooks/useStageView.js';
-import { frettedHooks, watchPointer } from '../lib/frettedStage.js';
-import { buildModelGuitarRig, MODEL_STRINGS } from '../lib/guitarModelRig.js';
+import { frettedHooks, watchPointer } from '../lib/strings/frettedStage.js';
+import { buildModelGuitarRig, MODEL_STRINGS } from '../lib/strings/guitarModelRig.js';
 import { bringModel } from '../lib/stage/otherRigs.js';
 import { STAGE_TIERS } from '../lib/stage/quality.js';
 import { runStage } from '../lib/stage/stageRunner.js';
@@ -11,7 +12,7 @@ import StageLabels from './StageLabels.jsx';
 import StageViewSwitch from './StageViewSwitch.jsx';
 
 /**
- * A fretted instrument that is played on its downloaded model: the bass.
+ * A fretted instrument that is played on its downloaded model: the bass or the veena.
  *
  * Lessons frame the neck straight across; free play opens on the same view
  * and can show the whole instrument, turned by dragging. The model is for the
@@ -74,9 +75,9 @@ export default function FrettedModelStage({ kit, engine, score, onPluck, onUnava
   }, [kit, theme, quality, maxFret]);
   const hint = hover || (whole ? 'Drag to turn · Fretboard to play the frets' : turnable ? 'Click between frets to play · drag to turn' : 'Click between frets to play · ○ open string');
   return <div className="guitar-stage fretted-model-stage" ref={host} role="group" aria-label={`Three-dimensional ${name} fretboard`} data-view={view}>
-    <div className="guitar-stage-top"><div><strong>Fretboard</strong><span>Standard tuning · {kit.tuning.map((_, s) => kit.stringName(s).note).join(' ')}</span></div></div>
+    <div className="guitar-stage-top"><div><strong>Fretboard</strong><span>{kit.tuningLabel ?? 'Standard tuning'} · {kit.tuning.map((_, s) => kit.stringName(s).note).join(' ')}</span></div></div>
     <StageLabels labels={labels} labelSize={labelSize} />
     {!ready && <div className="bowed-stage-preparing" role="status">Preparing your {name}…</div>}
-    <div className="guitar-stage-bottom"><span className="guitar-stage-legend"><i className="played"/>Played <i className="next"/>{view === 'freePlay' ? 'Hover' : 'Next note'}</span><span className="guitar-stage-end">{offersWhole && <StageViewSwitch label="Fretboard" short="Frets" value={whole ? 'whole' : 'learn'} onChange={setStageView} />}{turnable && (turned || resetFocused) && <ResetViewButton turned={turned} onReset={resetView} onFocusChange={setResetFocused} />}<span className="guitar-stage-hint">{hint}</span></span></div>
+    <div className="guitar-stage-bottom"><span className="guitar-stage-legend"><i className="played"/>Played <i className="next"/>{view === 'freePlay' ? 'Hover' : 'Next note'}</span><span className="guitar-stage-end">{offersWhole && <StageViewSwitch label="Fretboard" short="Frets" value={whole ? 'whole' : 'learn'} onChange={setStageView} />}{turnable && (turned || resetFocused) && <ResetViewButton turned={turned} onReset={resetView} onFocusChange={setResetFocused} />}{ready && <ModelCredit id={kit.model} />}<span className="guitar-stage-hint">{hint}</span></span></div>
   </div>;
 }

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { seedSettings } from '../helpers/studio.js';
+import { seedSettings, STAGE_TIMEOUT } from '../helpers/studio.js';
 import { chooseWorkspace as workspace } from '../helpers/workspace.js';
 
 /**
@@ -37,13 +37,13 @@ test.describe('on a tablet', () => {
 
   test('free play fits the window, gives the guitar a real stage, and shows the chord explorer under it', async ({ page }) => {
     await open(page)();
-    await expect(stage(page).locator('canvas')).toBeVisible();
+    await expect(stage(page).locator('canvas')).toBeVisible({ timeout: STAGE_TIMEOUT });
     const edges = await rightEdges(page);
     expect(edges.topbar).toBeLessThanOrEqual(edges.window);
     expect(edges.studio).toBeLessThanOrEqual(edges.window);
     expect((await stage(page).boundingBox()).height).toBeGreaterThanOrEqual(260);
 
-    await page.evaluate(async () => { window.__notes = []; (await import('/src/lib/midiInput.js')).midiInput.onMessage(m => window.__notes.push(m)); });
+    await page.evaluate(async () => { window.__notes = []; (await import('/src/lib/input/midiInput.js')).midiInput.onMessage(m => window.__notes.push(m)); });
     const explorer = page.getByRole('region', { name: 'Chord workspace' });
     await explorer.scrollIntoViewIfNeeded();
     await expect(explorer).toBeVisible();
@@ -55,7 +55,7 @@ test.describe('on a tablet', () => {
 
   test('a lesson fits the window and keeps its short stage', async ({ page }) => {
     await open(page, { free: false })();
-    await expect(stage(page).locator('canvas')).toBeVisible();
+    await expect(stage(page).locator('canvas')).toBeVisible({ timeout: STAGE_TIMEOUT });
     const edges = await rightEdges(page);
     expect(edges.topbar).toBeLessThanOrEqual(edges.window);
     expect(edges.studio).toBeLessThanOrEqual(edges.window);
@@ -77,7 +77,7 @@ test.describe('on a phone', () => {
   test('the stage keeps its labels apart and its own top bar on the stage', async ({ page }) => {
     await open(page)();
     await stage(page).scrollIntoViewIfNeeded();
-    await expect(stage(page).locator('canvas')).toBeVisible();
+    await expect(stage(page).locator('canvas')).toBeVisible({ timeout: STAGE_TIMEOUT });
     expect((await stage(page).boundingBox()).height).toBeGreaterThanOrEqual(200);
 
     const strings = (await boxes(page.locator('.guitar-position-label.string'))).sort((a, b) => a.top - b.top);
@@ -85,7 +85,9 @@ test.describe('on a phone', () => {
     for (let i = 1; i < strings.length; i++) expect(strings[i].top).toBeGreaterThanOrEqual(strings[i - 1].bottom - 0.5);
 
     const frets = (await boxes(page.locator('.guitar-position-label.fret'))).sort((a, b) => a.left - b.left);
-    expect(frets.map(f => f.text)).toEqual(expect.arrayContaining(['1', '3', '5', '7', '9', '12']));
+    // A phone starts at first position: twelve frets across 360px are too narrow to tap.
+    expect(frets.map(f => f.text)).toEqual(expect.arrayContaining(['1', '3', '5']));
+    await expect(page.locator('.studio-footer')).toContainText('5 frets');
     for (let i = 1; i < frets.length; i++) expect(frets[i].left).toBeGreaterThanOrEqual(frets[i - 1].right - 0.5);
 
     const box = await stage(page).boundingBox();
@@ -97,7 +99,7 @@ test.describe('on a phone', () => {
 
   test('the instrument gets the screen: one-row bars, a tab bar at the bottom, and 44px controls', async ({ page }) => {
     await open(page)();
-    await expect(stage(page).locator('canvas')).toBeVisible();
+    await expect(stage(page).locator('canvas')).toBeVisible({ timeout: STAGE_TIMEOUT });
     expect((await page.locator('#practice-stage').boundingBox()).y).toBeLessThanOrEqual(140);
     expect((await page.locator('.topbar').boundingBox()).height).toBeLessThanOrEqual(64);
     const tabs = await page.getByRole('navigation', { name: 'Main' }).boundingBox();
@@ -127,6 +129,10 @@ test.describe('on a phone', () => {
 
   test('the chord explorer can be reached and played, laid out in one column', async ({ page }) => {
     await open(page)();
+    // Free play opens on the fretboard; the explorer is folded under it, one tap away.
+    const folded = page.locator('.folded-card > summary');
+    await expect(folded).toHaveText(/^Chords/);
+    await folded.click();
     const explorer = page.getByRole('region', { name: 'Chord workspace' });
     const strum = explorer.getByRole('button', { name: /^↓ Strum/ });
     await strum.scrollIntoViewIfNeeded();
@@ -145,7 +151,7 @@ test.describe('on a phone held sideways', () => {
 
   test('the top bar keeps to one line and the stage fits the screen', async ({ page }) => {
     await open(page)();
-    await expect(stage(page).locator('canvas')).toBeVisible();
+    await expect(stage(page).locator('canvas')).toBeVisible({ timeout: STAGE_TIMEOUT });
     expect((await page.locator('.topbar').boundingBox()).height).toBeLessThan(80);
     expect((await stage(page).boundingBox()).height).toBeLessThanOrEqual(390);
     const room = await page.locator('.guitar-workspace').evaluate(el => el.clientHeight);
@@ -194,7 +200,7 @@ test.describe('on a small laptop', () => {
     for (const width of [701, 760, 901, 960, 1024]) {
       await page.setViewportSize({ width, height: 900 });
       if (width === 701) await open(page, { free: false })();
-      const title = await page.locator('.studio-heading h2').boundingBox();
+      const title = await page.locator('.studio-heading h1').boundingBox();
       expect(title.width, `title width at ${width}px`).toBeGreaterThanOrEqual(150);
       const buttons = await page.locator('.studio-header-actions').boundingBox();
       const titleBottom = title.y + title.height;

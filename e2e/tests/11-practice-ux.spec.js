@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { seedSettings } from '../helpers/studio.js';
 import { watchSound } from '../helpers/sound.js';
+import { choose } from '../helpers/listbox.js';
 
 test.beforeEach(async ({ page }) => {
   await seedSettings(page, { renderer: 'canvas' });
@@ -11,7 +12,7 @@ test.beforeEach(async ({ page }) => {
     Object.defineProperty(navigator,'requestMIDIAccess',{configurable:true,value:async()=>({inputs:new Map([['test-input',window.__testInput]]),outputs:new Map([['test-output',output]]),onstatechange:null})});
   });
   await page.goto('/');
-  await expect(page.locator('.studio-heading h2')).toContainText('C Major');
+  await expect(page.locator('.studio-heading h1')).toContainText('C Major');
 });
 
 test('output test makes sound without falsely verifying controller input or grading', async ({ page }) => {
@@ -19,14 +20,14 @@ test('output test makes sound without falsely verifying controller input or grad
   const dialog=page.getByRole('dialog',{name:'Your instrument, ready to play.'});
   await dialog.getByRole('button',{name:/^MIDI controller/}).click();
   await dialog.getByRole('button',{name:/Look for a device|Refresh devices/}).click();
-  await expect(dialog.getByRole('combobox',{name:'MIDI input'})).toHaveValue('test-input');
-  await page.evaluate(async()=>{window.__testNotes=[];(await import('/src/lib/midiInput.js')).midiInput.onMessage(m=>window.__testNotes.push(m));});
+  await expect(dialog.getByRole('combobox',{name:'MIDI input'})).toHaveAttribute('data-value', 'test-input');
+  await page.evaluate(async()=>{window.__testNotes=[];(await import('/src/lib/input/midiInput.js')).midiInput.onMessage(m=>window.__testNotes.push(m));});
   await watchSound(page);
   await dialog.getByRole('button',{name:'Play a test note',exact:true}).click();
   await expect.poll(()=>page.evaluate(()=>window.__studioHeardSound)).toBe(true);
   await expect(dialog.locator('.setup-detected')).toContainText('Input not verified');
   expect(await page.evaluate(()=>window.__testNotes)).toEqual([]);
-  await page.evaluate(async()=>{(await import('/src/lib/midiInput.js')).emitSyntheticMidi({type:'noteon',midi:64,velocity:.7});});
+  await page.evaluate(async()=>{(await import('/src/lib/input/midiInput.js')).emitSyntheticMidi({type:'noteon',midi:64,velocity:.7});});
   await expect(dialog.locator('.setup-detected')).toContainText('Input not verified');
   await page.evaluate(()=>window.__testInput.onmidimessage({data:[144,62,100],timeStamp:performance.now()}));
   await expect(dialog.locator('.setup-detected')).toContainText('Received D4 from your MIDI controller');
@@ -82,7 +83,7 @@ test('search, plan, progress, named settings and help remain discoverable', asyn
   await expect(page.getByRole('tab',{name:'Progress',exact:true})).toHaveAttribute('aria-selected','true');
   await page.getByRole('button',{name:'Close library'}).click();
   await page.getByRole('button',{name:'Instrument settings',exact:true}).click();
-  await page.getByRole('combobox',{name:'Keyboard labels'}).selectOption('notes');
+  await choose(page.getByRole('combobox',{name:'Keyboard labels'}), 'notes');
   await page.keyboard.press('Escape');
   await expect(page.getByRole('button',{name:'Instrument settings',exact:true})).toBeFocused();
   await page.getByRole('button',{name:'More',exact:true}).click();

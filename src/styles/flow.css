@@ -5,10 +5,10 @@
    Every "pick one of these" row is the same object: a trough, and a raised segment for the one chosen. They had
    grown six sets of colours, radii and paddings between them. Sizes stay where each control sets them. */
 :is(.instrument-picker, .workspace-switch, .library-instruments, .learning-instruments, .type-switch, .practice-size, .chord-label-modes, .fit-switch, .stage-view-switch, .studio-app .mode-switch) {
-  background: var(--seg-trough); border: 1px solid var(--line-soft); border-radius: var(--control-r); padding: 3px; gap: 2px; box-shadow: none;
+  background: var(--seg-trough); border: 1px solid var(--line-soft); border-radius: var(--control-r); padding: 3px; gap: var(--sp-hair); box-shadow: none;
 }
 :is(.instrument-picker, .workspace-switch, .library-instruments, .learning-instruments, .type-switch, .practice-size, .chord-label-modes, .fit-switch, .stage-view-switch, .studio-app .mode-switch) > button {
-  border: 0; background: transparent; box-shadow: none; color: var(--text-dim); border-radius: calc(var(--control-r) - 3px); font-weight: var(--fw-medium);
+  border: 0; background: transparent; box-shadow: none; color: var(--text-dim); border-radius: calc(var(--control-r) - var(--radius-xs)); font-weight: var(--fw-medium);
 }
 :is(.instrument-picker, .workspace-switch, .library-instruments, .learning-instruments, .type-switch, .practice-size, .chord-label-modes, .fit-switch, .stage-view-switch, .studio-app .mode-switch) > button:hover:not(:disabled) { color: var(--text); }
 :is(.instrument-picker, .workspace-switch, .library-instruments, .learning-instruments, .type-switch, .practice-size, .chord-label-modes, .fit-switch, .stage-view-switch, .studio-app .mode-switch) > button:is([aria-pressed="true"], .on) {
@@ -30,7 +30,7 @@
 .free-play-last small { font-size: var(--fs-2xs); letter-spacing: var(--tracking-caps); color: var(--text-faint); }
 .free-play-last strong { font: var(--fw-bold) var(--fs-md)/1 var(--mono); min-width: 3ch; color: var(--text); }
 .free-play-hint { margin-inline-start: auto; font-size: var(--fs-xs); color: var(--text-dim); text-align: end; }
-.free-play-hint kbd { font: var(--fw-bold) var(--fs-2xs)/1 var(--mono); padding: 2px 5px; border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: var(--radius-xs); background: var(--bg-1); color: var(--text); }
+.free-play-hint kbd { font: var(--fw-bold) var(--fs-2xs)/1 var(--mono); padding: var(--sp-hair) 5px; border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: var(--radius-xs); background: var(--bg-1); color: var(--text); }
 .studio-app.focus-view .free-play-bar { border-top: 0; padding-block: 0 var(--sp-2); }
 /* Where the bar's first button leads: the card says "here" once. */
 @keyframes spotlight { from { box-shadow: 0 0 0 3px var(--accent); } to { box-shadow: 0 0 0 3px transparent; } }
@@ -45,7 +45,6 @@
   .free-play-last small { display: none; }
 }
 @media (max-height: 500px) { .free-play-bar { display: none; } }
-}
 
 /* ------------------------------------------------------------ the explorer cards */
 .chord-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-1) var(--sp-3); margin: 0 0 var(--sp-2); font-size: var(--fs-2xs); color: var(--text-dim); }
@@ -82,7 +81,7 @@
 .learning-key span { display: inline-flex; align-items: center; gap: var(--sp-2); }
 @media (max-width: 600px) {
   .learning-stage-lessons button { flex-wrap: wrap; }
-  .learning-stage-lessons button > small { max-width: none; flex-basis: 100%; text-align: start; padding-inline-start: 32px; }
+  .learning-stage-lessons button > small { max-width: none; flex-basis: 100%; text-align: start; padding-inline-start: var(--sp-6); }
 }
 
 /* ------------------------------------------------------------ the report */
@@ -113,7 +112,7 @@
 .setup-more-body { padding-bottom: var(--sp-2); }
 .setup-more-body .setup-section-title { margin-top: var(--sp-5); }
 .setup-more-body .latency-row { align-items: center; padding: var(--sp-3) 0; }
-.setup-more-body .latency-row > span:first-child { display: grid; gap: 2px; color: var(--text); font-family: var(--sans); }
+.setup-more-body .latency-row > span:first-child { display: grid; gap: var(--sp-hair); color: var(--text); font-family: var(--sans); }
 .setup-more-body .latency-row strong { font-size: var(--fs-sm); }
 .setup-more-body .latency-row small { font-size: var(--fs-xs); color: var(--text-dim); line-height: 1.5; }
 .setup-more-body .latency-value { flex: none; }

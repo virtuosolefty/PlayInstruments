@@ -12,7 +12,7 @@
  * model axis it comes from (with its sign).
  */
 
-import { creditLine, modelCredit } from '../../src/lib/modelCredits.js';
+import { creditLine, modelCredit } from '../../src/lib/stage/modelCredits.js';
 
 /** Size of `piece` along `axis` as a share of the model's length. */
 const share = (piece, axis, model) => piece.box.size[axis] / model.length;
@@ -21,6 +21,22 @@ const share = (piece, axis, model) => piece.box.size[axis] / model.length;
 const credit = model => {
   const { title, author, authorUrl, source, license, licenseUrl } = modelCredit(model);
   return { title, author, authorUrl, source, license, licenseUrl, line: creditLine(modelCredit(model)) };
+};
+
+/**
+ * Where a string plays that rises over a bridge partway along the instrument
+ * and runs on down to a tailpiece (the veena's): from where it levels out past
+ * the nut, at the head end, to its crest. `centres` run from the head (see
+ * `ringCentres` in fit.mjs); `up` is the model axis that points out of the
+ * playing surface.
+ */
+const crestSpan = (along, up, steepest = 0.05) => centres => {
+  const crest = centres.reduce((best, c, i) => (c[up] > centres[best][up] ? i : best), 0);
+  const slope = i => Math.abs((centres[i + 1][up] - centres[i][up]) / (centres[i + 1][along] - centres[i][along]));
+  // Up from the pegs the string climbs steeply to the nut, then barely rises.
+  let nut = 0;
+  while (nut < crest && slope(nut) > steepest) nut++;
+  return { from: centres[nut], to: centres[crest] };
 };
 
 /** Standing as it was made: up is the model's y. */
@@ -40,9 +56,13 @@ const HEAD_TOWARD_X = { lengthAxis: 0, headAt: 'max', axes: [[0, -1], [1, 1], [2
  * being hit: where each drum stands, in stage units (see `drumZonePart`), so
  * that each is a part of its own.
  */
-const shown = (model, { axes = UPRIGHT, view, imageSize = 1024, omit = () => false, zones }) => ({
+const shown = (model, { axes = UPRIGHT, view, imageSize = 1024, omit = () => false, zones, keys = false, simplify, liftDarkMaterials, retone }) => ({
   showcase: true,
   zones,
+  keys,
+  simplify,
+  liftDarkMaterials,
+  retone,
   lean: true,
   credit: credit(model),
   axes,
@@ -109,6 +129,7 @@ export const RECIPES = {
   // their strings replaced, exactly as above.
 
   'guitar-bass': {
+    simplify: { ratio: 0.35, error: 0.002 },
     credit: credit('guitar-bass'),
     ...HEAD_TOWARD_X,
     lean: true,
@@ -123,6 +144,7 @@ export const RECIPES = {
   },
 
   'violin-electric': {
+    liftDarkMaterials: true,
     credit: credit('violin-electric'),
     // Model: standing along y with the scroll at the top, front facing +z, as the cello above.
     lengthAxis: 1,
@@ -136,7 +158,31 @@ export const RECIPES = {
     imageSize: () => 1024,
   },
 
+  veena: {
+    simplify: { ratio: 0.35, error: 0.002 },
+    credit: credit('veena'),
+    // Model: lying along x with the yali head toward −x and the strings on top (+y); the three drone strings run
+    // along its side toward +z.
+    lengthAxis: 0,
+    headAt: 'min',
+    axes: [[0, 1], [1, 1], [2, 1]],
+    lean: true,
+    strings: 4,
+    // All seven strings are one material; the four that are played run the whole length, the drones about two thirds.
+    classify: (piece, model) => (piece.material === 'Material.016' && share(piece, 0, model) > 0.9 ? 'string' : piece.material === 'Material.016' ? 'drones' : `part${piece.primIndex}`),
+    rightHanded: true,
+    // Sarani, the highest and the one most played, lies nearest the player, beside the drones.
+    highestNearest: true,
+    // The strings rise gently from the nut to the bridge on the resonator, then fall away to the tailpiece.
+    playingSpan: crestSpan(0, 1),
+    // Twenty-one brass bars across the neck past the nut's, which the model spaces evenly; prepare.mjs moves each to where equal
+    // temperament puts it, so a fret the stage marks is a fret the model has.
+    evenFrets: (piece, model) => share(piece, 0, model) < 0.01 && share(piece, 1, model) > 0.005 && share(piece, 1, model) < 0.01 && share(piece, 2, model) > 0.03 && share(piece, 2, model) < 0.06,
+    imageSize: () => 1024,
+  },
+
   'cello-antique': {
+    simplify: { ratio: 0.5, error: 0.002 },
     credit: credit('cello-antique'),
     ...HEAD_TOWARD_X,
     lean: true,
@@ -153,8 +199,19 @@ export const RECIPES = {
 
   // These two are shown, not played (showcase.mjs), but each drum is its own part, so a hit moves and lights it.
   // Boxes are in stage units, found by looking at the kit; the kick is listed last because its box holds the others' lower edges.
+  // Played on the practice stage at full detail, so it wears that stage's finish: wine lacquer shells (linear colour of
+  // #5a1222) in place of teal. Its cymbals share one metal with the stands, so they turn bronze in drumModelRig.js, where
+  // each drum has materials of its own. Its white platform and stool go: the stage has its own floor, and from the
+  // drummer's side the stool would stand in front of the kit.
+  // A grand whose keys are separate pieces: each becomes a part of its own (keyParts, showcase.mjs) and presses as
+  // its note plays.
+  'piano-grand': shown('piano-grand', { keys: true, view: { azimuthDeg: 30, elevationDeg: 28 } }),
   'drums-acoustic': shown('drums-acoustic', {
     view: { azimuthDeg: 25, elevationDeg: 22 },
+    omit: (material, mesh) => mesh === 'Plane.001__0' || material === 'Cylinder.015__0',
+    retone: {
+      Main_Color: { color: [0.102, 0.006, 0.016], metallic: 0.2, roughness: 0.32 },
+    },
     zones: [
       { id: 'crash', at: [3, 10.5, 0, 7.5, 13.5, 4.5], maxSize: 6 },
       { id: 'ride', at: [-10.5, 9.8, -0.5, -5.5, 13, 3.5], maxSize: 7 },
@@ -166,10 +223,31 @@ export const RECIPES = {
       { id: 'kick', at: [-3.7, 0.2, -0.6, 3.4, 7, 4.6], maxSize: 7.2 },
     ],
   }),
+  // The tabla: the dayan and the bayan, its 829k triangles mostly the laced ropes, which simplify well. Each drum is a
+  // part of its own (zones), so the stage can light and move the one that is struck.
+  // Made with the dayan toward −x: turned half round, so from the player's seat (+z) the dayan is on the right, where
+  // the right hand plays it, and the bayan on the left.
+  tabla: shown('tabla', {
+    axes: [[0, -1], [1, 1], [2, -1]],
+    simplify: { ratio: 0.1, error: 0.002 },
+    view: { azimuthDeg: 0, elevationDeg: 38 },
+    // Written in the older specular-glossiness materials: the dayan's wood is a black base under a reddish shine and
+    // the bayan's pot a perfect mirror, both black once converted. Given back their wood and their copper.
+    retone: {
+      korpusklein: { color: [0.2, 0.07, 0.035], metallic: 0, roughness: 0.42 },
+      'Material.003': { color: [0.74, 0.45, 0.3], metallic: 1, roughness: 0.3 },
+    },
+    zones: [
+      { id: 'dayan', at: [1.5, -1, -6, 13, 11, 6], maxSize: 13 },
+      { id: 'bayan', at: [-13, -1, -7, 1.5, 11, 7], maxSize: 13 },
+    ],
+  }),
   // Its pads face the drummer, who sits toward −z: seen from that side and above, as on its box.
   // A lead trails a kit's width across the floor to a plug (the parts named EDK-T14): framed with it, the kit is half the size.
   // It has two crash pads and two low toms, and each answers to the one key.
   'drums-electronic': shown('drums-electronic', {
+    liftDarkMaterials: true,
+    simplify: { ratio: 0.2, error: 0.002 },
     view: { azimuthDeg: 205, elevationDeg: 30 },
     omit: material => material.endsWith('EDK-T14'),
     zones: [

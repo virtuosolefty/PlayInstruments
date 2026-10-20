@@ -1,4 +1,4 @@
-import { noteName } from '../lib/theory.js';
+import { noteName } from '../lib/music/theory.js';
 
 /**
  * One button for each string of a fretted instrument, to hear it: the chord

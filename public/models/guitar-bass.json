@@ -7,7 +7,7 @@
     "source": "https://sketchfab.com/3d-models/percussion-bass-guitar-d1f04fc920b8425a9a78b057b532dd89",
     "license": "CC BY 4.0",
     "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
-    "line": "\"Percussion bass guitar\" (https://sketchfab.com/3d-models/percussion-bass-guitar-d1f04fc920b8425a9a78b057b532dd89) by Kanade_Tatibana (https://sketchfab.com/Kanade_Tatibana), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Modified: the strings between nut and bridge replaced, scaled and re-encoded for Practice Deck."
+    "line": "\"Percussion bass guitar\" (https://sketchfab.com/3d-models/percussion-bass-guitar-d1f04fc920b8425a9a78b057b532dd89) by Kanade_Tatibana (https://sketchfab.com/Kanade_Tatibana), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Modified: the strings between nut and bridge replaced, scaled and re-encoded, surface geometry simplified for Practice Deck."
   },
   "nutX": -6.05,
   "scaleLength": 24.1,
@@ -163,50 +163,50 @@
     },
     "part5": {
       "min": [
-        14.2445,
+        14.2472,
         -0.7405,
         -1.4999
       ],
       "max": [
-        14.9574,
+        14.9547,
         -0.0163,
         0.36
       ]
     },
     "part6": {
       "min": [
-        13.4734,
+        13.4761,
         -0.747,
         -0.5422
       ],
       "max": [
-        14.1863,
+        14.1836,
         -0.0228,
         1.3177
       ]
     },
     "part7": {
       "min": [
-        14.5327,
+        14.5342,
         -0.1932,
         -1.0657
       ],
       "max": [
         14.6905,
-        -0.0125,
+        -0.0127,
         -0.0656
       ]
     },
     "part8": {
       "min": [
-        13.7616,
+        13.7631,
         -0.1996,
         -0.1079
       ],
       "max": [
         13.9194,
-        -0.019,
-        0.8921
+        -0.0191,
+        0.891
       ]
     },
     "part9": {
@@ -264,9 +264,9 @@
         -3.6708
       ],
       "max": [
-        18.9718,
-        -0.0879,
-        1.8215
+        18.965,
+        -0.0881,
+        1.8198
       ]
     },
     "part14": {
@@ -446,7 +446,7 @@
       "max": [
         -6.9575,
         -0.1279,
-        0.8893
+        0.889
       ]
     },
     "stringEnds": {
@@ -470,7 +470,7 @@
       "max": [
         18.1912,
         0.0319,
-        0.9239
+        0.9231
       ]
     },
     "part30": {
@@ -494,7 +494,7 @@
       "max": [
         -10.8916,
         -0.1224,
-        0.0628
+        0.0625
       ]
     },
     "part32": {
@@ -506,7 +506,7 @@
       "max": [
         -8.259,
         -0.126,
-        0.6097
+        0.6094
       ]
     },
     "part33": {
@@ -518,13 +518,13 @@
       "max": [
         -9.5687,
         -0.1241,
-        0.3226
+        0.3223
       ]
     },
     "part34": {
       "min": [
         -8.651,
-        -1.1447,
+        -1.1402,
         -2.9929
       ],
       "max": [

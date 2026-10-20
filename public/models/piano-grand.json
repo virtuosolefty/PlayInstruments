@@ -1,0 +1,29 @@
+{
+  "name": "piano-grand",
+  "credit": {
+    "title": "Grand Paino",
+    "author": "EastSeaSaltfishnet",
+    "authorUrl": "https://sketchfab.com/EastSeaSaltfishnet",
+    "source": "https://sketchfab.com/3d-models/grand-paino-977f3a6fcc0a46648a4eba6b4f15ed5d",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "line": "\"Grand Paino\" (https://sketchfab.com/3d-models/grand-paino-977f3a6fcc0a46648a4eba6b4f15ed5d) by EastSeaSaltfishnet (https://sketchfab.com/EastSeaSaltfishnet), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Modified: each key made a part of its own, scaled and re-encoded for Practice Deck."
+  },
+  "showcase": true,
+  "view": {
+    "azimuthDeg": 30,
+    "elevationDeg": 28
+  },
+  "bounds": {
+    "min": [
+      -10.3413,
+      0,
+      -12
+    ],
+    "max": [
+      10.3413,
+      22.6262,
+      12
+    ]
+  }
+}

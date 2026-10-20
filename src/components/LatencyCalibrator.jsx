@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDialog } from '../hooks/useDialog.js';
-import { audio } from '../lib/audio.js';
-import { midiInput } from '../lib/midiInput.js';
-import { clampLatency, measureOffset } from '../lib/latency.js';
+import { audio } from '../lib/audio/audio.js';
+import { midiInput } from '../lib/input/midiInput.js';
+import { clampLatency, measureOffset } from '../lib/input/latency.js';
 
 const BPM = 100;
 const BEATS = 12;
@@ -130,7 +130,7 @@ export default function LatencyCalibrator({ currentMs, onApply, onClose }) {
               </p>
             ) : (
               <p>
-                Couldn't read a reliable offset — {result.reason}. You can try again or set a value by hand.
+                Couldn't read a reliable offset: {result.reason}. You can try again or set a value by hand.
               </p>
             )}
             <label className="field calib-manual">

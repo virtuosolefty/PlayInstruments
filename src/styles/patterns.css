@@ -1,0 +1,117 @@
+/* patterns.css — the Ctrl+K palette, the appearance dialog, the studio tour, the chrome that steps back while you
+   play, screen transitions, stage placeholders and the note for next time. Loaded last; every value is a token. */
+
+/* ---------------------------------------------------------------- neutral accents
+   Ivory and silver are not colours, so colour stops saying "you can press this". Links say it with a line. */
+:root[data-theme="dark"]:is([data-accent="ivory"], [data-accent="silver"]) :is(.pane, .learning-home, .report, .welcome-page) a:not(.skip-link):not(.nav-link),
+:root[data-theme="dark"]:is([data-accent="ivory"], [data-accent="silver"]) .text-button {
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em;
+}
+.text-button { min-height: var(--control-h-sm); padding: 0; border: 0; background: none; box-shadow: none; color: var(--accent); font: inherit; cursor: pointer; }
+.text-button:hover:not(:disabled) { background: none; color: var(--text); text-decoration: underline; }
+.text-button.quiet { color: var(--text-dim); }
+
+/* ---------------------------------------------------------------- appearance */
+.appearance-dialog { max-width: var(--dialog-w-sm); }
+.appearance-row { display: grid; gap: var(--sp-2); padding-block: var(--sp-3); border-top: 1px solid var(--line-soft); }
+.appearance-row h3 { margin: 0; font-size: var(--fs-sm); font-weight: var(--fw-bold); color: var(--text); }
+.appearance-row .hint { margin: 0; color: var(--text-dim); font-size: var(--fs-xs); }
+.appearance-choice { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.appearance-choice button { display: inline-flex; align-items: center; gap: var(--sp-2); min-height: var(--control-h); padding: 0 var(--sp-3);
+  border: 1px solid var(--line-strong); border-radius: var(--control-r); background: var(--bg-1); color: var(--text-dim); }
+.appearance-choice button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--text); font-weight: var(--fw-bold); }
+.appearance-choice .swatch { width: var(--swatch); height: var(--swatch); border-radius: var(--radius-pill); box-shadow: inset 0 0 0 1px var(--line-strong); }
+
+/* ---------------------------------------------------------------- search in the top bar */
+.search-trigger { display: inline-flex; align-items: center; gap: var(--sp-2); min-height: var(--control-h-sm); padding: 0 var(--sp-2) 0 var(--sp-3);
+  border: 1px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--bg-1); color: var(--text-dim); font-size: var(--fs-sm); }
+.search-trigger:hover { color: var(--text); }
+.search-trigger kbd, .palette kbd { font: var(--fw-bold) var(--fs-2xs)/1 var(--mono); padding: var(--sp-1) var(--sp-1-5); border: 1px solid var(--line);
+  border-radius: var(--radius-xs); background: var(--bg-2); color: var(--text-dim); }
+@media (max-width: 1100px) { .search-trigger kbd { display: none; } }
+@media (max-width: 900px) { .search-trigger .search-label { display: none; } .search-trigger { padding: 0 var(--sp-3); } }
+
+/* ---------------------------------------------------------------- the palette */
+.palette-overlay { position: fixed; inset: 0; z-index: var(--z-dialog); display: grid; justify-items: center; align-items: start;
+  padding: max(var(--sp-6), 10vh) var(--sp-4) var(--sp-4); background: var(--scrim); backdrop-filter: var(--scrim-blur); }
+.palette { display: flex; flex-direction: column; width: min(var(--palette-w), 100%); max-height: min(var(--palette-h), 80vh); overflow: hidden;
+  border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--overlay-bg); box-shadow: var(--elev-3); color: var(--text); }
+.palette:focus { outline: none; }
+.palette-field { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--line-soft); color: var(--text-dim); }
+.palette-field input { flex: 1; min-width: 0; min-height: var(--control-h); border: 0; background: none; box-shadow: none; color: var(--text); font-size: var(--fs-lg); }
+.palette-field input:focus, .palette-field input:focus-visible { outline: none; box-shadow: none; }
+.palette-list { overflow-y: auto; padding: 0 var(--sp-2) var(--sp-2); overscroll-behavior: contain; }
+.palette-list h3 { margin: 0; padding: var(--sp-3) var(--sp-3) var(--sp-1); font-size: var(--fs-2xs); font-weight: var(--fw-bold); letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); }
+.palette-option { display: flex; align-items: center; gap: var(--sp-3); min-height: var(--control-h); padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-sm); cursor: pointer; }
+.palette-option[aria-selected="true"] { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent-dim); }
+.palette-icon { display: grid; place-items: center; width: var(--icon-box); height: var(--icon-box); flex: none; border-radius: var(--radius-xs); background: var(--bg-3); color: var(--text-dim); }
+.palette-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.palette-detail { color: var(--text-dim); font-size: var(--fs-xs); white-space: nowrap; }
+.palette-keys { display: inline-flex; gap: var(--sp-1); }
+.palette-empty { margin: 0; padding: var(--sp-5) var(--sp-3); color: var(--text-dim); }
+.palette-foot { display: flex; gap: var(--sp-4); padding: var(--sp-2) var(--sp-4); border-top: 1px solid var(--line-soft); color: var(--text-faint); font-size: var(--fs-xs); }
+.palette-foot span { display: inline-flex; align-items: center; gap: var(--sp-1); }
+@media (max-width: 600px) {
+  .palette-overlay { padding: 0; }
+  .palette { width: 100%; max-height: none; height: 100%; border-radius: 0; border: 0; }
+  .palette-foot, .palette-keys { display: none; }
+  .palette-option { flex-wrap: wrap; row-gap: 0; }
+  .palette-detail { flex-basis: 100%; padding-inline-start: calc(var(--icon-box) + var(--sp-3)); }
+}
+
+/* ---------------------------------------------------------------- the studio tour */
+.coach-tour { position: fixed; inset: 0; z-index: var(--z-popover); pointer-events: none; }
+.coach-hole { position: fixed; border-radius: var(--radius); box-shadow: 0 0 0 100vmax rgb(5 5 8 / 55%), 0 0 0 var(--sp-hair) var(--accent); transition: all var(--dur-base) var(--ease-out); }
+.coach-tip { position: fixed; pointer-events: auto; padding: var(--sp-4); border: 1px solid var(--line); border-radius: var(--radius); background: var(--overlay-bg); box-shadow: var(--elev-3); color: var(--text); }
+.coach-tip h2 { margin: 0 0 var(--sp-1); font-size: var(--fs-md); }
+.coach-tip p { margin: 0 0 var(--sp-3); color: var(--text-dim); font-size: var(--fs-sm); line-height: 1.5; }
+.coach-row { display: flex; align-items: center; gap: var(--sp-2); }
+.coach-count { flex: 1; color: var(--text-faint); font-size: var(--fs-xs); }
+.coach-tip::after { content: ""; position: absolute; left: var(--arrow-x); width: var(--tip-arrow); height: var(--tip-arrow); background: var(--overlay-bg); border: 1px solid var(--line); transform: rotate(45deg); }
+.coach-tip.above::after { bottom: calc(var(--tip-arrow) / -2 - 1px); border-top: 0; border-left: 0; }
+.coach-tip.below::after { top: calc(var(--tip-arrow) / -2 - 1px); border-bottom: 0; border-right: 0; }
+@media (prefers-reduced-motion: reduce) { .coach-hole { transition: none; } }
+
+/* ---------------------------------------------------------------- while a run plays
+   Everything but the stage and the transport fades back. Opacity only, so nothing moves under your hands; a
+   moving pointer, a pause or keyboard focus inside a faded part brings it back. */
+.studio-app :is(.topbar, .studio-header, .pane.right, .studio-footer, .passage-timeline, .stage-views-anchor, .lesson-bar) { transition: opacity var(--dur-slow) var(--ease-out); }
+.studio-app.receded :is(.topbar, .studio-header, .pane.right, .studio-footer, .passage-timeline, .stage-views-anchor, .lesson-bar):not(:focus-within) { opacity: .2; }
+@media (prefers-reduced-motion: reduce) { .studio-app :is(.topbar, .studio-header, .pane.right, .studio-footer, .passage-timeline, .stage-views-anchor, .lesson-bar) { transition: none; } }
+
+/* ---------------------------------------------------------------- screens that move into each other
+   The piece's title is one element to the browser across the change, so it travels from the card you pressed. */
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: var(--dur-base); }
+::view-transition-group(piece-title) { animation-duration: var(--dur-base); animation-timing-function: var(--ease-out); }
+.studio-heading h1, .next-lesson-card > h2 { view-transition-name: piece-title; }
+@media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; } }
+
+/* ---------------------------------------------------------------- a stage-shaped placeholder
+   Drawn while an instrument's code or model loads: the outline of what is coming, a slow shimmer, the same words. */
+.stage-placeholder { position: relative; display: grid; place-items: center; overflow: hidden; background: var(--screen); color: var(--text-dim); font-size: var(--fs-sm); }
+.stage-placeholder .outline { position: absolute; inset: 18% 8%; border-radius: var(--radius-lg); opacity: .55; }
+.stage-placeholder.strings .outline { background: repeating-linear-gradient(180deg, transparent 0 calc(16.66% - 1px), var(--line-strong) calc(16.66% - 1px) 16.66%),
+  repeating-linear-gradient(90deg, transparent 0 calc(8% - var(--sp-hair)), var(--line) calc(8% - var(--sp-hair)) 8%); border: 1px solid var(--line); }
+.stage-placeholder.bowed .outline { inset: 22% 6%; background: repeating-linear-gradient(180deg, transparent 0 calc(25% - 1px), var(--line-strong) calc(25% - 1px) 25%); border: 1px solid var(--line); }
+.stage-placeholder.drums .outline { inset: 20% 12%; background: radial-gradient(circle at 22% 60%, var(--line) 0 11%, transparent 11.5%), radial-gradient(circle at 50% 42%, var(--line) 0 9%, transparent 9.5%),
+  radial-gradient(circle at 78% 60%, var(--line) 0 11%, transparent 11.5%), radial-gradient(ellipse at 50% 82%, var(--line-strong) 0 13%, transparent 13.5%); }
+.stage-placeholder::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 4%) 50%, transparent 70%);
+  transform: translateX(-100%); animation: placeholder-shimmer var(--dur-shimmer) var(--ease-out) infinite; }
+.stage-placeholder span { position: relative; z-index: 1; padding: var(--sp-1) var(--sp-3); border-radius: var(--radius-pill); background: var(--bg-1); }
+@keyframes placeholder-shimmer { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .stage-placeholder::after { animation: none; display: none; } }
+
+/* ---------------------------------------------------------------- the note for next time */
+.next-time-note { display: grid; gap: var(--sp-1); margin: var(--sp-1) 0 var(--sp-3); padding: var(--sp-3); border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--bg-2); }
+.next-time-note .eyebrow { display: flex; justify-content: space-between; gap: var(--sp-2); color: var(--text-faint); font-size: var(--fs-2xs); letter-spacing: .06em; text-transform: uppercase; }
+.next-time-note q { quotes: none; color: var(--text); line-height: 1.5; overflow-wrap: anywhere; }
+.next-time-note .actions { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
+.report-note { display: grid; gap: var(--sp-1); margin-top: var(--sp-3); }
+.report-note label { color: var(--text-dim); font-size: var(--fs-xs); }
+.report-note input { min-height: var(--control-h); }
+
+/* ---------------------------------------------------------------- the stage's bottom bar
+   The bar lets clicks through to the instrument (strings.css); these take them back: the handpan's Top / Underside
+   switch, and the artist's link in a model's credit. */
+.guitar-stage-bottom :is(.handpan-side, .model-credit a) { pointer-events: auto; }
+.handpan-side { flex-shrink: 0; }

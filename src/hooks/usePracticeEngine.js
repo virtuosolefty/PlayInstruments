@@ -9,17 +9,17 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { canonicalDrumMidi } from '../lib/drums.js';
-import { PracticeSession, NOTE_STATUS } from '../lib/matcher.js';
-import { Scheduler, Transport } from '../lib/transport.js';
-import { audio } from '../lib/audio.js';
-import { midiInput } from '../lib/midiInput.js';
-import { INSTRUMENT_MODES, midiOutput } from '../lib/midiOutput.js';
-import { recordCombo, recordGhost, recordPracticeDay, recordSession } from '../lib/storage.js';
-import { gradeRun } from '../lib/grading.js';
-import { groupProblems } from '../lib/passages.js';
-import { FULL_VARIANT } from '../lib/score.js';
-import { applyCurve, isIdentity } from '../lib/velocity.js';
+import { struckSetFor } from '../lib/struck/struckSets.js';
+import { PracticeSession, NOTE_STATUS } from '../lib/practice/matcher.js';
+import { Scheduler, Transport } from '../lib/practice/transport.js';
+import { audio } from '../lib/audio/audio.js';
+import { midiInput } from '../lib/input/midiInput.js';
+import { INSTRUMENT_MODES, midiOutput } from '../lib/input/midiOutput.js';
+import { recordCombo, recordGhost, recordPracticeDay, recordSession } from '../lib/app/storage.js';
+import { gradeRun } from '../lib/practice/grading.js';
+import { groupProblems } from '../lib/music/passages.js';
+import { FULL_VARIANT } from '../lib/music/score.js';
+import { applyCurve, isIdentity } from '../lib/input/velocity.js';
 
 const TAIL_SEC = 1.2; // grace period after the last note before we call it done
 const UI_HZ = 12; // how often the numeric read-outs refresh
@@ -121,11 +121,12 @@ export function referencePlaybackFor(settings) {
 
 /**
  * The note a message means. Pitched instruments take the input transpose; on
- * the drums a controller's neighbouring General MIDI note counts as the drum
- * the lessons are written in.
+ * a struck instrument a controller's note for the same piece (a neighbouring
+ * General MIDI drum) counts as the one the lessons are written in.
  */
 export function playedMidi(cfg, midi) {
-  if (cfg.practiceInstrument === 'drums') return canonicalDrumMidi(midi) ?? midi;
+  const struck = struckSetFor(cfg.practiceInstrument);
+  if (struck) return struck.canonical(midi) ?? midi;
   return midi + (cfg.inputTranspose ?? 0);
 }
 

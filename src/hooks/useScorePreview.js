@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { audio } from '../lib/audio.js';
-import { midiOutput, INSTRUMENT_MODES } from '../lib/midiOutput.js';
-import { loadScoreFromUrl } from '../lib/score.js';
+import { audio } from '../lib/audio/audio.js';
+import { midiOutput, INSTRUMENT_MODES } from '../lib/input/midiOutput.js';
+import { loadScoreFromUrl } from '../lib/music/score.js';
 
 /** Auditions a short excerpt without emitting input, changing the score or recording a run. */
 export function useScorePreview({ active, instrument, instrumentSource, midiOutputId }) {

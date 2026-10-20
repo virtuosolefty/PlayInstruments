@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import { exportHistory } from '../lib/storage.js';
+import { exportHistory } from '../lib/app/storage.js';
 
 /**
  * The floor under a render that throws.
@@ -71,8 +71,8 @@ export default class ErrorBoundary extends Component {
         <div className="boundary-card">
           <h2>Something in the app broke</h2>
           <p>
-            This is a bug, not something you did. Your practice history is still on this device —
-            save a copy before reloading, and nothing is lost either way.
+            This is a bug, not something you did. Your practice history is still on this device.
+            Save a copy before reloading, and nothing is lost either way.
           </p>
           <pre className="boundary-detail">{String(error?.message ?? error)}</pre>
           {this.state.where && <p className="boundary-where">In {this.state.where}</p>}

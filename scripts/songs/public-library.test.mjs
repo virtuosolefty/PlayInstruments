@@ -48,7 +48,7 @@ describe('the files the public site is built from', () => {
   });
 
   it('install from wherever the site is served: no address in the app manifest starts at the root', () => {
-    // GitHub Pages serves the site from /PlayInsturments/, where "/" is somebody else's page.
+    // GitHub Pages serves the site from /PlayInstruments/, where "/" is somebody else's page.
     for (const address of [app.start_url, app.scope, ...app.icons.map(icon => icon.src)]) expect(address.startsWith('/'), address).toBe(false);
   });
 

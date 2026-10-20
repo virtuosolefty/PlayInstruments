@@ -30,7 +30,8 @@ jobs:
       - run: npm run build
         env:
           GITHUB_PAGES: 'true'
-          PUBLIC_SITE_URL: https://virtuosolefty.github.io/PlayInsturments
+          # The site's address follows the repository's owner and name.
+          PUBLIC_SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist

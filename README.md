@@ -6,7 +6,7 @@ Practice Deck is a browser-based practice studio for piano, guitar (and bass), v
 
 Once the GitHub Pages deployment completes, open:
 
-**https://virtuosolefty.github.io/PlayInsturments/**
+**https://virtuosolefty.github.io/PlayInstruments/**
 
 No download or account is required. Sound starts after you click **Enable sound** or play an instrument control. It can be installed from the browser's menu as an app; it still needs a connection to load.
 
@@ -15,8 +15,8 @@ No download or account is required. Sound starts after you click **Enable sound*
 You need [Node.js 20 or newer](https://nodejs.org/).
 
 ```bash
-git clone https://github.com/virtuosolefty/PlayInsturments.git
-cd PlayInsturments
+git clone https://github.com/virtuosolefty/PlayInstruments.git
+cd PlayInstruments
 npm install
 npm run dev
 ```

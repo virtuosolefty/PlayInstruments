@@ -469,6 +469,20 @@ note it was asked for and could not play and warns on the first one. It used to
 log that at `console.debug`, which Chrome hides under Verbose — so a fault that
 silenced every note looked exactly like a fault that silenced none.
 
+**An iPhone with its silent switch on (21 October 2026).** iOS plays a web page's Web Audio as *ambient*
+sound, which the ring/silent switch mutes: everything runs, the level meter moves, and the speaker says
+nothing. `src/lib/audio/audioSession.js` tells the phone the app plays media, in the same tap that starts the
+engine (`audio.start()` calls `preferPlayback()` before its first `await`):
+
+- Safari 17 and later: `navigator.audioSession.type = 'playback'`.
+- Older iOS has no such setting, but a page that is playing an ordinary `<audio>` element is moved into
+  playback, so a tenth of a second of silence (`silentWav()`, made in memory, not a file) loops on one.
+
+While the microphone listens, `micInput.js` sets the session back to `'auto'` (a playback-only session cannot
+record) and to `'playback'` when it stops. There is no way to test the switch itself off a real iPhone; the unit
+tests use a fake navigator, and a Playwright page dressed as an iPhone checks that one tap sets the session or
+starts the loop.
+
 **Picking the plugin means the browser stops sounding notes.** `instrumentFor`
 used to read `instrumentSource === EXTERNAL && midiOutput.available`, so any
 moment the port list came back empty — a device re-enumerating, a cable going,
@@ -1108,7 +1122,8 @@ src/
                     theme.js, appearance.js, commands.js (the Ctrl+K palette's matching), shortcuts.js
     audio/          audio.js (instrument loading, playback, error cues, metronome, the drone), audioOutput.js (the
                     master gain, limiter and safety stage), drone.js + droneVoice.js, playback.js, speech.js,
-                    technique.js (bow or fingers, and the voice of a model shown in the whole view)
+                    technique.js (bow or fingers, and the voice of a model shown in the whole view),
+                    audioSession.js (playback that the iPhone's silent switch leaves alone)
     input/          midiInput.js (Web MIDI: enumeration, hot-plug, normalisation), midiOutput.js, micInput.js,
                     pitch.js, tuner.js, noteTracker.js, playInput.js, devices.js (controller profiles and the
                     playable-key window), latency.js (tap-offset maths), velocity.js (a touch curve per controller)

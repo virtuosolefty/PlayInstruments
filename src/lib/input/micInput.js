@@ -1,4 +1,5 @@
 import { QUIET, detectPitch } from './pitch.js';
+import { afterRecording, allowRecording } from '../audio/audioSession.js';
 
 /**
  * micInput.js — listening to a real instrument through the microphone.
@@ -155,6 +156,8 @@ export class MicInput {
     let stream = null, context = null, stopWaiting = () => {};
     const wake = () => { context?.resume?.()?.catch?.(() => {}); };
     try {
+      // A session that only plays cannot record: the browser chooses one that can while the microphone listens.
+      allowRecording();
       stream = await deps.getUserMedia(CONSTRAINTS);
       context = deps.createContext();
       // A page that has made no sound yet may get a sleeping audio clock, which hears nothing. Some browsers
@@ -213,6 +216,8 @@ export class MicInput {
     const live = this.live;
     this.live = null;
     if (live) { live.stop(); live.release(); }
+    // Back to playback, which the iPhone's silent switch leaves alone (audioSession.js).
+    afterRecording();
     if (this.status !== status || this.error !== error) this._set(status, error);
   }
 }

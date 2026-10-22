@@ -23,6 +23,7 @@
 let Tone = null;
 const loadTone = () => import('tone').then(module => { Tone = module; return module; });
 import { buildOutput } from './audioOutput.js';
+import { preferPlayback } from './audioSession.js';
 // 60 to "C4", as Tone's Frequency(...).toNote() spells it, without needing Tone loaded.
 import { noteName as midiToName } from '../music/theory.js';
 import { buildDrumVoice } from '../struck/drumVoice.js';
@@ -120,6 +121,9 @@ class AudioEngine {
     // controller, say. That boot's resume is left pending by the browser, and
     // without this every later click would just await that same stuck promise:
     // the keys light up, the engine never makes a sound.
+    // On an iPhone, Web Audio is "ambient" sound that the silent switch mutes, the meter moving all the while;
+    // saying, in this same tap, that the app plays media lets it be heard (audioSession.js).
+    preferPlayback();
     this._claimContext();
     this._kickClock();
     if (this.ready) {
